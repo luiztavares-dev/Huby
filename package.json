@@ -1,0 +1,8 @@
+{
+    "scripts": {
+        "front" : "cd huby-front-end && npx vite",
+        "mobile" : "cd huby-front-mobile && npx expo start",
+        "i-all" : "cd huby-front-end && npm i && cd .. && cd huby-front-mobile && npm i && cd .."
+    }
+}
+
