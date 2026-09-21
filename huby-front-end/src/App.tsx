@@ -1,13 +1,16 @@
 import { Route, Routes } from 'react-router-dom'
+
+import { Standart } from './layouts/standart/Standart';
+
 import { Home } from './pages/home/Home'
 import { Eventos } from './pages/eventos/Eventos'
-import { Standart } from './layouts/standart/Standart';
 import { Comunidades } from './pages/comunidades/Comunidades';
 import { Carrinho } from './pages/carrinho/Carrinho';
 import { Configuracoes } from './pages/configuracoes/Configuracoes';
 import { Login } from './pages/login/Login';
 import { Perfil } from './pages/perfil/Perfil';
 import { Biblioteca } from './pages/bilbioteca/Biblioteca'
+
 import './Index.css'
 
 function App() {
