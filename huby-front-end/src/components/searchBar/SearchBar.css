@@ -9,6 +9,7 @@
     flex-direction: row;
     width: 100%;
     gap: 20px;
+    padding: 30px 0 30px 60px;
 }
 
 .SearchBar-Barra{
@@ -25,6 +26,9 @@
     border: none;
     font-size: 16px;
     background-color: var(--gray3);  
+    outline: none;
+    caret-color: var(--white);
+    color: var(--white);
 }
 
 .SearchBar-Barra-input::placeholder{
@@ -32,7 +36,7 @@
 }
 
 .SearchBar-Barra-img{
-    background-color: var(--gray3);
+    background-color: var(--gray3); 
     padding: 10px;
 }
 
@@ -40,8 +44,17 @@
     cursor: pointer;
 }
 
+.SearchBar-Barra-img:active{
+    background-color: var(--gray2);
+}
+
 .SearchBar-Filtro{
-    
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    background-color: var(--gray3);
+    padding: 0 10px 0 10px;
+    gap: 10px;
 }
 
 .SearchBar-Filtro img{
@@ -50,7 +63,5 @@
 
 .SearchBar-Filtro p{
     color: var(--white);
-    padding: 0 10px 0 10px ;
-    background-color: var(--gray3);
     border: none;
 }
