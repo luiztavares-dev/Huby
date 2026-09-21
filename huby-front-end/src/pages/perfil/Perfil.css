@@ -1,0 +1,20 @@
+.perfil-banner {
+    width: 100%;
+    height: 360px;  
+}
+
+.peril-ifcon {
+    margin-top: -80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: center;
+    justify-self: center;
+}
+
+.peril-ifcon img {
+    border: 10px solid var(--gray1);
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+}
