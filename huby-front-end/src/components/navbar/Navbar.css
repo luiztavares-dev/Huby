@@ -12,3 +12,10 @@
     align-items: center;
     justify-content: center;
 }
+
+.navbar-link-perfil {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--white);
+    border-radius: 50%;
+}

@@ -6,6 +6,8 @@ interface NavbarProps {
 }
 
 export function Navbar ({activeLink}: NavbarProps) {
+    
+    const imgPerfil = 'icon-perfil.png'
 
     return (
         <>
@@ -14,6 +16,12 @@ export function Navbar ({activeLink}: NavbarProps) {
                     backgroundColor: activeLink === 'home' ? 'var(--pink)' : '' 
                 }}>
                     <img src="icon-home.svg" alt="home" />
+                </Link>
+
+                <Link to="/perfil" className="navbar-link" style={{
+                    backgroundColor: activeLink === 'perfil' ? 'var(--pink)' : '' 
+                }}>
+                    <img src={imgPerfil} alt="perfil" className="navbar-link-perfil" />
                 </Link>
 
                 <Link to="/eventos" className="navbar-link" style={{
