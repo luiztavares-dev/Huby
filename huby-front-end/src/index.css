@@ -1,0 +1,22 @@
+:root {
+  --pink: #FA295F;
+  --gray1: #111111;
+  --gray2: #818181;
+  --gray3: #414141;
+  --white: #FFFFFF;
+
+  --text1: #FFFFFF;
+  --text2: #a3a3a3;
+  --text3: #585858;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--gray1);
+  color: var(--text1);
+}
