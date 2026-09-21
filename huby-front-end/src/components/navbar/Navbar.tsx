@@ -16,6 +16,12 @@ export function Navbar ({activeLink}: NavbarProps) {
                     <img src="icon-home.svg" alt="home" />
                 </Link>
 
+                <Link to="/perfil" className="navbar-link" style={{
+                    backgroundColor: activeLink === 'perfil' ? 'var(--pink)' : '' 
+                }}>
+                    <img src="icon-perfil.png" alt="perfil" className="navbar-link-perfil" />
+                </Link>
+
                 <Link to="/eventos" className="navbar-link" style={{
                     backgroundColor: activeLink === 'eventos' ? 'var(--pink)' : '' 
                 }}>
