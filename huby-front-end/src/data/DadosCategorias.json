@@ -1,0 +1,252 @@
+{
+  "Aventura": {
+    "Descricao": "Jogos focados em exploração, narrativa, descobertas e desafios progressivos. Em geral, o jogador percorre cenários, resolve enigmas e avança em uma história com foco em experiência e imersão.",
+    "SubCategorias": [
+      { "Titulo": "Exploração", "Descricao": "Jogos que priorizam descobrir mapas, áreas secretas e ambientes ricos em detalhes." },
+      { "Titulo": "Narrativa", "Descricao": "Jogos com foco em história, personagens e desenvolvimento emocional ou cinematográfico." },
+      { "Titulo": "Metroidvania", "Descricao": "Exploração não linear com progresso por habilidades, áreas desbloqueáveis e revisitas ao mundo." },
+      { "Titulo": "Puzzle de Aventura", "Descricao": "Mistura de exploração com desafios lógicos, enigmas e resolução de problemas." },
+      { "Titulo": "Aventura Gráfica", "Descricao": "Jogos com forte ênfase em diálogos, escolhas e direção artística visual." }
+    ]
+  },
+  "RPG": {
+    "Descricao": "Jogos de role-playing em que o jogador desenvolve personagens, toma decisões e evolui por níveis, habilidades e histórias complexas.",
+    "SubCategorias": [
+      { "Titulo": "RPG de Ação", "Descricao": "Combina desenvolvimento de personagem com combate dinâmico e ação em tempo real." },
+      { "Titulo": "RPG Tático", "Descricao": "Combate em turnos ou em grade, com foco em estratégia e posicionamento." },
+      { "Titulo": "JRPG", "Descricao": "RPGs com foco em narrativa, personagens e estruturas tradicionais de jornada." },
+      { "Titulo": "RPG de Mundo Aberto", "Descricao": "Grande liberdade para explorar, completar quests e evoluir o personagem no mundo." },
+      { "Titulo": "RPG de Mesa / CRPG", "Descricao": "Jogos inspirados em sistemas de RPG tradicionais, com escolhas e mecânicas profundas." }
+    ]
+  },
+  "Estratégia": {
+    "Descricao": "Jogos em que o jogador planeja, organiza recursos, posiciona unidades e toma decisões para alcançar objetivos de curto ou longo prazo.",
+    "SubCategorias": [
+      { "Titulo": "RTS", "Descricao": "Estratégia em tempo real, com foco em produção, expansão e combate rápido." },
+      { "Titulo": "TBS", "Descricao": "Estratégia por turnos, com atenção à logística e ações por rodada." },
+      { "Titulo": "4X", "Descricao": "Exploração, expansão, exploração e extermínio em grande escala." },
+      { "Titulo": "Tower Defense", "Descricao": "Defesa de rotas e base usando torres ou unidades para bloquear invasões." },
+      { "Titulo": "Grand Strategy", "Descricao": "Planejamento em escala política, econômica e militar de um império ou nação." }
+    ]
+  },
+  "Ação": {
+    "Descricao": "Jogos com foco em reflexos, combate, velocidade, habilidade e momentos intensos de ação direta.",
+    "SubCategorias": [
+      { "Titulo": "Hack and Slash", "Descricao": "Combate massivo contra hordas com armas de alto dano e combos." },
+      { "Titulo": "Beat 'em Up", "Descricao": "Luta contra vários inimigos em cenários urbanos, muitas vezes cooperativos." },
+      { "Titulo": "Ação e Plataforma", "Descricao": "Combina combate e movimento com obstáculos físicos e desafios de precisão." },
+      { "Titulo": "Ação em Mundo Aberto", "Descricao": "Combate, missão e exploração em um mapa grande e dinâmico." },
+      { "Titulo": "Ação Cinematográfica", "Descricao": "Jogo focado em cenas intensas, confrontos dramáticos e valor de produção." }
+    ]
+  },
+  "FPS": {
+    "Descricao": "Jogos de tiro em primeira pessoa, focados em mira, movimentação, precisão e combate em tempo real.",
+    "SubCategorias": [
+      { "Titulo": "Tiro Casual", "Descricao": "Jogos de tiro rápidos, acessíveis e com baixa curva de aprendizado." },
+      { "Titulo": "Tático", "Descricao": "Foco em estratégia, comunicação, planejamento e execução em equipe." },
+      { "Titulo": "Battle Royale", "Descricao": "Jogadores competem em grande mapa até restar um sobrevivente ou uma equipe." },
+      { "Titulo": "Arena Shooter", "Descricao": "Partidas rápidas em mapas pequenos e combate direto." },
+      { "Titulo": "Cooperativo FPS", "Descricao": "Combate em equipe contra inimigos ou ameaças em cenários cooperativos." }
+    ]
+  },
+  "Luta": {
+    "Descricao": "Jogos baseados em duelo entre personagens com foco em combos, timing, movimentos especiais, defesa e leitura de oponente.",
+    "SubCategorias": [
+      { "Titulo": "2D", "Descricao": "Lutas em duas dimensões, geralmente com comandos mais diretos e animado estilo arcade." },
+      { "Titulo": "3D", "Descricao": "Lutas em espaço tridimensional, com movimentação mais livre e maior foco em posicionamento." },
+      { "Titulo": "Arcade", "Descricao": "Estilo de luta acessível e explosivo, com foco em diversão e combos simples." },
+      { "Titulo": "Competitivo", "Descricao": "Jogos com meta de alto nível, torneios e técnicas extremamente refinadas." },
+      { "Titulo": "Crossovers", "Descricao": "Personagens de franquias diferentes em combate unificado." }
+    ]
+  },
+  "Corrida": {
+    "Descricao": "Jogos de velocidade em que o jogador compete em pistas, circuitos, ruas ou ambientes off-road.",
+    "SubCategorias": [
+      { "Titulo": "Arcade", "Descricao": "Corridas acessíveis, com foco em diversão, drift e emoção visual." },
+      { "Titulo": "Simulador", "Descricao": "Mais realismo, físicas, mecânicas e gestão de veículos." },
+      { "Titulo": "Off-road", "Descricao": "Corridas fora da estrada com terrenos irregulares e desafios de condução." },
+      { "Titulo": "Kart", "Descricao": "Corridas mais leves e familiares, com itens, armas e personalização lúdica." },
+      { "Titulo": "Street Racing", "Descricao": "Corridas urbanas com foco em estilo, velocidade e cultura automobilística." }
+    ]
+  },
+  "Simulação": {
+    "Descricao": "Jogos que tentam reproduzir a rotina, o comportamento ou a dinâmica de atividades do mundo real.",
+    "SubCategorias": [
+      { "Titulo": "Gerenciamento", "Descricao": "O jogador cria, organiza e administra negócios, cidades ou recursos." },
+      { "Titulo": "Vida", "Descricao": "Simula rotina, relacionamento, profissão e cotidiano de personagens ou comunidades." },
+      { "Titulo": "Construção", "Descricao": "Criação de cidades, casas, infraestrutura ou paisagens em ambiente controlado." },
+      { "Titulo": "Agrícola", "Descricao": "Foco em plantio, gestão de recursos e cultivo em pequenos ou grandes territórios." },
+      { "Titulo": "Veículos", "Descricao": "Simulação de pilotagem, mecânica e operação de veículos e transportes." }
+    ]
+  },
+  "Sobrevivência": {
+    "Descricao": "Jogos em que o jogador precisa administrar recursos vitais, resistir a ameaças e sobreviver em ambientes hostis.",
+    "SubCategorias": [
+      { "Titulo": "Survival Craft", "Descricao": "Exploração, coleta, construção e sobrevivência em mundo aberto ou hostil." },
+      { "Titulo": "Survival Horror", "Descricao": "Sobrevivência com pressão psicológica, terror e escassez de recursos." },
+      { "Titulo": "Cooperativo", "Descricao": "Grupo de jogadores sobrevivendo juntos contra ameaças e dificuldades." },
+      { "Titulo": "Base Building", "Descricao": "Construção e fortalecimento de abrigo, bases e infraestrutura de sobrevivência." },
+      { "Titulo": "Open World Survival", "Descricao": "Sobrevivência em mundos gigantes, com exploração e perigos permanentes." }
+    ]
+  },
+  "Horror": {
+    "Descricao": "Jogos que provocam tensão, medo, apreensão e desconforto por meio de ambiente, som, narrativa e ameaças imprevisíveis.",
+    "SubCategorias": [
+      { "Titulo": "Psychological Horror", "Descricao": "Foco em medo mental, isolamento, paranoia e pressão emocional." },
+      { "Titulo": "Survival Horror", "Descricao": "Recursos limitados e fuga ou combate em ambientes intimidadores." },
+      { "Titulo": "Horror de Exploração", "Descricao": "Descoberta de mistérios e ameaças em mundo aberto ou complexo." },
+      { "Titulo": "Horror Co-op", "Descricao": "Experiência de medo compartilhada em equipe, com coordenação e comunicação." },
+      { "Titulo": "Horror Indie", "Descricao": "Experiências mais enxutas, atmosféricas e criativas, geralmente com estética singular." }
+    ]
+  },
+  "Plataforma": {
+    "Descricao": "Jogos onde o movimento do personagem e a precisão de saltos são centrais para a progressão e desafios do mapa.",
+    "SubCategorias": [
+      { "Titulo": "2D", "Descricao": "Plataforma em duas dimensões com desafios de tempo, precisão e exploração." },
+      { "Titulo": "3D", "Descricao": "Salto, agilidade e navegação em ambientes tridimensionais." },
+      { "Titulo": "Precision Platformer", "Descricao": "Jogos extremamente exigentes em timing e controle." },
+      { "Titulo": "Speedrun", "Descricao": "Jogos projetados para completar o percurso em menos tempo possível." },
+      { "Titulo": "Plataforma com Ação", "Descricao": "Mistura de combate, movimento e exploração em cenário de plataforma." }
+    ]
+  },
+  "Puzzle": {
+    "Descricao": "Jogos em que o principal desafio é resolver enigmas, manipular regras, lógica e padrões em cenários bem projetados.",
+    "SubCategorias": [
+      { "Titulo": "Puzzle Clássico", "Descricao": "Quebra-cabeças tradicionais com regras simples e foco em raciocínio." },
+      { "Titulo": "Puzzle de Movimento", "Descricao": "Manipulação de objetos, blocos ou espaço para alcançar objetivo." },
+      { "Titulo": "Physics Puzzle", "Descricao": "Física e interação entre objetos geram a complexidade do desafio." },
+      { "Titulo": "Logic Puzzle", "Descricao": "Desafios focados em dedução, padrões e solução racional." },
+      { "Titulo": "Puzzle de Narrativa", "Descricao": "Enigmas integrados à história, ambiente ou escolhas do jogador." }
+    ]
+  },
+  "Casual": {
+    "Descricao": "Jogos simples, rápidos e fáceis de aprender, geralmente focados em diversão imediata e partidas curtas.",
+    "SubCategorias": [
+      { "Titulo": "Match 3", "Descricao": "Combinar peças ou elementos para cumprir objetivos e pontuar." },
+      { "Titulo": "Idle", "Descricao": "Progresso automático, gerenciamento leve e economia incremental." },
+      { "Titulo": "Hypercasual", "Descricao": "Jogos minimalistas, rápidos e altamente acessíveis em curto tempo." },
+      { "Titulo": "Arcade Casual", "Descricao": "Jogos de reflexo, ação simples e partidas curtas." },
+      { "Titulo": "Mobile Casual", "Descricao": "Jogos leves e intuitivos, projetados para dispositivos móveis." }
+    ]
+  },
+  "Esportes": {
+    "Descricao": "Jogos baseados em competições esportivas e simulações de modalidades físicas ou competitivas.",
+    "SubCategorias": [
+      { "Titulo": "Futebol", "Descricao": "Jogos de futebol com gestão de time, partidas e campeonatos." },
+      { "Titulo": "Basquete", "Descricao": "Jogos centrados em jogo coletivo, arremessos e táticas de equipe." },
+      { "Titulo": "Tênis", "Descricao": "Competição individual ou em duplas com foco em timing e precisão." },
+      { "Titulo": "Esportes Radicais", "Descricao": "Skate, motocross, snowboarding e outras modalidades com foco em estilo." },
+      { "Titulo": "Esportes Simuladores", "Descricao": "Reprodução detalhada de modalidades e competições reais." }
+    ]
+  },
+  "MMO": {
+    "Descricao": "Jogos online massivos em que milhares de jogadores interagem num mundo compartilhado, em cooperação, competição ou exploração.",
+    "SubCategorias": [
+      { "Titulo": "MMORPG", "Descricao": "Gameplay de mundo compartilhado com quests, progressão e interação social." },
+      { "Titulo": "MMO de Ação", "Descricao": "Combate em ambientes públicos, raids e eventos em escala massiva." },
+      { "Titulo": "MMO de Estratégia", "Descricao": "Coordenação de alianças, bases, recursos e objetivos em grande escala." },
+      { "Titulo": "MMO de Construção", "Descricao": "Jogos focados em expansão, guildas, economia e comunidades online." },
+      { "Titulo": "Coop MMO", "Descricao": "Jogos voltados para grupos e equipes trabalhando juntos em progresso coletivo." }
+    ]
+  },
+  "Sandbox": {
+    "Descricao": "Jogos com grande liberdade para criar, experimentar, construir e moldar o mundo ou a experiência conforme o jogador quiser.",
+    "SubCategorias": [
+      { "Titulo": "Construção Livre", "Descricao": "Criação de estruturas, ambientes e mecânicas sem grande limitação." },
+      { "Titulo": "Minecraft-like", "Descricao": "Jogos de blocos, exploração e construção em mundo procedural." },
+      { "Titulo": "Criativo", "Descricao": "Foco na expressão, prototipagem e criação sem metas obrigatórias." },
+      { "Titulo": "Open World Sandbox", "Descricao": "Grande liberdade de exploração e experimentação em mundo vivo." },
+      { "Titulo": "Survival Sandbox", "Descricao": "Mistura de sobrevivência e liberdade criativa em ambientes hostis." }
+    ]
+  },
+  "Roguelike": {
+    "Descricao": "Jogos com run permanente, dificuldade alta, perda progressiva e elementos aleatórios que exigem resiliência e adaptação.",
+    "SubCategorias": [
+      { "Titulo": "Roguelite", "Descricao": "Progressão parcial, dados e variações entre runs sem perder tudo de forma permanente." },
+      { "Titulo": "Dungeon Crawl", "Descricao": "Exploração de masmorras, combate em turnos ou ação e itens aleatórios." },
+      { "Titulo": "Auto Battle Rogue", "Descricao": "Combate automatizado ou semi-automatizado com escolhas estratégicas em runs." },
+      { "Titulo": "Roguelike de Ação", "Descricao": "Combate em tempo real com run intensa, armas aleatórias e grande desafio." },
+      { "Titulo": "Roguelike Tático", "Descricao": "Decisões de estratégia, posicionamento e rotação de habilidades em runs curtas." }
+    ]
+  },
+  "Narrativo": {
+    "Descricao": "Jogos com atenção especial à história, escolhas de diálogo, interpretação de personagens e experiências emocionalmente profundas.",
+    "SubCategorias": [
+      { "Titulo": "Visual Novel", "Descricao": "Narrativa em texto e imagens com foco em escolhas e desenvolvimento emocional." },
+      { "Titulo": "Escolhas e Consequências", "Descricao": "Decisões influenciam enredo, relacionamento e resultado final." },
+      { "Titulo": "Narrativa Experimental", "Descricao": "Jogos que reinventam storytelling e interação de formas não convencionais." },
+      { "Titulo": "Narrativa Emocional", "Descricao": "Jogos focados em experiências íntimas, humanas e reflexivas." },
+      { "Titulo": "Interactive Story", "Descricao": "História guiada por decisões, combinações e cenas interativas." }
+    ]
+  },
+  "Party": {
+    "Descricao": "Jogos projetados para grupos, com partidas rápidas, diversão coletiva e alto valor de socialização.",
+    "SubCategorias": [
+      { "Titulo": "Minigames", "Descricao": "Muitas pequenas atividades em um único jogo, com foco em diversão em grupo." },
+      { "Titulo": "Competição Local", "Descricao": "Jogos para partidas presenciais com disputas rápidas e competitivas." },
+      { "Titulo": "Coop Party", "Descricao": "Jogos em equipe para trabalhar em conjunto e se divertir em grupo." },
+      { "Titulo": "Party de Cartas", "Descricao": "Jogos de estratégia leve e socialização usando baralhos ou mecânicas comparáveis." },
+      { "Titulo": "Quizzes e Trivia", "Descricao": "Partidas focadas em resposta rápida, conhecimento e competição amigável." }
+    ]
+  },
+  "Tiro": {
+    "Descricao": "Jogos de disparos em diversos estilos, com foco em mira, táticas, mobília, habilidades e desafios de combate.",
+    "SubCategorias": [
+      { "Titulo": "Shoot 'em Up", "Descricao": "Jogos de nave, disparo vertical ou horizontal em ritmo acelerado." },
+      { "Titulo": "Twin Stick Shooter", "Descricao": "Controle com dois analógicos para movimentar e mirar ao mesmo tempo." },
+      { "Titulo": "Top-down Shooter", "Descricao": "Perspectiva superior com foco em movimentação, cobertura e mira rápida." },
+      { "Titulo": "Bullet Hell", "Descricao": "Dificuldade extrema com muitos projéteis e timing de sobrevivência." },
+      { "Titulo": "Tiro de Habilidade", "Descricao": "Combate em ritmo intenso com foco em precisão e execução." }
+    ]
+  },
+  "Gestão": {
+    "Descricao": "Jogos com foco em decidir, planejar e otimizar recursos, equipes, infraestrutura ou expansão ao longo do tempo.",
+    "SubCategorias": [
+      { "Titulo": "Gestão de Cidade", "Descricao": "Planejar crescimento urbano, serviços e infraestrutura pública." },
+      { "Titulo": "Gestão de Império", "Descricao": "Administração e expansão de território, recursos e diplomacia." },
+      { "Titulo": "Gestão de Time", "Descricao": "Organização de esportes, equipes ou negócios junto de metas e objetivos." },
+      { "Titulo": "Economia", "Descricao": "Produção, venda, investimentos e planejamento financeiro." },
+      { "Titulo": "Gestão de Recursos", "Descricao": "Controle de produção, estoque, logística e sustentabilidade." }
+    ]
+  },
+  "Metroidvania": {
+    "Descricao": "Gênero que combina exploração não linear, plataforma e poder de progressão por habilidades, com revisitas ao mapa e caminhos fechados.",
+    "SubCategorias": [
+      { "Titulo": "Exploração de Habilidades", "Descricao": "Progressão por técnicas que abrem áreas e permitem novos caminhos." },
+      { "Titulo": "Boss Rush", "Descricao": "Enfrentar chefes em sequência e evoluir pela dificuldade." },
+      { "Titulo": "Souls-like Metroidvania", "Descricao": "Mistura de exploração e mecânicas de dificuldade intensa, combate e derrota." },
+      { "Titulo": "Metroidvania de Ação", "Descricao": "Combate e movimentação em ambiente explorável com aprender a dominar o mapa." },
+      { "Titulo": "Metroidvania de Narrativa", "Descricao": "Foco em ambiente, história e descoberta de mistério também em paralelo à progressão." }
+    ]
+  },
+  "Deckbuilding": {
+    "Descricao": "Jogos em que o jogador monta um baralho ao longo da partida, selecionando cartas, habilidades e combinações estratégicas.",
+    "SubCategorias": [
+      { "Titulo": "Deckbuilder de Combate", "Descricao": "Construção de decks para batalhas com foco em sinergias e táticas." },
+      { "Titulo": "Deckbuilder de Estratégia", "Descricao": "Moedas, recursos, habilidades e suporte em estrutura de deck." },
+      { "Titulo": "Auto Deckbuilder", "Descricao": "Progressão de cartas e combinações em partidas automatizadas ou semi-automáticas." },
+      { "Titulo": "Deckbuilder Roguelite", "Descricao": "Construção de baralho em runs com escolhas e recompensas aleatórias." },
+      { "Titulo": "Deckbuilder de Tema", "Descricao": "Jogos com deck e narrativa inspirados em universos, classes ou estilos específicos." }
+    ]
+  },
+  "Hacking": {
+    "Descricao": "Jogos que envolvem invasão digital, segurança, redes, programação, dados e sistemas complexos de informação.",
+    "SubCategorias": [
+      { "Titulo": "Cyberpunk", "Descricao": "Foco em redes, sistemas, espionagem digital e histórias futuristas." },
+      { "Titulo": "Terminal Hacking", "Descricao": "Interação com consoles, usuários e dados em ambiente computacional." },
+      { "Titulo": "Pós-ia / Sistemas", "Descricao": "Jogos que tratam de inteligência artificial e manipulação de sistemas avançados." },
+      { "Titulo": "Stealth Hacker", "Descricao": "Jogador se infiltra discretamente em redes e infraestrutura sem ser detectado." },
+      { "Titulo": "Hacking Combinado com Ação", "Descricao": "Mistura de invasão digital com combate, perseguição e tomada de decisões rápidas." }
+    ]
+  },
+  "Indie": {
+    "Descricao": "Jogos independentes, frequentemente com forte personalidade criativa, estética autoral e inovações de design.",
+    "SubCategorias": [
+      { "Titulo": "Indie Narrativo", "Descricao": "Foco em história, atmosfera e experiências autorais de alta identidade." },
+      { "Titulo": "Indie Experimental", "Descricao": "Jogos com mecânicas inovadoras e proposta artística forte." },
+      { "Titulo": "Indie Simples e Delicado", "Descricao": "Jogos de baixa escala e grande charme visual ou mecânico." },
+      { "Titulo": "Indie de Ação", "Descricao": "Experiências independentes com proposta de combate ou exploração criativa." },
+      { "Titulo": "Indie de Puzzle", "Descricao": "Quebra-cabeças autorais, sutis e bem desenhados." }
+    ]
+  }
+}

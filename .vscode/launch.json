@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-LoginsimplesApplication<loginsimples>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.loginsimples.LoginsimplesApplication",
+            "projectName": "loginsimples",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

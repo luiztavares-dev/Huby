@@ -1,3 +1,5 @@
+import Banner from '../../components/banner/Banner';
+import BarraDePesquisa from '../../components/searchBar/SearchBar';
 import './Eventos.css'
 
 export function Eventos () {
@@ -12,32 +14,9 @@ export function Eventos () {
 
     return (
         <div className="eventos-container">
-            <div className="eventos-banner-carousel">
-                <div className="eventos-banner-content">
-                    <h2>Imagem 1</h2>
-                </div>
-                <div className="eventos-carousel-indicators">
-                    <span className="eventos-indicator eventos-active"></span>
-                    <span className="eventos-indicator"></span>
-                    <span className="eventos-indicator"></span>
-                    <span className="eventos-indicator"></span>
-                </div>
-            </div>
+            <Banner />
 
-            <div className="eventos-search-filter-section">
-                <div className="eventos-search-bar">
-                    <input type="text" placeholder="RPG" />
-                    <button className="eventos-search-icon">
-                        <img src="/pesquisa.svg" alt="Buscar" />
-                    </button>
-                </div>
-                <button className="eventos-filter-button">
-                    <span className="eventos-filter-icon">
-                        <img src="/filtros.svg" alt="Filtro" />
-                    </span> 
-                    Filtros
-                </button>
-            </div>
+            <BarraDePesquisa />
 
             <div className="eventos-section">
                 <h3 className="eventos-section-title">INSCRIÇÕES TERMINANDO</h3>

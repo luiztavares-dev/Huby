@@ -1,0 +1,317 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+.home {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px 40px 40px;
+    background-color: var(--gray1);
+    color: var(--text1);
+    overflow-x: hidden;
+}
+
+.home-catalog {
+    width: 100%;
+    padding: 0;
+}
+
+.home-section {
+    margin-top: 18px;
+}
+
+.home-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 12px;
+}
+
+.home-section-heading h2 {
+    margin: 0;
+    color: var(--text1);
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.home-section-heading span {
+    color: var(--text2);
+    font-size: 0.85rem;
+}
+
+.home-carousel-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+}
+
+.home-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 6px 8px 10px;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    flex: 1;
+    scrollbar-width: none;
+}
+
+.home-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-100%);
+    z-index: 2;
+
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(17, 17, 17, 0.88);
+    color: var(--white);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+
+    
+}
+
+.carousel-arrow.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.carousel-arrow:hover:not(:disabled) {
+    background: var(--pink);
+    border-color: var(--pink);
+}
+
+.carousel-arrow:disabled {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.carousel-arrow-left {
+    left: -8px;
+}
+
+.carousel-arrow-right {
+    right: -8px;
+}
+
+.home-carousel::-webkit-scrollbar {
+    height: 10px;
+}
+
+.home-carousel::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border-radius: 999px;
+}
+
+.home-carousel::-webkit-scrollbar-thumb {
+    background: var(--pink);
+    border-radius: 999px;
+}
+
+.game-card {
+    position: relative;
+    flex: 0 0 350px;
+    background-color: var(--gray1);
+    border: 1px solid var(--gray3);
+    border-radius: 12px;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    scroll-snap-align: start;
+    z-index: 1;
+}
+
+.game-card:hover {
+    transform: translateY(-2px);
+    border-color: #5b5b5b;
+}
+
+.game-card-image {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background-color: var(--gray3);
+    border-bottom: 1px solid var(--gray3);
+}
+
+.game-card-image > img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.game-card-more {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 30px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    color: var(--white);
+    background-color: rgba(0, 0, 0, 0.72);
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.game-card-body {
+    padding: 16px 14px 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+}
+
+.game-card h3 {
+    margin: 0;
+    color: var(--text1);
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.game-card p {
+    min-height: 38px;
+    margin: 0;
+    color: var(--text2);
+    font-size: 0.77rem;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.game-card-rating {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.game-card-rating span {
+    color: var(--pink);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.game-card-rating small {
+    color: var(--text2);
+    font-size: 0.72rem;
+}
+
+.game-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.game-card-tags span {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--white);
+    font-size: 0.62rem;
+    padding: 6px 8px;
+    border-radius: 16px;
+    letter-spacing: 0.08em;
+
+    
+}
+
+.game-card-tag {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    border: 1px solid var(--pink);
+    border-radius: 20px;
+    color: var(--text1);
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.game-card-tag:hover {
+    border-color: var(--pink);
+    background-color: var(--pink);
+}
+
+.game-card-tag:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 220px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--gray1);
+    border: 1px solid var(--pink);
+    color: var(--gray2);
+    font-size: 0.7rem;
+    line-height: 1.4;
+    letter-spacing: normal;
+    font-weight: 500;
+    white-space: normal;
+    z-index: 10000;
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 1150px) {
+
+    .home-grid {
+        grid-template-columns:
+            repeat(
+                auto-fill,
+                minmax(min(100%, 310px), 1fr)
+            );
+    }
+
+}
+
+@media (max-width: 760px) {
+
+    .home {
+        padding: 20px;
+    }
+
+    .home-grid {
+        grid-template-columns: 1fr;
+    }
+
+}

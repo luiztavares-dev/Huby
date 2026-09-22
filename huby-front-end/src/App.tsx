@@ -9,9 +9,9 @@ import { Carrinho } from './pages/carrinho/Carrinho';
 import { Configuracoes } from './pages/configuracoes/Configuracoes';
 import { Login } from './pages/login/Login';
 import { Perfil } from './pages/perfil/Perfil';
-import { Biblioteca } from './pages/bilbioteca/Biblioteca'
+import { Biblioteca } from './pages/biblioteca/Biblioteca'
 
-import './Index.css'
+import './index.css'
 
 function App() {
   return (
