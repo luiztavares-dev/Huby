@@ -9,6 +9,7 @@
     padding-top: 20px;
 
     background-color: var(--gray1);
+    user-select: none;
 }
 
 .navbar-link {

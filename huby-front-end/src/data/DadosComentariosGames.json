@@ -1,0 +1,22 @@
+{
+    "ComentariosGames": [
+        {
+            "id": "comentarioID12312414",
+            "gameId": "gamesID32431454",
+            "userId": "userID12345678",
+            "comment": "A jogabilidade é divertida, mas alguns níveis são um pouco difíceis demais. Ainda assim, vale a pena jogar."
+        },
+        {
+            "id": "comentarioID12312415",
+            "gameId": "gamesID32431454",
+            "userId": "userID87654321",
+            "comment": "Adorei a história e os gráficos! Recomendo para todos que gostam de jogos de plataforma."
+        },
+        {
+            "id": "comentarioID12312416",
+            "gameId": "gamesID32431454",
+            "userId": "userID11223344",
+            "comment": "O jogo é bom, mas achei que poderia ter mais variedade de inimigos e desafios."
+        }
+    ]
+}

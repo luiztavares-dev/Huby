@@ -1,0 +1,25 @@
+{
+    "ReviewsGames": [
+        {
+            "id": "reviewID12312414",
+            "gameId": "gamesID32431454",
+            "userId": "userID12345678",
+            "rating": 4.5,
+            "comment": "A jogabilidade é divertida, mas alguns níveis são um pouco difíceis demais. Ainda assim, vale a pena jogar."
+        },
+        {
+            "id": "reviewID12312415",
+            "gameId": "gamesID32431454",
+            "userId": "userID87654321",
+            "rating": 5.0,
+            "comment": "Adorei a história e os gráficos! Recomendo para todos que gostam de jogos de plataforma."
+        },
+        {
+            "id": "reviewID12312416",
+            "gameId": "gamesID32431454",
+            "userId": "userID11223344",
+            "rating": 3.5,
+            "comment": "O jogo é bom, mas achei que poderia ter mais variedade de inimigos e desafios."
+        }
+    ]
+}

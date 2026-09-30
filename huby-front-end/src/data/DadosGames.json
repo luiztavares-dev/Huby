@@ -1,0 +1,33 @@
+{
+    "Games": [
+        {
+            "id": "gamesID32431454",
+            "name": "Jundu's Sprouts",
+            "description": "Jundu's Sprouts é um jogo de plataforma 2D onde você controla Jundu, um pequeno alienígena que precisa coletar sementes e evitar obstáculos para salvar seu planeta natal.",
+            "banner": "/images/jundus-sprouts.jpg",
+            "media": [{
+                "type": "image",
+                "url": "/images/jundus-sprouts-1.jpg"
+            }, {
+                "type": "image",
+                "url": "/images/jundus-sprouts-2.jpg"
+            }, {
+                "type": "video",
+                "url": "/videos/jundus-sprouts-trailer.mp4"
+            }],
+            "releaseDate": "2016-05-18T16:00:00Z",
+            "categories": [{
+                "name": "Plataforma",
+                "subcategories": ["3D", "2D", "Precision Platformer"]
+            }, {
+                "name": "Aventura",
+                "subcategories": ["Narrativa", "Puzzle de Aventura"]
+            }, {
+                "name": "Ação",
+                "subcategories": ["Beat 'em Up", "Ação"]
+            }],
+            "developer": ["equipe", "THN"],
+            "rating": 4.5
+        }
+    ]
+}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import Banner from '../../components/banner/Banner'
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
-import categoriasData from '../../data/DadosCategorias.json'
+import categoriesData from '../../data/DadosCategories.json'
 
 type Game = {
     id: number
@@ -22,7 +22,7 @@ type CategoriaMap = Record<string, {
     SubCategorias?: Array<{ Titulo: string; Descricao: string }>
 }>
 
-const categoriaMap = categoriasData as CategoriaMap
+const categoriaMap = categoriesData as CategoriaMap
 
 const normalizarCategoria = (valor: string) => {
     return valor

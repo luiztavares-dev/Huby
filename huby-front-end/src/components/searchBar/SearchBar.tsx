@@ -6,10 +6,10 @@ export default function BarraDePesquisa() {
 
             <div className="SearchBar-Barra">
                 <input type="text" placeholder="Pesquise..." className="SearchBar-Barra-input" />
-                <img src="LupaPesquisa.svg" alt="" className="SearchBar-Barra-img" />
+                <img src="icon-pesquisa.svg" alt="" className="SearchBar-Barra-img" />
             </div>
             <div className="SearchBar-Filtro">
-                <img src="Filtros.svg" alt="" />
+                <img src="icon-filtros.svg" alt="" />
                 <p>Filtros</p>
             </div>
             

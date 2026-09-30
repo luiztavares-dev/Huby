@@ -51,11 +51,11 @@ export function Eventos () {
                                 {evento.hasPrize ? (
                                     <>
                                         <div className="eventos-footer-left">
-                                            <img src="/placar.svg" alt="Rank" className="eventos-icon-podium" />
+                                            <img src="/icon-placar.svg" alt="Rank" className="eventos-icon-podium" />
                                             <span>1 &nbsp;|&nbsp; {evento.prize}</span>
                                         </div>
                                         <span className="eventos-footer-right">
-                                            <img src="/cifrao.svg" alt="Cifrão" className="eventos-icon-dollar" />
+                                            <img src="/icon-cifrao.svg" alt="Cifrão" className="eventos-icon-dollar" />
                                         </span>
                                     </>
                                 ) : (

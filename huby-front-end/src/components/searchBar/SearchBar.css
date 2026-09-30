@@ -57,10 +57,6 @@
     gap: 10px;
 }
 
-.SearchBar-Filtro img{
-
-}
-
 .SearchBar-Filtro p{
     color: var(--white);
     border: none;
