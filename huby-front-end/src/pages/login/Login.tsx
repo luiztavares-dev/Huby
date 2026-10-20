@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
 import './Login.css';
 
 type LoginProps = {};
@@ -7,12 +8,58 @@ export function Login(_props: LoginProps) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  
+  const [mensagem, setMensagem] = useState('');
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO: conectar com a API de autenticação do Huby.
-    console.log('Tentativa de login:', { email });
+    
+    if (!email || !senha) {
+      setMensagem('Erro: Preencha todos os campos!');
+      return;
+    }
+
+    try {
+      const resposta = await fetch('http://localhost:8080/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: email, senha: senha })
+      });
+
+      const textoResultado = await resposta.text();
+      setMensagem(textoResultado);
+
+    } catch (error) {
+      console.error(error);
+      setMensagem('Erro: O servidor Java está desligado ou inacessível.');
+    }
   }
+
+
+  const loginComGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setMensagem('Autenticado pelo Google! Validando no servidor Huby...');
+      
+      try {
+        const resposta = await fetch('http://localhost:8080/api/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: tokenResponse.access_token })
+        });
+
+        const textoResultado = await resposta.text();
+        setMensagem(textoResultado);
+
+      } catch (error) {
+        console.error(error);
+        setMensagem('Erro: Não foi possível conectar ao servidor Java.');
+      }
+    },
+    onError: () => {
+      setMensagem('Erro: O login com o Google falhou ou foi cancelado.');
+    }
+  });
 
   return (
     <main className="login-page">
@@ -23,10 +70,10 @@ export function Login(_props: LoginProps) {
 
         <div className="showcase-content">
           <img
-  className="brand-mark"
-  src="/logo-huby.svg"
-  alt="Huby"
-/>
+            className="brand-mark"
+            src="/logo-huby.svg"
+            alt="Huby"
+          />
           <p className="eyebrow">DESCUBRA · JOGUE · APOIE</p>
           <h1>O próximo jogo<br />que vai te marcar<br /><span>é independente.</span></h1>
           <p className="showcase-description">
@@ -52,6 +99,21 @@ export function Login(_props: LoginProps) {
           <p className="login-kicker">BOM TE VER POR AQUI</p>
           <h2>Faça seu login</h2>
           <p className="login-subtitle">Entre na sua conta e continue explorando<br className="desktop-break" /> o universo dos jogos independentes.</p>
+
+          {/* Exibe o aviso de sucesso ou erro do Java */}
+          {mensagem && (
+            <div style={{ 
+              padding: '10px', 
+              marginBottom: '15px', 
+              borderRadius: '4px', 
+              textAlign: 'center',
+              fontWeight: 'bold',
+              backgroundColor: mensagem.includes('Erro') ? '#f8d7da' : '#d4edda',
+              color: mensagem.includes('Erro') ? '#721c24' : '#155724'
+            }}>
+              {mensagem}
+            </div>
+          )}
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label htmlFor="login-email">E-mail ou nome de usuário</label>
@@ -93,14 +155,21 @@ export function Login(_props: LoginProps) {
           </form>
 
           <div className="separator"><span /> <span>ou continue com</span> <span /></div>
-          <button className="google-button" type="button" onClick={() => console.info('Conecte aqui o login OAuth do Google.')}>
-          <img
-  className="google-logo"
-  src="/google-image.png"
-  alt=""
-  aria-hidden="true"
-/> Continuar com o Google
+          
+
+          <button 
+            className="google-button" 
+            type="button" 
+            onClick={() => loginComGoogle()}
+          >
+            <img
+              className="google-logo"
+              src="/google-image.png"
+              alt=""
+              aria-hidden="true"
+            /> Continuar com o Google
           </button>
+          
           <p className="signup-text">Ainda não tem uma conta? <a href="#cadastro">Criar conta</a></p>
           <p className="terms-text">Ao continuar, você concorda com nossos <a href="#termos">Termos de uso</a> e <a href="#privacidade">Política de privacidade</a>.</p>
         </div>
