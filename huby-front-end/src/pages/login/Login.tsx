@@ -1,5 +1,9 @@
 import { useState } from 'react';
+<<<<<<< HEAD
+import { Link } from 'react-router-dom';
+=======
 import { useGoogleLogin } from '@react-oauth/google';
+>>>>>>> 3e2b3064e72c070ad69e0717e7ed9532831ea003
 import './Login.css';
 
 type LoginProps = {};
@@ -90,8 +94,8 @@ export function Login(_props: LoginProps) {
           <div className="sound-ring sound-ring-one" />
           <div className="sound-ring sound-ring-two" />
           <div className="sound-ring sound-ring-three" />
-        </div>
-      </section>
+     </div>
+   </section>
 
       <section className="login-panel" aria-label="Entrar na conta">
         <div className="login-box">
@@ -155,6 +159,12 @@ export function Login(_props: LoginProps) {
           </form>
 
           <div className="separator"><span /> <span>ou continue com</span> <span /></div>
+<<<<<<< HEAD
+          <button className="google-button" type="button" onClick={() => console.info('Conecte aqui o login OAuth do Google.')}>
+            <img className="google-logo" src="/google-image.png" alt="" aria-hidden="true" /> Continuar com o Google
+          </button>
+          <p className="signup-text">Ainda não tem uma conta? <Link to="/cadastro">Criar conta</Link></p>
+=======
           
 
           <button 
@@ -171,6 +181,7 @@ export function Login(_props: LoginProps) {
           </button>
           
           <p className="signup-text">Ainda não tem uma conta? <a href="#cadastro">Criar conta</a></p>
+>>>>>>> 3e2b3064e72c070ad69e0717e7ed9532831ea003
           <p className="terms-text">Ao continuar, você concorda com nossos <a href="#termos">Termos de uso</a> e <a href="#privacidade">Política de privacidade</a>.</p>
         </div>
       </section>

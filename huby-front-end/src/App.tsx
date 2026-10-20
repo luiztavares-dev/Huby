@@ -11,6 +11,8 @@ import { Login } from './pages/login/Login';
 import { Perfil } from './pages/perfil/Perfil';
 import { Biblioteca } from './pages/biblioteca/Biblioteca'
 import './index.css'
+import {Cadastro} from './pages/login/Cadastro';
+
 
 
 
@@ -30,7 +32,8 @@ function App() {
         <Route path="/carrinho" element={<Standart page={<Carrinho />} activeLink="carrinho" />} />
         <Route path="/configuracoes" element={<Standart page={<Configuracoes />} activeLink="configuracoes" />} />
         <Route path="/perfil" element={<Standart page={<Perfil />} activeLink="perfil" />} />
-
+       <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/login" element={<Login />} />
       </Routes>
     </>
