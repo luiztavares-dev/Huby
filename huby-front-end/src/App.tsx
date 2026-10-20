@@ -10,7 +10,6 @@ import { Configuracoes } from './pages/configuracoes/Configuracoes';
 import { Login } from './pages/login/Login';
 import { Perfil } from './pages/perfil/Perfil';
 import { Biblioteca } from './pages/biblioteca/Biblioteca'
-
 import './index.css'
 
 function App() {
