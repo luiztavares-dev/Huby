@@ -19,7 +19,7 @@ public class AuthController {
             return "Erro: Esse usuário já existe!";
         }
 
-        // ENCAIXE 1: Criptografa a senha recebida do aplicativo antes de mandar para o MongoDB
+        // Criptografia das senhas
         String senhaCriptografada = BCrypt.hashpw(novoUsuario.getSenha(), BCrypt.gensalt());
         novoUsuario.setSenha(senhaCriptografada);
 
@@ -31,7 +31,7 @@ public class AuthController {
     public String login(@RequestBody Usuario dadosLogin) {
         Usuario usuarioNoBanco = repository.findByLogin(dadosLogin.getLogin());
         
-        // ENCAIXE 2: O BCrypt assume o controle da comparação, checando a senha do app contra o hash do banco
+        // encaixe com o bcrypt para verificar a senha
         if (usuarioNoBanco != null && BCrypt.checkpw(dadosLogin.getSenha(), usuarioNoBanco.getSenha())) {
             return "Sucesso: Login aprovado!";
         }

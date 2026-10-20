@@ -24,7 +24,7 @@ public class Usuario {
     public String getLogin() { return login; }
     public String getSenha() { return senha; }
 
-    // Setters (Esses caras permitem que o AuthController modifique a senha!)
+    // Setters 
     public void setId(String id) { this.id = id; }
     public void setLogin(String login) { this.login = login; }
     public void setSenha(String senha) { this.senha = senha; }
