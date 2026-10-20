@@ -1,23 +1,21 @@
 import { useState } from 'react';
-<<<<<<< HEAD
-import { Link } from 'react-router-dom';
-=======
+import { Link, useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
->>>>>>> 3e2b3064e72c070ad69e0717e7ed9532831ea003
 import './Login.css';
 
 type LoginProps = {};
 
 export function Login(_props: LoginProps) {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  
   const [mensagem, setMensagem] = useState('');
-
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMensagem('');
     
     if (!email || !senha) {
       setMensagem('Erro: Preencha todos os campos!');
@@ -31,15 +29,25 @@ export function Login(_props: LoginProps) {
         body: JSON.stringify({ login: email, senha: senha })
       });
 
-      const textoResultado = await resposta.text();
-      setMensagem(textoResultado);
+      const textoBruto = await resposta.text();
+
+      if (resposta.ok) {
+        const usuarioLogado = JSON.parse(textoBruto);
+        try {
+          localStorage.setItem('huby_user', JSON.stringify(usuarioLogado));
+        } catch {
+          localStorage.setItem('huby_user', JSON.stringify({ ...usuarioLogado, avatarUrl: '', bannerUrl: '' }));
+        };
+        navigate('/perfil');
+      } else {
+        setMensagem(textoBruto || 'Erro: Login ou senha incorretos.');
+      }
 
     } catch (error) {
       console.error(error);
       setMensagem('Erro: O servidor Java está desligado ou inacessível.');
     }
   }
-
 
   const loginComGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -52,8 +60,19 @@ export function Login(_props: LoginProps) {
           body: JSON.stringify({ token: tokenResponse.access_token })
         });
 
-        const textoResultado = await resposta.text();
-        setMensagem(textoResultado);
+        const textoBruto = await resposta.text();
+
+        if (resposta.ok) {
+          const usuarioLogado = JSON.parse(textoBruto);
+          try {
+          localStorage.setItem('huby_user', JSON.stringify(usuarioLogado));
+        } catch {
+          localStorage.setItem('huby_user', JSON.stringify({ ...usuarioLogado, avatarUrl: '', bannerUrl: '' }));
+        };
+          navigate('/perfil');
+        } else {
+          setMensagem(textoBruto || 'Erro ao autenticar com Google.');
+        }
 
       } catch (error) {
         console.error(error);
@@ -94,8 +113,8 @@ export function Login(_props: LoginProps) {
           <div className="sound-ring sound-ring-one" />
           <div className="sound-ring sound-ring-two" />
           <div className="sound-ring sound-ring-three" />
-     </div>
-   </section>
+        </div>
+      </section>
 
       <section className="login-panel" aria-label="Entrar na conta">
         <div className="login-box">
@@ -104,23 +123,24 @@ export function Login(_props: LoginProps) {
           <h2>Faça seu login</h2>
           <p className="login-subtitle">Entre na sua conta e continue explorando<br className="desktop-break" /> o universo dos jogos independentes.</p>
 
-          {/* Exibe o aviso de sucesso ou erro do Java */}
           {mensagem && (
             <div style={{ 
-              padding: '10px', 
-              marginBottom: '15px', 
-              borderRadius: '4px', 
+              padding: '12px 16px', 
+              marginBottom: '20px', 
+              borderRadius: '8px', 
               textAlign: 'center',
-              fontWeight: 'bold',
-              backgroundColor: mensagem.includes('Erro') ? '#f8d7da' : '#d4edda',
-              color: mensagem.includes('Erro') ? '#721c24' : '#155724'
+              fontSize: '13px',
+              fontWeight: '600',
+              backgroundColor: mensagem.includes('Erro') ? 'rgba(250, 41, 95, 0.08)' : 'rgba(40, 167, 69, 0.08)',
+              border: `1px solid ${mensagem.includes('Erro') ? 'var(--pink)' : '#28a745'}`,
+              color: mensagem.includes('Erro') ? 'var(--pink)' : '#28a745'
             }}>
               {mensagem}
             </div>
           )}
 
           <form className="login-form" onSubmit={handleSubmit}>
-            <label htmlFor="login-email">E-mail ou nome de usuário</label>
+            <label htmlFor="login-email">E-mail</label>
             <input
               id="login-email"
               type="text"
@@ -159,29 +179,10 @@ export function Login(_props: LoginProps) {
           </form>
 
           <div className="separator"><span /> <span>ou continue com</span> <span /></div>
-<<<<<<< HEAD
-          <button className="google-button" type="button" onClick={() => console.info('Conecte aqui o login OAuth do Google.')}>
+          <button className="google-button" type="button" onClick={() => loginComGoogle()}>
             <img className="google-logo" src="/google-image.png" alt="" aria-hidden="true" /> Continuar com o Google
           </button>
           <p className="signup-text">Ainda não tem uma conta? <Link to="/cadastro">Criar conta</Link></p>
-=======
-          
-
-          <button 
-            className="google-button" 
-            type="button" 
-            onClick={() => loginComGoogle()}
-          >
-            <img
-              className="google-logo"
-              src="/google-image.png"
-              alt=""
-              aria-hidden="true"
-            /> Continuar com o Google
-          </button>
-          
-          <p className="signup-text">Ainda não tem uma conta? <a href="#cadastro">Criar conta</a></p>
->>>>>>> 3e2b3064e72c070ad69e0717e7ed9532831ea003
           <p className="terms-text">Ao continuar, você concorda com nossos <a href="#termos">Termos de uso</a> e <a href="#privacidade">Política de privacidade</a>.</p>
         </div>
       </section>

@@ -1,20 +1,497 @@
+.perfil-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--gray1);
+  color: var(--text1);
+  padding-bottom: 48px;
+  font-family: "Inter", sans-serif;
+}
+
+/* BANNER SUPERIOR (Sem borda inferior vermelha) */
 .perfil-banner {
-    width: 100%;
-    height: 360px;  
+  width: 100%;
+  height: 360px;
+  background: linear-gradient(135deg, #181818 0%, #202020 50%, var(--gray1) 100%);
+  background-size: cover;
+  background-position: center;
+  position: relative;
 }
 
-.peril-ifcon {
-    margin-top: -80px;
-    display: flex;
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(17, 17, 17, 0.7));
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 20px 32px;
+}
+
+.btn-editar-midia {
+  background: var(--gray1);
+  color: var(--text1);
+  border: 1px solid var(--gray3);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-editar-midia:hover {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+/* CABEÇALHO DO PERFIL */
+.perfil-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -80px;
+  position: relative;
+  z-index: 2;
+  padding: 0 24px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+
+/* Borda da mesma cor do fundo (--gray1) igual ao CSS original */
+.perfil-avatar {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 10px solid var(--gray1);
+  object-fit: cover;
+  background-color: #1a1a1a;
+}
+
+.avatar-vazio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  font-weight: 800;
+  color: var(--pink);
+  background-color: #1a1a1a;
+}
+
+/* Botão de lápis discreto no lugar do círculo vermelho com câmera */
+.avatar-upload-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gray1);
+  border: 1px solid var(--gray3);
+  color: var(--text1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.avatar-upload-badge:hover {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+.perfil-identidade {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  margin-top: 8px;
+}
+
+.perfil-nomes {
+  text-align: center;
+}
+
+.perfil-nomes h2 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text1);
+  letter-spacing: -0.02em;
+}
+
+.perfil-nomes p {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+.perfil-stat {
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.perfil-stat strong {
+  color: var(--text1);
+  font-weight: 700;
+}
+
+/* CAIXA DE EDIÇÃO DE MÍDIA */
+.midia-editor-box {
+  margin-top: 18px;
+  background: var(--gray1);
+  border: 1px solid var(--gray3);
+  border-radius: 8px;
+  padding: 18px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.midia-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.midia-input-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.midia-input-group input[type="text"] {
+  height: 36px;
+  padding: 0 12px;
+  background: var(--gray1);
+  border: 1px solid var(--gray3);
+  border-radius: 6px;
+  color: var(--text1);
+  font-size: 12px;
+  outline: none;
+}
+
+.midia-input-group input[type="text"]:focus {
+  border-color: var(--pink);
+}
+
+.file-input-compact {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+
+/* GRID PRINCIPAL DE CONTEÚDO */
+.perfil-content-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 28px;
+  max-width: 1440px;
+  margin: 36px auto 0;
+  padding: 0 32px;
+}
+
+.perfil-col-esquerda {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.perfil-top-cards,
+.perfil-bottom-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* CARDS ESTILO HUBY */
+.huby-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.huby-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: -14px;
+  padding-left: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.huby-pill-tag {
+  background-color: var(--pink);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 18px;
+  border-radius: 20px;
+}
+
+.huby-edit-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--gray1);
+  border: 1px solid var(--gray3);
+  color: var(--text1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.huby-edit-btn:hover {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+.huby-card-body {
+  background-color: var(--gray1);
+  border: 1px solid rgba(250, 41, 95, 0.45);
+  border-radius: 8px;
+  padding: 28px 18px 18px;
+  min-height: 155px;
+  flex: 1;
+}
+
+.bio-text {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--text2);
+  white-space: pre-line;
+}
+
+.texto-vazio {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text3);
+}
+
+/* REDES SOCIAIS (Com SVG) */
+.redes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 12px;
+  margin-top: 4px;
+}
+
+.rede-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rede-svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text1);
+  flex-shrink: 0;
+}
+
+.rede-vazia {
+  color: var(--text3);
+}
+
+/* EDITORES INTERNOS (BIO E REDES) */
+.card-editor textarea {
+  width: 100%;
+  background: var(--gray1);
+  border: 1px solid var(--gray3);
+  border-radius: 6px;
+  color: var(--text1);
+  padding: 10px;
+  font-size: 12px;
+  resize: vertical;
+  outline: none;
+}
+
+.card-editor textarea:focus {
+  border-color: var(--pink);
+}
+
+.redes-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.redes-editor-grid input {
+  width: 100%;
+  height: 32px;
+  background: var(--gray1);
+  border: 1px solid var(--gray3);
+  border-radius: 6px;
+  color: var(--text1);
+  padding: 0 10px;
+  font-size: 11px;
+  outline: none;
+}
+
+.redes-editor-grid input:focus {
+  border-color: var(--pink);
+}
+
+.full-span {
+  grid-column: span 2;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-salvar {
+  background: var(--pink);
+  color: var(--white);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-cancelar {
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--gray3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* COMENTÁRIOS E AVALIAÇÕES */
+.lista-interacoes {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-box {
+  text-align: center;
+  padding: 20px;
+}
+
+.empty-state-box p {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+
+.empty-state-box span {
+  font-size: 11.5px;
+  color: var(--text3);
+}
+
+/* COLUNA DIREITA: PUBLICAÇÕES E ABAS */
+.full-height-card {
+  height: 100%;
+}
+
+.huby-tabs-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: -14px;
+  padding-left: 14px;
+  position: relative;
+  z-index: 2;
+  flex-wrap: wrap;
+}
+
+.huby-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--gray1);
+  color: var(--text1);
+  border: 1px solid var(--gray3);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-svg {
+  width: 14px;
+  height: 14px;
+}
+
+.huby-tab-btn span {
+  font-weight: 400;
+  color: var(--text2);
+}
+
+.huby-tab-btn.ativa {
+  background-color: var(--pink);
+  border-color: var(--pink);
+  color: var(--white);
+}
+
+.huby-tab-btn.ativa span {
+  color: var(--white);
+}
+
+.galeria-jogos-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 520px;
+}
+
+.empty-publications {
+  text-align: center;
+  max-width: 320px;
+  padding: 24px;
+}
+
+.empty-publications h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text1);
+  margin-bottom: 8px;
+}
+
+.empty-publications p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text3);
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 1100px) {
+  .perfil-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .perfil-top-cards,
+  .perfil-bottom-cards {
+    grid-template-columns: 1fr;
+  }
+  .perfil-identidade {
     flex-direction: column;
-    align-items: center;
-    align-self: center;
-    justify-self: center;
-}
-
-.peril-ifcon img {
-    border: 10px solid var(--gray1);
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
+    gap: 8px;
+  }
 }
