@@ -7,7 +7,7 @@
   font-family: "Inter", sans-serif;
 }
 
-/* BANNER SUPERIOR (Sem borda inferior vermelha) */
+
 .perfil-banner {
   width: 100%;
   height: 360px;
@@ -44,7 +44,7 @@
   color: var(--pink);
 }
 
-/* CABEÇALHO DO PERFIL */
+
 .perfil-header {
   display: flex;
   flex-direction: column;
@@ -61,7 +61,7 @@
   height: 160px;
 }
 
-/* Borda da mesma cor do fundo (--gray1) igual ao CSS original */
+
 .perfil-avatar {
   width: 160px;
   height: 160px;
@@ -81,7 +81,7 @@
   background-color: #1a1a1a;
 }
 
-/* Botão de lápis discreto no lugar do círculo vermelho com câmera */
+
 .avatar-upload-badge {
   position: absolute;
   bottom: 8px;
@@ -401,7 +401,7 @@
   color: var(--text3);
 }
 
-/* COLUNA DIREITA: PUBLICAÇÕES E ABAS */
+
 .full-height-card {
   height: 100%;
 }
@@ -478,7 +478,7 @@
   color: var(--text3);
 }
 
-/* RESPONSIVIDADE */
+
 @media (max-width: 1100px) {
   .perfil-content-grid {
     grid-template-columns: 1fr;
@@ -494,4 +494,192 @@
     flex-direction: column;
     gap: 8px;
   }
+}
+
+/* --- ESTILOS DO MODAL CROPPER --- */
+.cropper-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.cropper-modal-content {
+  background: var(--gray1);
+  border: 1px solid var(--gray3);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cropper-modal-content h3 {
+  padding: 16px 20px;
+  margin: 0;
+  font-size: 16px;
+  border-bottom: 1px solid var(--gray3);
+}
+
+.cropper-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #000;
+}
+
+.cropper-controls {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.zoom-slider {
+  width: 100%;
+  accent-color: var(--pink);
+  cursor: pointer;
+}
+
+.cropper-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.midia-editor-box h4 {
+  font-size: 14px;
+  color: var(--text1);
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.custom-file-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(250, 41, 95, 0.1);
+  border: 1px dashed var(--pink);
+  color: var(--pink);
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.custom-file-upload:hover {
+  background: var(--pink);
+  color: var(--white);
+}
+
+.custom-file-upload svg {
+  width: 18px;
+  height: 18px;
+}
+
+.midia-divisor {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text3);
+  font-size: 10px;
+  font-weight: 800;
+  margin: 8px 0;
+}
+
+.midia-divisor::before,
+.midia-divisor::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--gray3);
+}
+
+.midia-divisor span {
+  padding: 0 10px;
+}
+
+.midia-actions {
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+/* --- EDIÇÃO DE NOME E USUÁRIO --- */
+.btn-edit-inline {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 8px;
+  transition: color 0.2s;
+  vertical-align: middle;
+}
+
+.btn-edit-inline:hover {
+  color: var(--pink);
+}
+
+.identidade-editor-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #181818;
+  border: 1px solid var(--gray3);
+  padding: 14px;
+  border-radius: 8px;
+  margin-top: 8px;
+  min-width: 220px;
+}
+
+.identidade-editor-box input {
+  width: 100%;
+  height: 34px;
+  background: var(--gray1);
+  border: 1px solid var(--gray3);
+  border-radius: 6px;
+  color: var(--text1);
+  padding: 0 10px;
+  font-size: 13px;
+  outline: none;
+  text-align: center;
+  font-weight: 600;
+}
+
+.identidade-editor-box input:focus {
+  border-color: var(--pink);
+}
+
+.input-arroba {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-arroba span {
+  position: absolute;
+  left: 12px;
+  color: var(--text3);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.input-arroba input {
+  padding-left: 28px;
+  font-weight: 400;
+  color: var(--text2);
+}
+
+.center-actions {
+  justify-content: center;
+  margin-top: 4px;
 }

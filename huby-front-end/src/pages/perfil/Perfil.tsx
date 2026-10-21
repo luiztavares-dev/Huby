@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Cropper from 'react-easy-crop';
 import './Perfil.css';
 
 interface UsuarioData {
@@ -18,49 +19,43 @@ interface UsuarioData {
   itchIo: string;
 }
 
-function salvarCacheSeguro(usuario: UsuarioData) {
-  try {
-    localStorage.setItem('huby_user', JSON.stringify(usuario));
-  } catch (e) {
-    const usuarioLeve = { ...usuario, avatarUrl: '', bannerUrl: '' };
-    localStorage.setItem('huby_user', JSON.stringify(usuarioLeve));
-  }
-}
 
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.src = url;
+  });
 
-function comprimirImagem(file: File, maxWidth: number, maxHeight: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<Blob | null> {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
 
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-        if (height > maxHeight) {
-          width = Math.round((width * maxHeight) / height);
-          height = maxHeight;
-        }
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
 
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(blob);
+    }, 'image/jpeg', 0.9);
   });
 }
+
 
 export function Perfil() {
   const navigate = useNavigate();
@@ -69,8 +64,19 @@ export function Perfil() {
   const [editandoBio, setEditandoBio] = useState(false);
   const [editandoRedes, setEditandoRedes] = useState(false);
   const [editandoMidia, setEditandoMidia] = useState(false);
+  const [editandoIdentidade, setEditandoIdentidade] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<'publicados' | 'criados' | 'participados'>('publicados');
   const [salvando, setSalvando] = useState(false);
+
+ 
+  const [imagemParaCortar, setImagemParaCortar] = useState<string | null>(null);
+  const [tipoCrop, setTipoCrop] = useState<'avatarUrl' | 'bannerUrl'>('avatarUrl');
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
   useEffect(() => {
     const dadosSalvos = localStorage.getItem('huby_user');
@@ -87,7 +93,7 @@ export function Perfil() {
       .then((usuarioDaNuvem) => {
         if (usuarioDaNuvem) {
           setUser(usuarioDaNuvem);
-          salvarCacheSeguro(usuarioDaNuvem);
+          localStorage.setItem('huby_user', JSON.stringify(usuarioDaNuvem));
         }
       })
       .catch((err) => console.error('Erro ao buscar perfil no servidor:', err));
@@ -108,10 +114,12 @@ export function Perfil() {
       if (resposta.ok) {
         const atualizado = await resposta.json();
         setUser(atualizado);
-        salvarCacheSeguro(atualizado);
         setEditandoBio(false);
         setEditandoRedes(false);
         setEditandoMidia(false);
+        setEditandoIdentidade(false);
+        localStorage.setItem('huby_user', JSON.stringify(atualizado));
+        window.dispatchEvent(new Event('huby_avatar_atualizado'));
       }
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
@@ -120,25 +128,100 @@ export function Perfil() {
     }
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, campo: 'avatarUrl' | 'bannerUrl') {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>, tipo: 'avatarUrl' | 'bannerUrl') => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const imageDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target?.result as string);
+        reader.readAsDataURL(file);
+      });
+      setTipoCrop(tipo);
+      setImagemParaCortar(imageDataUrl);
+      setEditandoMidia(false); 
+    }
+  };
+
+  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+
+  const handleUploadCortado = async () => {
+    if (!imagemParaCortar || !croppedAreaPixels) return;
+    setSalvando(true);
 
     try {
-      const imagemComprimida = campo === 'avatarUrl' 
-        ? await comprimirImagem(file, 400, 400)
-        : await comprimirImagem(file, 1280, 500);
+      const croppedImageBlob = await getCroppedImg(imagemParaCortar, croppedAreaPixels);
+      if (!croppedImageBlob) return;
 
-      await salvarNoBanco({ [campo]: imagemComprimida });
+      const formData = new FormData();
+      formData.append('file', croppedImageBlob);
+      formData.append('upload_preset', uploadPreset);
+
+      const resCloudinary = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        { method: 'POST', body: formData }
+      );
+
+      const dadosCloudinary = await resCloudinary.json();
+
+      if (dadosCloudinary.secure_url) {
+        await salvarNoBanco({ [tipoCrop]: dadosCloudinary.secure_url });
+        setImagemParaCortar(null); 
+      }
     } catch (error) {
-      console.error('Erro ao processar imagem:', error);
+      console.error('Erro ao fazer upload da imagem cortada:', error);
+    } finally {
+      setSalvando(false);
     }
-  }
+  };
 
   if (!user) return null;
 
   return (
     <div className="perfil-wrapper">
+      
+      
+      {imagemParaCortar && (
+        <div className="cropper-modal-overlay">
+          <div className="cropper-modal-content">
+            <h3>Ajuste sua imagem</h3>
+            <div className="cropper-container">
+              <Cropper
+                image={imagemParaCortar}
+                crop={crop}
+                zoom={zoom}
+                aspect={tipoCrop === 'avatarUrl' ? 1 : 16 / 5} 
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                cropShape={tipoCrop === 'avatarUrl' ? 'round' : 'rect'}
+              />
+            </div>
+            <div className="cropper-controls">
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="zoom-slider"
+              />
+              <div className="cropper-actions">
+                <button className="btn-cancelar" onClick={() => setImagemParaCortar(null)}>Cancelar</button>
+                <button className="btn-salvar" onClick={handleUploadCortado} disabled={salvando}>
+                  {salvando ? 'Salvando...' : 'Aplicar e Salvar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div 
         className="perfil-banner" 
         style={user.bannerUrl ? { backgroundImage: `url(${user.bannerUrl})` } : {}}
@@ -149,7 +232,7 @@ export function Perfil() {
             onClick={() => setEditandoMidia(!editandoMidia)}
             title="Alterar Foto e Banner"
           >
-            ✎ Editar Capa / Foto
+            ✎ Editar Capa
           </button>
         </div>
       </div>
@@ -157,7 +240,7 @@ export function Perfil() {
       <div className="perfil-header">
         <div className="avatar-wrapper">
           {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt={user.nomeExibicao} className="perfil-avatar" />
+            <img src={user.avatarUrl} alt={user.nomeExibicao} className="perfil-avatar" referrerPolicy="no-referrer" />
           ) : (
             <div className="perfil-avatar avatar-vazio">
               <span>{(user.nomeExibicao || user.login || 'H')[0].toUpperCase()}</span>
@@ -165,45 +248,85 @@ export function Perfil() {
           )}
           <label className="avatar-upload-badge" title="Alterar foto de perfil">
             ✎
-            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'avatarUrl')} hidden />
+            <input type="file" accept="image/*" onChange={(e) => onFileChange(e, 'avatarUrl')} hidden />
           </label>
         </div>
 
         <div className="perfil-identidade">
           <span className="perfil-stat">Seguindo <strong>0</strong></span>
           <div className="perfil-nomes">
-            <h2>{user.nomeExibicao || 'Novo Desenvolvedor'}</h2>
-            <p>@{user.username || user.login.split('@')[0]}</p>
+            {editandoIdentidade ? (
+              <div className="identidade-editor-box">
+                <input 
+                  type="text" 
+                  placeholder="Nome de Exibição" 
+                  value={user.nomeExibicao} 
+                  onChange={(e) => setUser({...user, nomeExibicao: e.target.value})} 
+                  maxLength={30}
+                />
+                <div className="input-arroba">
+                  <span>@</span>
+                  <input 
+                    type="text" 
+                    placeholder="nomedeusuario" 
+                    value={user.username} 
+                 
+                    onChange={(e) => setUser({...user, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')})} 
+                    maxLength={20}
+                  />
+                </div>
+                <div className="editor-actions center-actions">
+                  <button className="btn-salvar" onClick={() => salvarNoBanco({nomeExibicao: user.nomeExibicao, username: user.username})} disabled={salvando}>
+                    Salvar
+                  </button>
+                  <button className="btn-cancelar" onClick={() => setEditandoIdentidade(false)}>Cancelar</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2>
+                  {user.nomeExibicao || 'Novo Desenvolvedor'}
+                  <button className="btn-edit-inline" onClick={() => setEditandoIdentidade(true)} title="Mudar Nome e @">
+                    ✎
+                  </button>
+                </h2>
+                <p>@{user.username || user.login.split('@')[0]}</p>
+              </>
+            )}
           </div>
           <span className="perfil-stat"><strong>0</strong> Seguidores</span>
         </div>
 
+        
         {editandoMidia && (
           <div className="midia-editor-box">
+            <h4>Atualizar Capa do Perfil</h4>
+            
             <div className="midia-input-group">
-              <label>URL da Foto de Perfil (ou clique no lápis na foto):</label>
-              <input 
-                type="text" 
-                placeholder="https://exemplo.com/minha-foto.png"
-                value={user.avatarUrl}
-                onChange={(e) => setUser({ ...user, avatarUrl: e.target.value })}
-              />
+              <label>Escolher nova imagem do computador:</label>
+              <label className="custom-file-upload">
+                <input type="file" accept="image/*" onChange={(e) => onFileChange(e, 'bannerUrl')} hidden />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                Fazer upload de arquivo
+              </label>
             </div>
+
+            <div className="midia-divisor"><span>OU USE UMA URL</span></div>
+
             <div className="midia-input-group">
-              <label>URL do Banner (ou envie um arquivo abaixo):</label>
               <input 
                 type="text" 
-                placeholder="https://exemplo.com/meu-banner.jpg"
+                placeholder="Cole o link de uma imagem (ex: https://...)"
                 value={user.bannerUrl}
                 onChange={(e) => setUser({ ...user, bannerUrl: e.target.value })}
               />
-              <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'bannerUrl')} className="file-input-compact" />
             </div>
-            <div className="editor-actions">
-              <button className="btn-salvar" onClick={() => salvarNoBanco({ avatarUrl: user.avatarUrl, bannerUrl: user.bannerUrl })} disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Salvar Imagens'}
-              </button>
+            
+            <div className="editor-actions midia-actions">
               <button className="btn-cancelar" onClick={() => setEditandoMidia(false)}>Fechar</button>
+              <button className="btn-salvar" onClick={() => salvarNoBanco({ bannerUrl: user.bannerUrl })} disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Salvar URL'}
+              </button>
             </div>
           </div>
         )}

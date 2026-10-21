@@ -59,6 +59,7 @@ public class AuthController {
                 Map<String, Object> body = response.getBody();
                 String email = (String) body.get("email");
                 String nome = (String) body.get("name");
+                String fotoGoogle = (String) body.get("picture"); 
 
                 Usuario usuarioNoBanco = repository.findByLogin(email);
 
@@ -67,6 +68,11 @@ public class AuthController {
                     usuarioNoBanco.setLogin(email);
                     usuarioNoBanco.setNomeExibicao(nome != null ? nome : email.split("@")[0]);
                     usuarioNoBanco.setUsername(email.split("@")[0].toLowerCase().replaceAll("[^a-z0-9]", ""));
+                    
+                    
+                    if (fotoGoogle != null) {
+                        usuarioNoBanco.setAvatarUrl(fotoGoogle);
+                    }
                     
                     String senhaAleatoria = UUID.randomUUID().toString();
                     usuarioNoBanco.setSenha(BCrypt.hashpw(senhaAleatoria, BCrypt.gensalt()));
