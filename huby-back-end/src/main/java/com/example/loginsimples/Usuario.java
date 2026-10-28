@@ -3,6 +3,8 @@ package com.example.loginsimples;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import java.util.ArrayList;
 
 @Document(collection = "usuarios")
 public class Usuario {
@@ -14,16 +16,13 @@ public class Usuario {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String senha;
 
-    
     private String nomeExibicao = "";
     private String username = "";
 
-    
     private String bio = "";
     private String avatarUrl = "";
     private String bannerUrl = "";
 
-   
     private String instagram = "";
     private String discord = "";
     private String twitter = "";
@@ -31,9 +30,13 @@ public class Usuario {
     private String steam = "";
     private String itchIo = "";
 
+  
+    private List<String> seguindo = new ArrayList<>();
+    private List<String> seguidores = new ArrayList<>();
+
     public Usuario() {}
 
-   
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -75,4 +78,11 @@ public class Usuario {
 
     public String getItchIo() { return itchIo; }
     public void setItchIo(String itchIo) { this.itchIo = itchIo; }
+
+
+    public List<String> getSeguindo() { return seguindo; }
+    public void setSeguindo(List<String> seguindo) { this.seguindo = seguindo; }
+
+    public List<String> getSeguidores() { return seguidores; }
+    public void setSeguidores(List<String> seguidores) { this.seguidores = seguidores; }
 }

@@ -32,6 +32,8 @@ function App() {
         <Route path="/carrinho" element={<Standart page={<Carrinho />} activeLink="carrinho" />} />
         <Route path="/configuracoes" element={<Standart page={<Configuracoes />} activeLink="configuracoes" />} />
         <Route path="/perfil" element={<Standart page={<Perfil />} activeLink="perfil" />} />
+        <Route path="/perfil" element={<Perfil />} />
+        <Route path="/perfil/:id" element={<Perfil />} />
        <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/login" element={<Login />} />

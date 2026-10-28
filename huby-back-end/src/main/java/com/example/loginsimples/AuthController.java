@@ -6,6 +6,9 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Optional;
@@ -120,5 +123,45 @@ public class AuthController {
 
         repository.save(u);
         return ResponseEntity.ok(u);
+    }
+
+    @GetMapping("/usuarios")
+    public ResponseEntity<List<Usuario>> listarUsuarios() {
+        return ResponseEntity.ok(repository.findAll());
+    }
+
+    @PostMapping("/perfil/{id}/seguir/{alvoId}")
+    public ResponseEntity<?> alternarSeguir(@PathVariable String id, @PathVariable String alvoId) {
+        if (id.equals(alvoId)) {
+            return ResponseEntity.badRequest().body("Você não pode seguir a si mesmo.");
+        }
+
+        Optional<Usuario> optEu = repository.findById(id);
+        Optional<Usuario> optAlvo = repository.findById(alvoId);
+
+        if (optEu.isEmpty() || optAlvo.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
+        }
+
+        Usuario eu = optEu.get();
+        Usuario alvo = optAlvo.get();
+
+        if (eu.getSeguindo() == null) eu.setSeguindo(new ArrayList<>());
+        if (alvo.getSeguidores() == null) alvo.setSeguidores(new ArrayList<>());
+
+        if (eu.getSeguindo().contains(alvoId)) {
+            eu.getSeguindo().remove(alvoId);
+            alvo.getSeguidores().remove(id);
+        } else {
+            eu.getSeguindo().add(alvoId);
+            if (!alvo.getSeguidores().contains(id)) {
+                alvo.getSeguidores().add(id);
+            }
+        }
+
+        repository.save(alvo);
+        Usuario euAtualizado = repository.save(eu);
+
+        return ResponseEntity.ok(euAtualizado);
     }
 }
