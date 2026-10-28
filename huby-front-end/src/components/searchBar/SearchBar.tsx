@@ -5,14 +5,15 @@ export default function BarraDePesquisa() {
         <div className="SearchBar-content">
 
             <div className="SearchBar-Barra">
-                <input type="text" placeholder="Pesquise..." className="SearchBar-Barra-input" />
-                <img src="icon-pesquisa.svg" alt="" className="SearchBar-Barra-img" />
+                <input type="text" placeholder="Ex: RPG" className="SearchBar-Barra-input" />
+                <img src="/icon-pesquisa.svg" alt="" className="SearchBar-Barra-img" />
             </div>
-            <div className="SearchBar-Filtro">
-                <img src="icon-filtros.svg" alt="" />
-                <p>Filtros</p>
-            </div>
-            
+
+            <button className="SearchBar-Filtro">
+                <img src="/icon-filtros.svg" alt="" />
+                <span>Filtros</span>
+            </button>
+
         </div>
     )
 }

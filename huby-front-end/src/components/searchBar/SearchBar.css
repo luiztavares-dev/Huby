@@ -1,63 +1,79 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-
-*{
-    font-family: "Inter";
-}
-
-.SearchBar-content{
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    gap: 20px;
-    padding: 30px 0 30px 0;
-}
-
-.SearchBar-Barra{
-    width: 40%;
+.SearchBar-content {
     display: flex;
     flex-direction: row;
     align-items: center;
+    width: 100%;
+    gap: 20px;
+    padding: 30px 0;
 }
 
-.SearchBar-Barra-input{
-    width: calc(100% - 34px);
-    height: 34px;
-    padding: 10px;
+.SearchBar-Barra {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 44px;
+    background-color: #1A1A1A;
+    border: 1px solid var(--gray3);
+    border-radius: 10px;
+    padding: 0 16px;
+}
+
+.SearchBar-Barra-input {
+    flex: 1;
+    height: 100%;
+    padding: 0;
     border: none;
-    font-size: 16px;
-    background-color: var(--gray3);  
+    background: transparent;
+    font-size: 14px;
     outline: none;
     caret-color: var(--white);
     color: var(--white);
 }
 
-.SearchBar-Barra-input::placeholder{
-    color: var(--white);
+.SearchBar-Barra-input::placeholder {
+    color: var(--text2);
 }
 
-.SearchBar-Barra-img{
-    background-color: var(--gray3); 
-    padding: 10px;
-}
-
-.SearchBar-Barra-img:hover{
+.SearchBar-Barra-img {
+    width: 18px;
+    height: 18px;
+    margin-left: 10px;
     cursor: pointer;
 }
 
-.SearchBar-Barra-img:active{
+.SearchBar-Filtro {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--gray3);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.SearchBar-Filtro:hover {
     background-color: var(--gray2);
 }
 
-.SearchBar-Filtro{
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    background-color: var(--gray3);
-    padding: 0 10px 0 10px;
-    gap: 10px;
+.SearchBar-Filtro img {
+    width: 14px;
+    height: 14px;
 }
 
-.SearchBar-Filtro p{
-    color: var(--white);
-    border: none;
+@media (max-width: 700px) {
+    .SearchBar-content {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .SearchBar-Barra {
+        order: 3;
+        flex-basis: 100%;
+    }
 }

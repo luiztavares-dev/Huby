@@ -16,7 +16,15 @@ export function Eventos () {
         <div className="eventos-container">
             <Banner />
 
-            <BarraDePesquisa />
+            <div className="eventos-actions">
+                <button className="eventos-criar">
+                    <img src="/icon-mais.svg" alt="" />
+                    <span>Criar Evento</span>
+                </button>
+                <div className="eventos-pesquisar">
+                    <BarraDePesquisa />
+                </div>
+            </div>
 
             <div className="eventos-section">
                 <h3 className="eventos-section-title">INSCRIÇÕES TERMINANDO</h3>
