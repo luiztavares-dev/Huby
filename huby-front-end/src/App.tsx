@@ -12,6 +12,7 @@ import { Perfil } from './pages/perfil/Perfil';
 import { Biblioteca } from './pages/biblioteca/Biblioteca'
 import './index.css'
 import {Cadastro} from './pages/login/Cadastro';
+import { Mensagens } from './pages/Mensagens/Mensagens';
 
 
 
@@ -34,6 +35,8 @@ function App() {
         <Route path="/perfil" element={<Standart page={<Perfil />} activeLink="perfil" />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/perfil/:id" element={<Perfil />} />
+        <Route path="/mensagens" element={<Mensagens />} />
+        <Route path="/mensagens/:id" element={<Mensagens />} />
        <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/login" element={<Login />} />

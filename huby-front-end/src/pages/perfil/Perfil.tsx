@@ -69,7 +69,6 @@ export function Perfil() {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-
   useEffect(() => {
     const dadosSalvos = localStorage.getItem('huby_user');
     if (!dadosSalvos) {
@@ -90,12 +89,10 @@ export function Perfil() {
       .catch((err) => console.error(err));
   }, [navigate]);
 
- 
   useEffect(() => {
     if (!loggedUser) return;
 
     if (isOwner) {
- 
       setPerfilData(loggedUser);
     } else {
       fetch(`http://localhost:8080/api/perfil/${id}`)
@@ -214,7 +211,6 @@ export function Perfil() {
       
       <div className="perfil-wrapper">
       
-      {/* MODAL DO CROPPER FICA IGUAL... */}
       {imagemParaCortar && (
         <div className="cropper-modal-overlay">
           <div className="cropper-modal-content">
@@ -242,7 +238,6 @@ export function Perfil() {
         </div>
       )}
 
-      {/* GAVETA DIREITA (DRAWER) */}
       <aside className={`usuarios-drawer ${gavetaAberta === true ? 'aberta' : gavetaAberta === false ? 'fechando' : ''}`}>
         <button className="drawer-close-tab" onClick={() => setGavetaAberta(false)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -321,31 +316,36 @@ export function Perfil() {
         </div>
       </aside>
 
-      {/* BANNER SUPERIOR */}
       <div className="perfil-banner" style={perfilData.bannerUrl ? { backgroundImage: `url(${perfilData.bannerUrl})` } : {}}>
         <div className="banner-overlay" />
       </div>
 
-      {/* CABEÇALHO DO USUÁRIO */}
       <div className="perfil-header">
         
         <div className="banner-QuickActions">
-          {/* Só mostra botão de Seguir Principal se NÃO for o dono da conta */}
           {!isOwner && (
-            <button 
-              className={`btn-seguir-perfil ${loggedSigoPerfil ? 'seguindo' : ''}`} 
-              onClick={() => handleAlternarSeguir(perfilData.id)}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" />
-                {loggedSigoPerfil ? <line x1="23" y1="11" x2="17" y2="11" /> : <><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></>}
-              </svg>
-              {loggedSigoPerfil ? 'Seguindo' : 'Seguir'}
-            </button>
+            <>
+              {loggedSigoPerfil && (
+                <button className="btn-chat-perfil" onClick={() => navigate(`/mensagens/${perfilData.id}`)}>
+                  <img src="/chat.svg" alt="Chat" className="chat-svg-icon" />
+                  Chat
+                </button>
+              )}
+
+              <button 
+                className={`btn-seguir-perfil ${loggedSigoPerfil ? 'seguindo' : ''}`} 
+                onClick={() => handleAlternarSeguir(perfilData.id)}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" />
+                  {loggedSigoPerfil ? <line x1="23" y1="11" x2="17" y2="11" /> : <><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></>}
+                </svg>
+                {loggedSigoPerfil ? 'Seguindo' : 'Seguir'}
+              </button>
+            </>
           )}
 
-          {/* Lápis do Banner APENAS SE FOR O DONO */}
           {isOwner && (
             <button className="circle-action-btn" onClick={() => setEditandoMidia(!editandoMidia)}>✎</button>
           )}
@@ -397,10 +397,9 @@ export function Perfil() {
           <span className="perfil-stat"><strong>{perfilData.seguidores?.length || 0}</strong> Seguidores</span>
         </div>
 
-        {/* EDITOR DE MÍDIA FICA IGUAL... */}
         {isOwner && editandoMidia && (
           <div className="midia-editor-box">
-             {/* Conteúdo mantido idêntico */}
+    
             <h4>Atualizar Capa do Perfil</h4>
             <div className="midia-input-group">
               <label>Escolher nova imagem:</label>
@@ -468,12 +467,38 @@ export function Perfil() {
                   </div>
                 ) : (
                   <div className="redes-grid">
-                    <div className="rede-item"><svg className="rede-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/></svg> <span className={perfilData.instagram ? '' : 'rede-vazia'}>{perfilData.instagram || '...'}</span></div>
-                    <div className="rede-item"><svg className="rede-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <span className={perfilData.discord ? '' : 'rede-vazia'}>{perfilData.discord || '...'}</span></div>
-                    <div className="rede-item"><svg className="rede-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83z"/></svg> <span className={perfilData.twitter ? '' : 'rede-vazia'}>{perfilData.twitter || '...'}</span></div>
-                    <div className="rede-item"><svg className="rede-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg> <span className={perfilData.tiktok ? '' : 'rede-vazia'}>{perfilData.tiktok || '...'}</span></div>
-                    <div className="rede-item"><svg className="rede-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg> <span className={perfilData.steam ? '' : 'rede-vazia'}>{perfilData.steam || '...'}</span></div>
-                    <div className="rede-item"><svg className="rede-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4m-2-2v4m7-1h.01"/></svg> <span className={perfilData.itchIo ? '' : 'rede-vazia'}>{perfilData.itchIo || '...'}</span></div>
+                    <div className="rede-item">
+                      <img src="/instagram.svg" className="rede-svg" alt="Instagram" />
+                      <span className={perfilData.instagram ? '' : 'rede-vazia'}>{perfilData.instagram || '...'}</span>
+                    </div>
+                    
+                    <div className="rede-item">
+                      <img src="/discord.svg" className="rede-svg" alt="Discord" />
+                      <span className={perfilData.discord ? '' : 'rede-vazia'}>{perfilData.discord || '...'}</span>
+                    </div>
+                    
+                    <div className="rede-item">
+                      <img src="/x-twitter.svg" className="rede-svg" alt="X / Twitter" />
+                      <span className={perfilData.twitter ? '' : 'rede-vazia'}>{perfilData.twitter || '...'}</span>
+                    </div>
+                    
+                    <div className="rede-item">
+                      <img src="/tiktok.svg" className="rede-svg" alt="TikTok" />
+                      <span className={perfilData.tiktok ? '' : 'rede-vazia'}>{perfilData.tiktok || '...'}</span>
+                    </div>
+                    
+                    <div className="rede-item">
+                      <img src="/steam.svg" className="rede-svg" alt="Steam" />
+                      <span className={perfilData.steam ? '' : 'rede-vazia'}>{perfilData.steam || '...'}</span>
+                    </div>
+                    
+                    <div className="rede-item">
+                      <svg className="rede-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <path d="M6 12h4m-2-2v4m7-1h.01" />
+                      </svg>
+                      <span className={perfilData.itchIo ? '' : 'rede-vazia'}>{perfilData.itchIo || '...'}</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -481,7 +506,6 @@ export function Perfil() {
           </div>
 
           <div className="perfil-bottom-cards">
-            {/* Mantém igual */}
             <div className="huby-card-wrapper">
               <div className="huby-card-header"><span className="huby-pill-tag">Comentários</span></div>
               <div className="huby-card-body lista-interacoes"><div className="empty-state-box"><p>Nenhum comentário realizado.</p></div></div>
