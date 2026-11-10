@@ -16,14 +16,12 @@ export function Eventos () {
         <div className="eventos-container">
             <Banner />
 
-            <div className="eventos-actions">
+            <div className="eventos-toolbar">
                 <button className="eventos-criar">
                     <img src="/icon-mais.svg" alt="" />
                     <span>Criar Evento</span>
                 </button>
-                <div className="eventos-pesquisar">
-                    <BarraDePesquisa />
-                </div>
+                <BarraDePesquisa />
             </div>
 
             <div className="eventos-section">

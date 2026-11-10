@@ -1,0 +1,308 @@
+.game-details-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99;
+}
+
+.game-details {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100vh;
+    background-color: #161616;
+    border-left: 1px solid var(--gray3);
+    z-index: 100;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.3s ease, visibility 0s linear 0.3s;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) #1e1e1e;
+}
+
+.game-details.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.3s ease;
+}
+
+.game-details.is-open .game-details-cover,
+.game-details.is-open .game-details-header,
+.game-details.is-open .game-details-body {
+    animation: game-details-enter 0.35s ease both;
+}
+
+.game-details.is-open .game-details-header {
+    animation-delay: 0.06s;
+}
+
+.game-details.is-open .game-details-body {
+    animation-delay: 0.12s;
+}
+
+@keyframes game-details-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-details::-webkit-scrollbar {
+    width: 8px;
+}
+
+.game-details::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.game-details::-webkit-scrollbar-thumb {
+    background: var(--pink);
+    border-radius: 999px;
+}
+
+.game-details-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background-color: var(--gray3);
+}
+
+.game-details-cover img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.game-details-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.65);
+    color: var(--white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.game-details-close:hover {
+    background: var(--pink);
+}
+
+.game-details-close svg {
+    width: 100%;
+    height: 100%;
+}
+
+.game-details-header {
+    padding: 18px 20px 20px;
+    background: var(--pink);
+    color: var(--white);
+}
+
+.game-details-title {
+    margin: 0 0 12px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.game-details-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.game-details-tag {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    color: var(--white);
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.06em;
+}
+
+.game-details-body {
+    padding: 22px 20px 32px;
+}
+
+.game-details-developer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.game-details-developer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--pink);
+}
+
+.game-details-developer-name {
+    color: var(--text1);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.game-details-section {
+    margin-bottom: 26px;
+}
+
+.game-details-section h3 {
+    color: var(--text1);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin: 0 0 12px;
+}
+
+.game-details-description {
+    color: var(--text2);
+    font-size: 0.83rem;
+    line-height: 1.7;
+}
+
+.game-details-downloads {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.game-details-download-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: #f2f2f2;
+    color: #161616;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.game-details-download-btn:hover:not(:disabled) {
+    background: var(--white);
+    transform: translateY(-1px);
+}
+
+.game-details-download-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.game-details-download-btn:disabled {
+    background: #2a2a2a;
+    color: var(--text3);
+    cursor: not-allowed;
+}
+
+.game-details-download-btn.is-done {
+    background: rgba(250, 41, 95, 0.15);
+    border-color: var(--pink);
+    color: var(--pink);
+}
+
+.game-details-download-btn svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+}
+
+.game-details-status {
+    margin: 10px 0 0;
+    color: var(--text2);
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.game-details-play-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    background: var(--white);
+    color: #161616;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s ease, transform 0.15s ease, color 0.2s ease;
+}
+
+.game-details-play-btn:hover:not(:disabled) {
+    background: var(--pink);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+
+.game-details-play-btn:disabled {
+    background: #2a2a2a;
+    color: var(--text3);
+    cursor: not-allowed;
+}
+
+.game-details-play-btn.is-running {
+    background: var(--pink);
+    color: var(--white);
+}
+
+.game-details-play-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.game-details-spinner {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: game-details-spin 0.7s linear infinite;
+}
+
+@keyframes game-details-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 768px) {
+    .game-details-overlay.is-open {
+        display: block;
+    }
+
+    .game-details {
+        width: 100%;
+        border-left: none;
+    }
+}
