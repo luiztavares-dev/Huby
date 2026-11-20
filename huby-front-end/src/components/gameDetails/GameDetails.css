@@ -182,6 +182,34 @@
     line-height: 1.7;
 }
 
+.game-details-facts {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+}
+
+.game-details-facts div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gray3);
+}
+
+.game-details-facts dt {
+    color: var(--text2);
+    font-size: 0.78rem;
+}
+
+.game-details-facts dd {
+    margin: 0;
+    color: var(--text1);
+    font-size: 0.83rem;
+    font-weight: 600;
+    text-align: right;
+}
+
 .game-details-downloads {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

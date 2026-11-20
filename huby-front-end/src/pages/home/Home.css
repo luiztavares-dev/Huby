@@ -48,6 +48,109 @@
     font-size: 0.85rem;
 }
 
+.home-section-title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    min-width: 0;
+}
+
+.home-section-title p {
+    margin: 0;
+    color: var(--text2);
+    font-size: 0.78rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+/* Estados de carregamento / erro */
+
+.home-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 48px 0;
+    padding: 40px 24px;
+    border: 1px dashed var(--gray3);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.home-state p {
+    margin: 0;
+    color: var(--text2);
+    font-size: 0.9rem;
+}
+
+.home-state button {
+    padding: 9px 20px;
+    border: none;
+    border-radius: 999px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+.home-state button:hover {
+    filter: brightness(1.1);
+}
+
+.home-state-error {
+    border-color: rgba(250, 41, 95, 0.45);
+}
+
+.home-skeleton-heading {
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+.home-skeleton-card {
+    cursor: default;
+    pointer-events: none;
+}
+
+.home-skeleton-card:hover {
+    transform: none;
+    border-color: var(--gray3);
+}
+
+.home-skeleton-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: var(--gray3);
+}
+
+.home-skeleton-line {
+    display: block;
+    width: 70%;
+    height: 12px;
+    border-radius: 6px;
+    background-color: var(--gray3);
+    animation: home-skeleton-pulse 1.3s ease-in-out infinite;
+}
+
+.home-skeleton-line-short {
+    width: 38%;
+}
+
+.home-skeleton-heading .home-skeleton-line {
+    width: 220px;
+}
+
+.home-skeleton-heading .home-skeleton-line-short {
+    width: 120px;
+}
+
+@keyframes home-skeleton-pulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 0.9; }
+}
+
 .home-carousel-wrap {
     position: relative;
     display: flex;
@@ -242,6 +345,27 @@
 }
 
 .game-card-rating small {
+    color: var(--text2);
+    font-size: 0.75rem;
+}
+
+.game-card-event-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    font-size: 0.75rem;
+}
+
+.game-card-event-period {
+    color: var(--pink);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.game-card-event-meta small {
     color: var(--text2);
     font-size: 0.75rem;
 }

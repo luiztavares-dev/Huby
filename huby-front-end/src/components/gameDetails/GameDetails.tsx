@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import type { TipoConteudo } from '../../types/conteudo'
+import { formatarParticipantes, formatarPeriodo } from '../../utils/formato'
 import './GameDetails.css'
 
 export type Game = {
-    id: number
+    id: string
+    tipo: TipoConteudo
     title: string
     description: string
     longDescription: string
@@ -12,6 +15,10 @@ export type Game = {
     score: number
     reviews: number
     platforms: ('website' | 'mobile' | 'pc')[]
+    dataInicio?: string | null
+    dataFim?: string | null
+    participantes?: number | null
+    local?: string | null
 }
 
 type DownloadPlatform = 'windows' | 'linux' | 'macos' | 'android'
@@ -117,6 +124,9 @@ export default function GameDetails({ game, isOpen, onClose }: GameDetailsProps)
     const current = game ?? lastGame
     if (!current) return null
 
+    const isJogo = current.tipo === 'JOGO'
+    const participantes = formatarParticipantes(current.participantes)
+
     const isAvailable = (platform: DownloadPlatform) => {
         return platform === 'android'
             ? current.platforms.includes('mobile')
@@ -203,69 +213,97 @@ export default function GameDetails({ game, isOpen, onClose }: GameDetailsProps)
                         <p className="game-details-description">{current.longDescription}</p>
                     </section>
 
-                    <section className="game-details-section">
-                        <h3>Downloads</h3>
-                        <div className="game-details-downloads">
-                            {(Object.keys(downloadLabels) as DownloadPlatform[]).map((platform) => {
-                                const state = downloads[platform] ?? 'idle'
-                                const available = isAvailable(platform)
+                    {!isJogo && (
+                        <section className="game-details-section">
+                            <h3>{current.tipo === 'COMUNIDADE' ? 'Sobre a comunidade' : 'Sobre o evento'}</h3>
+                            <dl className="game-details-facts">
+                                <div>
+                                    <dt>Período</dt>
+                                    <dd>{formatarPeriodo(current.dataInicio, current.dataFim)}</dd>
+                                </div>
+                                {current.local && (
+                                    <div>
+                                        <dt>Local</dt>
+                                        <dd>{current.local}</dd>
+                                    </div>
+                                )}
+                                {participantes && (
+                                    <div>
+                                        <dt>Participantes</dt>
+                                        <dd>{participantes}</dd>
+                                    </div>
+                                )}
+                            </dl>
+                        </section>
+                    )}
 
-                                return (
-                                    <button
-                                        key={platform}
-                                        type="button"
-                                        className={`game-details-download-btn ${state === 'done' ? 'is-done' : ''}`}
-                                        disabled={!available}
-                                        onClick={() => startDownload(platform)}
-                                    >
-                                        {state === 'downloading' ? (
-                                            <span className="game-details-spinner" aria-hidden="true" />
-                                        ) : state === 'done' ? (
-                                            <CheckGlyph />
-                                        ) : (
-                                            <PlatformGlyph platform={platform} />
-                                        )}
-                                        <span>
-                                            {state === 'downloading' ? 'Baixando…' : state === 'done' ? 'Baixado' : downloadLabels[platform]}
-                                        </span>
-                                    </button>
-                                )
-                            })}
-                        </div>
-                        {downloadStatus && (
-                            <p className="game-details-status" role="status">{downloadStatus}</p>
-                        )}
-                    </section>
+                    {isJogo && (
+                        <section className="game-details-section">
+                            <h3>Downloads</h3>
+                            <div className="game-details-downloads">
+                                {(Object.keys(downloadLabels) as DownloadPlatform[]).map((platform) => {
+                                    const state = downloads[platform] ?? 'idle'
+                                    const available = isAvailable(platform)
 
-                    <section className="game-details-section">
-                        <h3>Jogar no Browser</h3>
-                        <button
-                            type="button"
-                            className={`game-details-play-btn ${playState === 'running' ? 'is-running' : ''}`}
-                            disabled={!current.platforms.includes('website')}
-                            onClick={togglePlay}
-                        >
-                            {playState === 'launching' ? (
-                                <span className="game-details-spinner game-details-spinner-light" aria-hidden="true" />
-                            ) : playState === 'running' ? (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path d="M7 7h10v10H7z" />
-                                </svg>
-                            ) : (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path d="M8 5.5v13l11-6.5z" />
-                                </svg>
+                                    return (
+                                        <button
+                                            key={platform}
+                                            type="button"
+                                            className={`game-details-download-btn ${state === 'done' ? 'is-done' : ''}`}
+                                            disabled={!available}
+                                            onClick={() => startDownload(platform)}
+                                        >
+                                            {state === 'downloading' ? (
+                                                <span className="game-details-spinner" aria-hidden="true" />
+                                            ) : state === 'done' ? (
+                                                <CheckGlyph />
+                                            ) : (
+                                                <PlatformGlyph platform={platform} />
+                                            )}
+                                            <span>
+                                                {state === 'downloading' ? 'Baixando…' : state === 'done' ? 'Baixado' : downloadLabels[platform]}
+                                            </span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            {downloadStatus && (
+                                <p className="game-details-status" role="status">{downloadStatus}</p>
                             )}
-                            <span>
-                                {playState === 'launching' ? 'Abrindo…' : playState === 'running' ? 'Parar' : 'Jogar'}
-                            </span>
-                        </button>
-                        {playState === 'running' && (
-                            <p className="game-details-status" role="status">
-                                {current.title} está rodando no navegador.
-                            </p>
-                        )}
-                    </section>
+                        </section>
+                    )}
+
+                    {isJogo && (
+                        <section className="game-details-section">
+                            <h3>Jogar no Browser</h3>
+                            <button
+                                type="button"
+                                className={`game-details-play-btn ${playState === 'running' ? 'is-running' : ''}`}
+                                disabled={!current.platforms.includes('website')}
+                                onClick={togglePlay}
+                            >
+                                {playState === 'launching' ? (
+                                    <span className="game-details-spinner game-details-spinner-light" aria-hidden="true" />
+                                ) : playState === 'running' ? (
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M7 7h10v10H7z" />
+                                    </svg>
+                                ) : (
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M8 5.5v13l11-6.5z" />
+                                    </svg>
+                                )}
+                                <span>
+                                    {playState === 'launching' ? 'Abrindo…' : playState === 'running' ? 'Parar' : 'Jogar'}
+                                </span>
+                            </button>
+                            {playState === 'running' && (
+                                <p className="game-details-status" role="status">
+                                    {current.title} está rodando no navegador.
+                                </p>
+                            )}
+                        </section>
+                    )}
                 </div>
             </aside>
         </>

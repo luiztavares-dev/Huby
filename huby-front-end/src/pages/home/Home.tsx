@@ -6,6 +6,8 @@ import Banner from '../../components/banner/Banner'
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
 import GameDetails, { type Game } from '../../components/gameDetails/GameDetails'
 import categoriesData from '../../data/DadosCategories.json'
+import { buscarCarrosseisHome, type CarrosselApi, type ConteudoApi } from '../../services/home'
+import { formatarParticipantes, formatarPeriodo } from '../../utils/formato'
 
 type CategoriaMap = Record<string, {
     Descricao: string
@@ -26,7 +28,7 @@ const categoriasExtras: Record<string, string> = {
 const normalizarCategoria = (valor: string) => {
     return valor
         .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '')
 }
@@ -50,159 +52,45 @@ const getCategoriaInfo = (tag: string) => {
     return categoriasExtras[tag] ?? 'Categoria do jogo.'
 }
 
-const games: Game[] = [
-    {
-        id: 1,
-        title: 'Hollow Knight Silksong',
-        description: 'Jogo de ação e aventura no estilo Metroidvania.',
-        longDescription: 'Hollow Knight: Silksong é um jogo de ação e aventura no estilo Metroidvania desenvolvido pela Team Cherry. No controle de Hornet, uma ágil guerreira, o jogador explora um reino desconhecido cheio de perigos, enfrenta criaturas desafiadoras, descobre novas habilidades e desbloqueia caminhos antes inacessíveis em uma jornada até o pico do mundo.',
-        developer: 'Dev.Lukario',
-        image: '/Silksong.png',
-        tags: ['AVENTURA', 'METROIDVANIA'],
-        score: 4.0,
-        reviews: 582,
-        platforms: ['pc', 'website', 'mobile']
-    },
-    {
-        id: 2,
-        title: 'Polvo Jam',
-        description: 'Uma game jam para experimentar novas ideias.',
-        longDescription: 'Polvo Jam é uma game jam colaborativa criada para experimentar novas ideias sem pressão. Participantes formam equipes, escolhem um tema surpresa e têm um fim de semana para prototipar, testar e publicar jogos autorais cheios de personalidade.',
-        developer: 'Estúdio Polvo',
-        image: '/imagem-polvojam.jpg',
-        tags: ['AVENTURA', 'INDIE'],
-        score: 4.0,
-        reviews: 124,
-        platforms: ['website', 'pc']
-    },
-    {
-        id: 3,
-        title: 'Global Game Jam',
-        description: 'Crie, compartilhe e participe de projetos.',
-        longDescription: 'A Global Game Jam é o maior evento presencial de criação de jogos do mundo. Milhares de desenvolvedores, artistas e músicos se reúnem em sedes espalhadas pelo planeta para criar jogos do zero em 48 horas, compartilhando conhecimento e celebrando a criatividade.',
-        developer: 'GGJ Foundation',
-        image: '/imagem-ggj.png',
-        tags: ['GAME JAM', 'COMUNIDADE'],
-        score: 4.5,
-        reviews: 318,
-        platforms: ['website']
-    },
-    {
-        id: 4,
-        title: 'Brasil Game Jam',
-        description: 'Evento para desenvolvedores e artistas.',
-        longDescription: 'A Brasil Game Jam reúne desenvolvedores e artistas brasileiros em uma maratona de criação de jogos. O evento oferece mentoria, palestras e espaço para networking, com premiações para os projetos mais criativos produzidos durante a competição.',
-        developer: 'BJam Org',
-        image: '/imagem-bgj.jpg',
-        tags: ['GAME JAM', 'ONLINE'],
-        score: 4.0,
-        reviews: 96,
-        platforms: ['website', 'pc']
-    },
-    {
-        id: 5,
-        title: 'Insperarte',
-        description: 'Experimente projetos criativos da comunidade.',
-        longDescription: 'Insperarte é uma mostra de projetos criativos que mistura jogos, arte digital e experiências interativas. Experimente instalações, protótipos e experimentos produzidos pela comunidade acadêmica e por convidados independentes.',
-        developer: 'Coletivo Insper',
-        image: '/imagem-insperarte.jpg',
-        tags: ['AVENTURA', 'INDIE'],
-        score: 4.2,
-        reviews: 207,
-        platforms: ['website', 'mobile']
-    },
-    {
-        id: 6,
-        title: 'Jundu Jam',
-        description: 'Uma experiência colaborativa para criar jogos.',
-        longDescription: 'Jundu Jam é uma experiência colaborativa para criar jogos em equipe com foco em pixel art. Os participantes recebem um tema, ferramentas e mentorias para transformar ideias em protótipos jogáveis em poucos dias.',
-        developer: 'Jundu Studios',
-        image: '/imagem-polvojam.jpg',
-        tags: ['GAME JAM', 'PIXEL ART'],
-        score: 3.9,
-        reviews: 73,
-        platforms: ['website']
-    },
-    {
-        id: 7,
-        title: 'Game Jam 2026',
-        description: 'Desafios rápidos para testar suas ideias.',
-        longDescription: 'Game Jam 2026 traz desafios rápidos para testar suas ideias em sessões curtas de criação. A cada rodada, um novo tema é revelado e os participantes têm tempo limitado para prototipar, votar e evoluir seus projetos.',
-        developer: 'Huby Community',
-        image: '/imagem-ggj.png',
-        tags: ['GAME JAM', 'RÁPIDO'],
-        score: 4.4,
-        reviews: 181,
-        platforms: ['website', 'pc']
-    },
-    {
-        id: 8,
-        title: 'BGJ 2026',
-        description: 'Conheça jogos produzidos pela comunidade.',
-        longDescription: 'A BGJ 2026 é a edição anual da Brasil Game Jam, com trilhas para iniciantes e veteranos. Conheça jogos produzidos pela comunidade, participe de workshops e acompanhe as premiações ao vivo.',
-        developer: 'BJam Org',
-        image: '/imagem-bgj.jpg',
-        tags: ['INDIE', 'ONLINE'],
-        score: 4.1,
-        reviews: 55,
-        platforms: ['website']
-    },
-    {
-        id: 9,
-        title: 'GMTK Game Jam',
-        description: 'Projetos criativos feitos em tempo limitado.',
-        longDescription: "A GMTK Game Jam é uma das maiores jams online do mundo, criada pelo canal Game Maker's Toolkit. Em 48 horas, milhares de participantes criam jogos a partir de um tema surpresa focado em design criativo e mecânicas inovadoras.",
-        developer: 'GMTK Team',
-        image: '/imagem-insperarte.jpg',
-        tags: ['GAME JAM', 'CRIATIVO'],
-        score: 4.6,
-        reviews: 402,
-        platforms: ['website', 'pc']
-    },
-    {
-        id: 10,
-        title: 'Polvo Jam II',
-        description: 'Novos projetos e desafios para a comunidade.',
-        longDescription: 'Polvo Jam II traz novos projetos e desafios para a comunidade, com temas mais ousados e mentorias ao vivo. Equipes novas e veteranas se encontram para criar, compartilhar e publicar experiências independentes.',
-        developer: 'Estúdio Polvo',
-        image: '/imagem-polvojam.jpg',
-        tags: ['AVENTURA', 'INDIE'],
-        score: 4.0,
-        reviews: 81,
-        platforms: ['website', 'mobile']
-    },
-    {
-        id: 11,
-        title: 'GGJ Brasil',
-        description: 'Projetos independentes feitos por equipes.',
-        longDescription: 'GGJ Brasil coordena as sedes brasileiras da Global Game Jam, conectando universidades, coletivos e estúdios independentes. Projetos feitos por equipes de todo o país são publicados e celebrados em uma vitrine nacional.',
-        developer: 'GGJ Brasil',
-        image: '/imagem-ggj.png',
-        tags: ['COMUNIDADE', 'GAME JAM'],
-        score: 4.3,
-        reviews: 142,
-        platforms: ['website']
-    },
-    {
-        id: 12,
-        title: 'Brasil Game Jam',
-        description: 'Encontre novos jogos e desenvolvedores.',
-        longDescription: 'Encontre novos jogos e desenvolvedores na Brasil Game Jam, uma comunidade aberta para quem quer criar, testar e publicar. Participe das edições, acompanhe devlogs e descubra talentos da cena independente brasileira.',
-        developer: 'BJam Org',
-        image: '/imagem-bgj.jpg',
-        tags: ['INDIE', 'GAME JAM'],
-        score: 3.8,
-        reviews: 64,
-        platforms: ['website', 'pc']
-    }
-]
+type Secao = {
+    id: string
+    title: string
+    subtitle?: string
+    items: Game[]
+}
 
-const sections = [
-    { title: 'GAME JAM 2026.03', items: games.slice(0, 6) },
-    { title: 'JOGOS RELEVANTES', items: games.slice(2, 8) },
-    { title: 'EM DESTAQUE', items: games.slice(1, 7) },
-    { title: 'COMUNIDADES E EVENTOS', items: games.slice(4, 10) }
-]
+const plataformasValidas = new Set(['website', 'mobile', 'pc'])
+
+function paraGame(item: ConteudoApi): Game {
+    return {
+        id: item.id,
+        tipo: item.tipo,
+        title: item.titulo,
+        description: item.descricao,
+        longDescription: item.descricaoLonga,
+        developer: item.desenvolvedor,
+        image: item.imagem,
+        tags: item.tags ?? [],
+        score: item.nota ?? 0,
+        reviews: item.avaliacoes ?? 0,
+        platforms: (item.plataformas ?? []).filter(
+            (plataforma): plataforma is 'website' | 'mobile' | 'pc' => plataformasValidas.has(plataforma)
+        ),
+        dataInicio: item.dataInicio,
+        dataFim: item.dataFim,
+        participantes: item.participantes,
+        local: item.local
+    }
+}
+
+function paraSecao(carrossel: CarrosselApi): Secao {
+    return {
+        id: carrossel.id,
+        title: carrossel.titulo,
+        subtitle: carrossel.subtitulo ?? undefined,
+        items: carrossel.itens.map(paraGame)
+    }
+}
 
 function PlatformIcon({ type }: { type: 'website' | 'mobile' | 'pc' }) {
     if (type === 'pc') {
@@ -260,6 +148,9 @@ function GameCard({ game, isSelected, onSelect }: {
         setActiveTag({ tag, descricao: getCategoriaInfo(tag) })
     }
 
+    const isJogo = game.tipo === 'JOGO'
+    const participantes = formatarParticipantes(game.participantes)
+
     return (
         <article
             className={`game-card ${isSelected ? 'is-selected' : ''}`}
@@ -294,10 +185,17 @@ function GameCard({ game, isSelected, onSelect }: {
                 <h3>{game.title}</h3>
                 <p>{game.description}</p>
 
-                <div className="game-card-rating">
-                    <Stars score={game.score} />
-                    <small>{game.score.toFixed(1)} ({game.reviews})</small>
-                </div>
+                {isJogo ? (
+                    <div className="game-card-rating">
+                        <Stars score={game.score} />
+                        <small>{game.score.toFixed(1)} ({game.reviews})</small>
+                    </div>
+                ) : (
+                    <div className="game-card-event-meta">
+                        <span className="game-card-event-period">{formatarPeriodo(game.dataInicio, game.dataFim)}</span>
+                        {participantes && <small>{participantes}</small>}
+                    </div>
+                )}
 
                 <div className="game-card-tags">
                     {game.tags.map((tag) => (
@@ -318,13 +216,15 @@ function GameCard({ game, isSelected, onSelect }: {
                         </button>
                     ))}
 
-                    <span className="game-card-platforms">
-                        {game.platforms.map((platform) => (
-                            <span key={platform} title={platformLabels[platform]} aria-label={platformLabels[platform]}>
-                                <PlatformIcon type={platform} />
-                            </span>
-                        ))}
-                    </span>
+                    {game.platforms.length > 0 && (
+                        <span className="game-card-platforms">
+                            {game.platforms.map((platform) => (
+                                <span key={platform} title={platformLabels[platform]} aria-label={platformLabels[platform]}>
+                                    <PlatformIcon type={platform} />
+                                </span>
+                            ))}
+                        </span>
+                    )}
                 </div>
 
                 <div className={`game-card-tooltip ${activeTag ? 'is-open' : ''}`}>
@@ -337,10 +237,11 @@ function GameCard({ game, isSelected, onSelect }: {
     )
 }
 
-function CarouselSection({ title, items, selectedId, onSelect }: {
+function CarouselSection({ title, subtitle, items, selectedId, onSelect }: {
     title: string
+    subtitle?: string
     items: Game[]
-    selectedId: number | null
+    selectedId: string | null
     onSelect: (game: Game) => void
 }) {
     const trackRef = useRef<HTMLDivElement | null>(null)
@@ -387,8 +288,11 @@ function CarouselSection({ title, items, selectedId, onSelect }: {
     return (
         <div className="home-section">
             <div className="home-section-heading">
-                <h2>{title}</h2>
-                <span>{items.length} resultados</span>
+                <div className="home-section-title">
+                    <h2>{title}</h2>
+                    {subtitle && <p>{subtitle}</p>}
+                </div>
+                <span>{items.length} {items.length === 1 ? 'resultado' : 'resultados'}</span>
             </div>
 
             <div className="home-carousel-wrap">
@@ -427,27 +331,93 @@ function CarouselSection({ title, items, selectedId, onSelect }: {
     )
 }
 
+function HomeSkeleton() {
+    return (
+        <>
+            {[0, 1].map((bloco) => (
+                <div className="home-section" key={bloco} aria-hidden="true">
+                    <div className="home-section-heading home-skeleton-heading">
+                        <span className="home-skeleton-line" />
+                        <span className="home-skeleton-line home-skeleton-line-short" />
+                    </div>
+                    <div className="home-carousel">
+                        {[0, 1, 2, 3].map((card) => (
+                            <div className="game-card home-skeleton-card" key={card}>
+                                <div className="home-skeleton-image" />
+                                <div className="game-card-body">
+                                    <span className="home-skeleton-line" />
+                                    <span className="home-skeleton-line home-skeleton-line-short" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </>
+    )
+}
+
 export function Home() {
     const [selectedGame, setSelectedGame] = useState<Game | null>(null)
+    const [secoes, setSecoes] = useState<Secao[]>([])
+    const [carregando, setCarregando] = useState(true)
+    const [erro, setErro] = useState<string | null>(null)
+    const [tentativa, setTentativa] = useState(0)
+
+    useEffect(() => {
+        const controller = new AbortController()
+
+        setCarregando(true)
+        setErro(null)
+
+        buscarCarrosseisHome(controller.signal)
+            .then((carrosseis) => setSecoes(carrosseis.map(paraSecao)))
+            .catch((error: unknown) => {
+                if (controller.signal.aborted) return
+                setErro(error instanceof Error ? error.message : 'Não foi possível carregar os destaques.')
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setCarregando(false)
+            })
+
+        return () => controller.abort()
+    }, [tentativa])
 
     const closeDetails = useCallback(() => setSelectedGame(null), [])
+    const recarregar = useCallback(() => setTentativa((valor) => valor + 1), [])
 
     return (
         <main className={`home ${selectedGame ? 'has-details' : ''}`}>
 
             <Banner />
 
-            <section className="home-catalog">
+            <section className="home-catalog" aria-busy={carregando}>
 
                 <div className="home-toolbar">
                     <BarraDePesquisa />
                 </div>
 
-                {sections.map((section) => (
+                {carregando && <HomeSkeleton />}
+
+                {!carregando && erro && (
+                    <div className="home-state home-state-error" role="alert">
+                        <p>{erro}</p>
+                        <button type="button" onClick={recarregar}>Tentar novamente</button>
+                    </div>
+                )}
+
+                {!carregando && !erro && secoes.length === 0 && (
+                    <div className="home-state">
+                        <p>Nenhum conteúdo publicado ainda. Volte em breve.</p>
+                    </div>
+                )}
+
+                {!carregando && !erro && secoes.map((secao) => (
                     <CarouselSection
-                        key={section.title}
-                        title={section.title}
-                        items={section.items}
+                        key={secao.id}
+                        title={secao.title}
+                        subtitle={secao.subtitle}
+                        items={secao.items}
                         selectedId={selectedGame?.id ?? null}
                         onSelect={setSelectedGame}
                     />
