@@ -258,6 +258,123 @@
   opacity: 0.7;
 }
 
+/* Convite de equipe */
+
+.msg-balao.convite {
+  max-width: 340px;
+  padding: 16px;
+  background-color: #1a1013;
+  color: var(--text1);
+}
+
+.msg-linha.minha .msg-balao.convite {
+  background-color: var(--pink);
+  color: var(--text1);
+  border-bottom-right-radius: 12px;
+}
+
+.msg-linha.deles .msg-balao.convite {
+  background-color: var(--pink);
+  border-bottom-left-radius: 12px;
+}
+
+.convite-titulo {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--text1);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.convite-texto {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.convite-dados {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.convite-dados span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text3);
+  font-size: 12px;
+}
+
+.convite-dados strong {
+  color: var(--pink);
+  font-weight: 600;
+}
+
+.convite-acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.convite-acoes button {
+  flex: 1;
+  height: 34px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.convite-acoes .aceitar {
+  border: none;
+  border: 1px solid var(--white);
+  background-color: transparent;
+  color: var(--white);
+}
+
+.convite-acoes .aceitar:hover {
+  background-color: #e01c50;
+}
+
+.convite-acoes .recusar {
+  border: 1px solid var(--white);
+  background-color: transparent;
+  color: var(--white);
+}
+
+.convite-acoes .recusar:hover {
+  background-color: #e01c50;
+}
+
+.convite-status {
+  display: block;
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.convite-status.aceito { color: #6fe3a1; }
+.convite-status.recusado { color: #ff8fa8; }
+.convite-status.pendente { color: #b9b9b9; }
+
+.convite-erro {
+  margin: 0;
+  padding: 10px 24px;
+  background-color: rgba(250, 41, 95, 0.12);
+  color: #ffb3c7;
+  font-size: 12px;
+}
+
 
 .chat-input-area {
   padding: 20px 24px;

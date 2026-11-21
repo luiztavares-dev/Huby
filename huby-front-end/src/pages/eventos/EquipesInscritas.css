@@ -1,0 +1,492 @@
+/* =========================
+   EQUIPES INSCRITAS
+========================= */
+
+.equipes-inscritas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0 20px 80px;
+    background-color: var(--gray1);
+    color: var(--text1);
+}
+
+.equipes-inscritas > * {
+    width: 100%;
+    max-width: 460px;
+}
+
+.equipes-inscritas button {
+    font-family: inherit;
+}
+
+/* Topo */
+
+.equipes-topo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 18px;
+    margin-bottom: 12px;
+    color: #9a9a9a;
+    font-size: 0.8rem;
+}
+
+.equipes-voltar {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--pink);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.equipes-voltar:hover {
+    background-color: rgba(250, 41, 95, 0.12);
+}
+
+/* Faixa rosa do evento */
+
+.equipes-faixa {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    background-color: var(--pink);
+}
+
+.equipes-faixa h1 {
+    margin: 0;
+    max-width: 300px;
+    color: var(--white);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.equipes-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.equipes-tags span {
+    padding: 3px 11px;
+    border-radius: 999px;
+    background-color: var(--white);
+    color: var(--pink);
+    font-size: 0.55rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Avisos */
+
+.equipes-aviso,
+.equipes-erro-acao {
+    margin-top: 14px;
+    padding: 9px 12px;
+    border-left: 3px solid var(--pink);
+    border-radius: 4px;
+    background-color: rgba(250, 41, 95, 0.1);
+    color: #ffd2de;
+    font-size: 0.72rem;
+    line-height: 1.45;
+}
+
+.equipes-erro-acao {
+    border-left-color: #ff5b86;
+    background-color: rgba(250, 41, 95, 0.16);
+    color: #ffb3c7;
+}
+
+/* Lista de equipes */
+
+.equipes-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 82% !important;
+    max-width: 378px !important;
+    margin-top: 32px;
+}
+
+.equipe-card {
+    border: 1px solid #2f2f2f;
+    border-radius: 8px;
+    background-color: var(--gray1);
+    overflow: hidden;
+}
+
+.equipe-card-topo {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.equipe-card-capa {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 3.3 / 1;
+    background-color: #1b1b1b;
+}
+
+.equipe-card-capa > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.equipe-card-capa-vazia {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(100deg, #191919 30%, #242424 50%, #191919 70%);
+}
+
+.equipe-card-avatar {
+    position: absolute;
+    left: 16px;
+    bottom: -38px;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border: 3px solid var(--gray1);
+    border-radius: 50%;
+    background-color: #242424;
+    overflow: hidden;
+}
+
+.equipe-card-avatar > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.equipes-avatar-neutro {
+    display: block;
+    width: 70%;
+    height: 70%;
+    color: #6b6b6b;
+}
+
+.equipe-card-faixa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 46px;
+    padding: 11px 14px 11px 92px;
+}
+
+.equipe-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.equipe-card-info strong {
+    overflow: hidden;
+    color: var(--text1);
+    font-size: 0.85rem;
+    font-weight: 800;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.equipe-card-info > span {
+    color: #9a9a9a;
+    font-size: 0.6rem;
+    white-space: nowrap;
+}
+
+.equipe-card-info > span.is-procurando {
+    color: var(--pink);
+}
+
+.equipe-card-lado {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+}
+
+.equipe-card-minis {
+    display: flex;
+    align-items: center;
+}
+
+.equipes-mini {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-left: -8px;
+    border: 2px solid var(--gray1);
+    border-radius: 50%;
+    background-color: #242424;
+    overflow: hidden;
+}
+
+.equipes-mini:first-child {
+    margin-left: 0;
+}
+
+.equipes-mini img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.equipes-mini .equipes-avatar-neutro {
+    width: 68%;
+    height: 68%;
+    color: #6b6b6b;
+}
+
+.equipe-card-seta {
+    display: flex;
+    color: #c4c4c4;
+}
+
+.equipe-card-seta svg {
+    width: 13px;
+    height: 13px;
+    transition: transform 0.2s ease;
+}
+
+.equipe-card-seta.is-aberta svg {
+    transform: rotate(180deg);
+}
+
+/* Integrantes expandidos */
+
+.equipe-card-integrantes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 16px 4px 18px;
+}
+
+.equipe-integrante {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.equipe-integrante:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.05);
+    width: 100%;
+    padding: 0 4px;
+}
+
+.equipe-integrante:disabled {
+    cursor: default;
+}
+
+.equipe-integrante:focus-visible {
+    outline: 1px solid var(--pink);
+    outline-offset: 1px;
+}
+
+.equipe-integrante-avatar {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-color: #242424;
+    overflow: hidden;
+}
+
+.equipe-integrante-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.equipe-integrante-avatar .equipes-avatar-neutro {
+    width: 70%;
+    height: 70%;
+    color: #6b6b6b;
+}
+
+.equipe-integrante-id {
+    overflow: hidden;
+    color: var(--pink);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.equipe-integrante-funcao {
+    color: #e8e8e8;
+    font-size: 0.6rem;
+    text-align: right;
+}
+
+.equipe-integrantes-vazio {
+    margin: 4px 0;
+    color: var(--text2);
+    font-size: 0.62rem;
+}
+
+/* Botão de pedido */
+
+.equipe-card-pedido {
+    display: block;
+    width: calc(100% - 28px);
+    height: 32px;
+    margin: 12px 14px 14px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.equipe-card-pedido:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+.equipe-card-pedido:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.equipe-card-pedido.is-enviado {
+    background-color: var(--gray3);
+    cursor: default;
+    opacity: 1;
+}
+
+/* Estados */
+
+.equipes-carregando {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 40px;
+}
+
+.equipes-esqueleto-faixa,
+.equipes-esqueleto-card {
+    border-radius: 6px;
+    background: linear-gradient(100deg, #1a1a1a 30%, #242424 50%, #1a1a1a 70%);
+    background-size: 220% 100%;
+    animation: equipes-pulso 1.4s ease-in-out infinite;
+}
+
+.equipes-esqueleto-faixa {
+    height: 78px;
+}
+
+.equipes-esqueleto-card {
+    height: 190px;
+    border-radius: 8px;
+}
+
+@keyframes equipes-pulso {
+    0% { background-position: 120% 0; }
+    100% { background-position: -20% 0; }
+}
+
+.equipes-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 44px;
+    padding: 36px 24px;
+    border: 1px dashed var(--gray3);
+    border-radius: 8px;
+    color: var(--text2);
+    text-align: center;
+}
+
+.equipes-estado p {
+    margin: 0;
+    font-size: 0.82rem;
+}
+
+.equipes-estado button {
+    height: 32px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 999px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.equipes-estado button.is-secundaria {
+    border: 1px solid var(--pink);
+    background-color: transparent;
+    color: var(--pink);
+}
+
+/* Responsividade */
+
+@media (max-width: 600px) {
+    .equipes-inscritas {
+        padding: 0 14px 64px;
+    }
+
+    .equipes-faixa {
+        padding: 14px;
+    }
+
+    .equipes-faixa h1 {
+        font-size: 0.95rem;
+    }
+
+    .equipes-lista {
+        width: 84% !important;
+        max-width: none !important;
+    }
+}

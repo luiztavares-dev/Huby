@@ -47,6 +47,25 @@ public class Conteudo {
     /** Id da game jam à qual o jogo pertence (apenas para tipo JOGO). */
     private String gameJamId;
 
+    /** Detalhes exibidos na página de eventos (EVENTO e GAME_JAM). */
+    private String tema = "";
+
+    /** Modelo de inscrição definido pela organização: COMUM, SURPRESA ou INDIVIDUAL. */
+    private String modeloEquipe = "COMUM";
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate inscricoesAte;
+
+    private List<Premio> premios = new ArrayList<>();
+    private List<EtapaCronograma> cronograma = new ArrayList<>();
+    private List<String> regras = new ArrayList<>();
+    private List<ComentarioConteudo> comentarios = new ArrayList<>();
+    private List<String> equipes = new ArrayList<>();
+    private Integer equipesInscritas = 0;
+
+    /** Quantidade de integrantes exigida na inscrição de uma equipe. */
+    private Integer tamanhoEquipe;
+
     public Conteudo() {
     }
 
@@ -106,4 +125,34 @@ public class Conteudo {
 
     public String getGameJamId() { return gameJamId; }
     public void setGameJamId(String gameJamId) { this.gameJamId = gameJamId; }
+
+    public String getTema() { return tema; }
+    public void setTema(String tema) { this.tema = tema; }
+
+    public String getModeloEquipe() { return modeloEquipe; }
+    public void setModeloEquipe(String modeloEquipe) { this.modeloEquipe = modeloEquipe; }
+
+    public LocalDate getInscricoesAte() { return inscricoesAte; }
+    public void setInscricoesAte(LocalDate inscricoesAte) { this.inscricoesAte = inscricoesAte; }
+
+    public List<Premio> getPremios() { return premios; }
+    public void setPremios(List<Premio> premios) { this.premios = premios; }
+
+    public List<EtapaCronograma> getCronograma() { return cronograma; }
+    public void setCronograma(List<EtapaCronograma> cronograma) { this.cronograma = cronograma; }
+
+    public List<String> getRegras() { return regras; }
+    public void setRegras(List<String> regras) { this.regras = regras; }
+
+    public List<ComentarioConteudo> getComentarios() { return comentarios; }
+    public void setComentarios(List<ComentarioConteudo> comentarios) { this.comentarios = comentarios; }
+
+    public List<String> getEquipes() { return equipes; }
+    public void setEquipes(List<String> equipes) { this.equipes = equipes; }
+
+    public Integer getEquipesInscritas() { return equipesInscritas; }
+    public void setEquipesInscritas(Integer equipesInscritas) { this.equipesInscritas = equipesInscritas; }
+
+    public Integer getTamanhoEquipe() { return tamanhoEquipe; }
+    public void setTamanhoEquipe(Integer tamanhoEquipe) { this.tamanhoEquipe = tamanhoEquipe; }
 }

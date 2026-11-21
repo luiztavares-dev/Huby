@@ -11,4 +11,9 @@ public interface MensagemRepository extends MongoRepository<Mensagem, String> {
 
     @Query("{ '$or': [ { 'remetenteId': ?0 }, { 'destinatarioId': ?0 } ] }")
     List<Mensagem> findMinhasMensagens(String meuId);
+
+    boolean existsByEquipeIdAndRemetenteIdAndTipoAndConviteStatus(
+            String equipeId, String remetenteId, String tipo, String conviteStatus);
+
+    List<Mensagem> findByRemetenteIdAndTipoOrderByDataHoraDesc(String remetenteId, String tipo);
 }

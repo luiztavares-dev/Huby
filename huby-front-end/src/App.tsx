@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom'
 
 import { Home } from './pages/home/Home'
 import { Eventos } from './pages/eventos/Eventos'
+import { InscricaoEvento } from './pages/eventos/Inscricao'
+import { EquipesInscritas } from './pages/eventos/EquipesInscritas'
 import { Pagina404 } from "./pages/404/404"
 import { Standart } from './layouts/standart/Standart';
 import { Comunidades } from './pages/comunidades/Comunidades';
@@ -23,6 +25,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Standart page={<Home />} activeLink="home" />} />
         <Route path="/eventos" element={<Standart page={<Eventos />} activeLink="eventos" />} />
+        <Route path="/eventos/:id/inscricao" element={<Standart page={<InscricaoEvento />} activeLink="eventos" />} />
+        <Route path="/eventos/:id/equipes" element={<Standart page={<EquipesInscritas />} activeLink="eventos" />} />
         <Route path="/biblioteca" element={<Standart page={<Eventos />} activeLink="biblioteca" />} />
         <Route path="/comunidades" element={<Standart page={<Eventos />} activeLink="comunidades" />} />
         <Route path="/carrinho" element={<Standart page={<Eventos />} activeLink="carrinho" />} />

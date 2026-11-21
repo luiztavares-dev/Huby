@@ -66,6 +66,11 @@
     background-color: var(--gray2);
 }
 
+.SearchBar-Filtro.is-active {
+    background-color: var(--pink);
+    color: var(--white);
+}
+
 .SearchBar-Filtro img {
     width: 14px;
     height: 14px;

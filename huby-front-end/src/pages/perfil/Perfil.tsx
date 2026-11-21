@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { Navbar } from '../../components/navbar/Navbar';
+import { enviarImagemParaCloudinary } from '../../services/uploads';
 import './Perfil.css';
 
 interface UsuarioData {
@@ -65,9 +66,6 @@ export function Perfil() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
   useEffect(() => {
     const dadosSalvos = localStorage.getItem('huby_user');
@@ -182,15 +180,9 @@ export function Perfil() {
     try {
       const croppedImageBlob = await getCroppedImg(imagemParaCortar, croppedAreaPixels);
       if (!croppedImageBlob) return;
-      const formData = new FormData();
-      formData.append('file', croppedImageBlob);
-      formData.append('upload_preset', uploadPreset);
-      const resCloudinary = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: formData });
-      const dadosCloudinary = await resCloudinary.json();
-      if (dadosCloudinary.secure_url) {
-        await salvarNoBanco({ [tipoCrop]: dadosCloudinary.secure_url });
-        setImagemParaCortar(null);
-      }
+      const url = await enviarImagemParaCloudinary(croppedImageBlob, 'huby/perfis');
+      await salvarNoBanco({ [tipoCrop]: url });
+      setImagemParaCortar(null);
     } catch (error) { console.error(error); } finally { setSalvando(false); }
   };
 

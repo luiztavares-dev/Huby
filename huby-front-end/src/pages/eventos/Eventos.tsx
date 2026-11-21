@@ -1,94 +1,1074 @@
-import Banner from '../../components/banner/Banner';
-import BarraDePesquisa from '../../components/searchBar/SearchBar';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import BarraDePesquisa from '../../components/searchBar/SearchBar'
+import {
+    buscarEventos,
+    buscarJogosDaJam,
+    type ComentarioApi,
+    type EventoApi
+} from '../../services/eventos'
+import type { ConteudoApi } from '../../services/home'
 import './Eventos.css'
 
-export function Eventos () {
-    
-    const mockEvents = [
-        { id: 1, image: "/imagem-insperarte.jpg", tag: "GAME JAM EXTENSIVA", title: "INSPERARTE", org: "MTROUXAKKAK", date: "Até 01/04/36", participants: "2.391", prize: "100,00", hasPrize: true },
-        { id: 2, image: "/imagem-bgj.jpg", tag: "SOUND", title: "BRASIL GAME JAM 26", org: "BGJ", date: "Até 01/04/38", participants: "2", prize: "Sem premiação", hasPrize: false },
-        { id: 3, image: "/imagem-polvojam.jpg", tag: "GAME JAM", title: "POLVOJAM", org: "POLVOS", date: "Até 01/04/38", participants: "68mil", prize: "800,00", hasPrize: true },
-        { id: 4, image: "/imagem-ggj.png", tag: "PIXEL ART", title: "GLOBAL GAME JAM 12", org: "GGJ", date: "Até 01/04/38", participants: "0", prize: "Sem premiação", hasPrize: false },
-        { id: 5, image: "/imagem-insperarte.jpg", tag: "GAME JAM EXTENSIVA", title: "INSPERARTE", org: "MTROUXAKKAK", date: "Até 01/04/36", participants: "2.391", prize: "150,00", hasPrize: true }
-    ];
+type FiltroTipo = 'TODOS' | 'EVENTO' | 'GAME_JAM'
+type AbaDetalhe = 'comentarios' | 'jogos'
+type OrdemComentarios = 'recentes' | 'populares'
+
+const normalizarTexto = (valor: string) =>
+    valor
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+
+const handleDe = (nome?: string | null) => {
+    if (!nome) return '@huby'
+
+    return `@${normalizarTexto(nome).replace(/[^a-z0-9]+/g, '')}`
+}
+
+const categoriaDoEvento = (evento: EventoApi) => {
+    if (evento.tags?.length) return evento.tags[0]
+    return evento.tipo === 'GAME_JAM' ? 'GAME JAM' : 'EVENTO'
+}
+
+const dataNumerica = (iso?: string | null) => {
+    if (!iso) return ''
+
+    const data = new Date(`${iso}T00:00:00`)
+    if (Number.isNaN(data.getTime())) return ''
+
+    return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+const dataCompleta = (iso?: string | null) => {
+    if (!iso) return ''
+
+    const data = new Date(`${iso}T00:00:00`)
+    if (Number.isNaN(data.getTime())) return ''
+
+    return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+const contagemLonga = (iso?: string | null, agora = Date.now()) => {
+    if (!iso) return ''
+
+    const alvo = new Date(`${iso}T00:00:00`).getTime()
+    if (Number.isNaN(alvo)) return ''
+
+    const restante = alvo - agora
+    if (restante <= 0) return 'Encerrado'
+
+    const totalSegundos = Math.floor(restante / 1000)
+    const horas = Math.floor(totalSegundos / 3600)
+    const minutos = Math.floor((totalSegundos % 3600) / 60)
+    const segundos = totalSegundos % 60
+
+    return `${horas}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`
+}
+
+const dividirPeriodo = (periodo: string) => {
+    const indice = periodo.indexOf(' · ')
+    if (indice === -1) return { data: periodo, hora: '' }
+
+    return {
+        data: periodo.slice(0, indice),
+        hora: periodo.slice(indice + 3)
+    }
+}
+
+const clonarComentarios = (lista?: ComentarioApi[] | null): ComentarioApi[] =>
+    (lista ?? []).map((comentario) => ({
+        ...comentario,
+        respostas: clonarComentarios(comentario.respostas)
+    }))
+
+const atualizarComentario = (
+    lista: ComentarioApi[],
+    id: string,
+    transformar: (comentario: ComentarioApi) => ComentarioApi
+): ComentarioApi[] =>
+    lista.map((comentario) => {
+        if (comentario.id === id) return transformar(comentario)
+
+        if (comentario.respostas?.length) {
+            return {
+                ...comentario,
+                respostas: atualizarComentario(comentario.respostas, id, transformar)
+            }
+        }
+
+        return comentario
+    })
+
+function IconeTrofeu() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M8 4h8v5a4 4 0 0 1-8 0V4z" />
+            <path d="M8 5H5.5a2.5 2.5 0 0 0 0 5H8M16 5h2.5a2.5 2.5 0 0 1 0 5H16" />
+            <path d="M12 13v4M9 21h6M10 17h4" />
+        </svg>
+    )
+}
+
+function IconeSeta() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+    )
+}
+
+function IconeAvancar() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" />
+        </svg>
+    )
+}
+
+function IconeCoracao() {
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 20.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 3.1c0 5.4-7.5 10-7.5 10z" />
+        </svg>
+    )
+}
+
+function IconeResponder() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 17l-5-5 5-5" />
+            <path d="M4 12h10a6 6 0 0 1 6 6v1" />
+        </svg>
+    )
+}
+
+function CartaoEvento({ evento, onAbrir }: { evento: EventoApi; onAbrir: (evento: EventoApi) => void }) {
+    const premio = evento.premios?.[0]
 
     return (
-        <div className="eventos-container">
-            <Banner />
-
-            <div className="eventos-toolbar">
-                <button className="eventos-criar">
-                    <img src="/icon-mais.svg" alt="" />
-                    <span>Criar Evento</span>
-                </button>
-                <BarraDePesquisa />
+        <article
+            className="evento-card"
+            role="button"
+            tabIndex={0}
+            aria-label={`Ver detalhes de ${evento.titulo}`}
+            onClick={() => onAbrir(evento)}
+            onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onAbrir(evento)
+                }
+            }}
+        >
+            <div className="evento-card-media">
+                <img src={evento.imagem || '/imagem-polvojam.jpg'} alt="" loading="lazy" />
             </div>
 
-            <div className="eventos-section">
-                <h3 className="eventos-section-title">INSCRIÇÕES TERMINANDO</h3>
-                <div className="eventos-grid">
-                    {mockEvents.map((evento) => (
-                        <div key={evento.id} className="eventos-card">
-                            <div className="eventos-card-image">
-                                <img src={evento.image} alt={`Cartaz do evento ${evento.title}`} className="eventos-poster" />
-                            </div>
-                            
-                            <div className="eventos-card-body">
-                                <span className={`eventos-tag ${!evento.hasPrize ? 'eventos-tag-dark' : ''}`}>
-                                    {evento.tag}
-                                </span>
-                                
-                                <h4 className="eventos-title">{evento.title}</h4>
-                                <p className="eventos-org-name">{evento.org}</p>
-                                
-                                <div className="eventos-card-stats">
-                                    <div className="eventos-stat-col">
-                                        <span className="eventos-stat-title">INSCRIÇÃO</span>
-                                        <span className="eventos-stat-sub">{evento.date}</span>
-                                    </div>
-                                    <div className="eventos-stat-col eventos-right">
-                                        <span className="eventos-stat-title">{evento.participants}</span>
-                                        <span className="eventos-stat-sub">inscritos</span>
-                                    </div>
-                                </div>
-                            </div>
+            <span className="evento-card-tag">{categoriaDoEvento(evento)}</span>
+            <h3>{evento.titulo}</h3>
+            <p className="evento-card-org">{evento.desenvolvedor}</p>
 
-                            <div className={`eventos-card-footer ${evento.hasPrize ? 'eventos-prize-active' : 'eventos-no-prize'}`}>
-                                {evento.hasPrize ? (
-                                    <>
-                                        <div className="eventos-footer-left">
-                                            <img src="/icon-placar.svg" alt="Rank" className="eventos-icon-podium" />
-                                            <span>1 &nbsp;|&nbsp; {evento.prize}</span>
-                                        </div>
-                                        <span className="eventos-footer-right">
-                                            <img src="/icon-cifrao.svg" alt="Cifrão" className="eventos-icon-dollar" />
-                                        </span>
-                                    </>
-                                ) : (
-                                    <span>{evento.prize}</span>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+            <div className="evento-card-inscricao">
+                <div className="evento-card-inscricao-topo">
+                    <span>INSCRIÇÃO</span>
+                    <strong>{evento.participantes?.toLocaleString('pt-BR') ?? '0'}</strong>
+                </div>
+                <div className="evento-card-inscricao-base">
+                    <small>{evento.inscricoesAte ? `Até ${dataNumerica(evento.inscricoesAte)}` : 'Abertas'}</small>
+                    <span className="evento-card-inscritos">inscritos</span>
                 </div>
             </div>
-            
-            <div className="eventos-section">
-                <h3 className="eventos-section-title">GAME JAM</h3>
-                <div className="eventos-grid">
-                    {mockEvents.slice(0,3).map((evento) => (
-                         <div key={evento.id + 10} className="eventos-card">
-                            <div className="eventos-card-image">
-                                <img src={evento.image} alt={`Cartaz do evento ${evento.title}`} className="eventos-poster" />
-                            </div>
-                            <div className="eventos-card-body">
-                                <span className="eventos-tag">{evento.tag}</span>
-                                <h4 className="eventos-title">{evento.title}</h4>
-                            </div>
-                         </div>
-                    ))}
+
+            <div className={`evento-card-footer ${premio ? 'is-premio' : 'is-sem-premio'}`}>
+                {premio ? (
+                    <span className="evento-card-premio">
+                        <IconeTrofeu />
+                        {premio.posicao}º | {premio.valor}
+                    </span>
+                ) : (
+                    <span>Sem premiação</span>
+                )}
+                <span className="evento-card-seta"><IconeSeta /></span>
+            </div>
+        </article>
+    )
+}
+
+function TrilhaEventos({ titulo, eventos, onAbrir }: {
+    titulo: string
+    eventos: EventoApi[]
+    onAbrir: (evento: EventoApi) => void
+}) {
+    const trilhaRef = useRef<HTMLDivElement | null>(null)
+    const [podeEsquerda, setPodeEsquerda] = useState(false)
+    const [podeDireita, setPodeDireita] = useState(false)
+
+    const atualizarSetas = useCallback(() => {
+        const trilha = trilhaRef.current
+        if (!trilha) return
+
+        const maximo = trilha.scrollWidth - trilha.clientWidth
+        setPodeEsquerda(trilha.scrollLeft > 10)
+        setPodeDireita(trilha.scrollLeft < maximo - 10)
+    }, [])
+
+    useEffect(() => {
+        atualizarSetas()
+
+        const trilha = trilhaRef.current
+        if (!trilha) return
+
+        const aoRolar = () => atualizarSetas()
+        trilha.addEventListener('scroll', aoRolar)
+
+        const observador = new ResizeObserver(atualizarSetas)
+        observador.observe(trilha)
+
+        return () => {
+            trilha.removeEventListener('scroll', aoRolar)
+            observador.disconnect()
+        }
+    }, [eventos, atualizarSetas])
+
+    const rolar = (direcao: number) => {
+        if (!trilhaRef.current) return
+
+        const largura = trilhaRef.current.querySelector('.evento-card')?.clientWidth ?? 350
+        trilhaRef.current.scrollBy({
+            left: direcao * (largura + 20),
+            behavior: 'smooth'
+        })
+    }
+
+    return (
+        <div className="eventos-carrossel-wrap">
+            <button
+                type="button"
+                className={`eventos-seta eventos-seta-esquerda ${podeEsquerda ? 'is-visible' : ''}`}
+                aria-label={`Voltar em ${titulo}`}
+                onClick={() => rolar(-1)}
+                disabled={!podeEsquerda}
+            >
+                ‹
+            </button>
+
+            <div className="eventos-trilha" ref={trilhaRef}>
+                {eventos.map((evento) => (
+                    <CartaoEvento key={evento.id} evento={evento} onAbrir={onAbrir} />
+                ))}
+            </div>
+
+            <button
+                type="button"
+                className={`eventos-seta eventos-seta-direita ${podeDireita ? 'is-visible' : ''}`}
+                aria-label={`Avançar em ${titulo}`}
+                onClick={() => rolar(1)}
+                disabled={!podeDireita}
+            >
+                ›
+            </button>
+        </div>
+    )
+}
+
+function HeroEventos({ itens, indice, onIndice }: {
+    itens: EventoApi[]
+    indice: number
+    onIndice: (indice: number) => void
+}) {
+    if (itens.length === 0) return null
+
+    const atual = itens[indice % itens.length]
+
+    return (
+        <section className="eventos-hero" aria-roledescription="carrossel">
+            <img
+                key={atual.id}
+                className="eventos-hero-imagem"
+                src={atual.imagem || '/imagem-polvojam.jpg'}
+                alt=""
+            />
+
+            <div className="eventos-hero-sombra" aria-hidden="true" />
+
+            <div className="eventos-hero-dots">
+                {itens.map((item, posicao) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        className={posicao === indice ? 'is-active' : ''}
+                        onClick={() => onIndice(posicao)}
+                        aria-label={`Ir para ${item.titulo}`}
+                        aria-current={posicao === indice}
+                    />
+                ))}
+            </div>
+        </section>
+    )
+}
+
+type AcoesComentario = {
+    curtidos: Set<string>
+    curtir: (id: string) => void
+    respostaAberta: string | null
+    alternarResposta: (id: string) => void
+    respostas: Record<string, string>
+    definirResposta: (id: string, texto: string) => void
+    enviarResposta: (id: string) => void
+}
+
+function ComentarioItem({ comentario, nivel, acoes }: {
+    comentario: ComentarioApi
+    nivel: number
+    acoes: AcoesComentario
+}) {
+    const curtido = acoes.curtidos.has(comentario.id)
+    const respondendo = acoes.respostaAberta === comentario.id
+    const textoResposta = acoes.respostas[comentario.id] ?? ''
+
+    return (
+        <div className={`evento-comentario ${nivel > 0 ? 'is-resposta' : ''}`}>
+            <img
+                className="evento-comentario-avatar"
+                src={comentario.avatar || '/icon-perfil.png'}
+                alt=""
+            />
+
+            <div className="evento-comentario-corpo">
+                <div className="evento-comentario-topo">
+                    <strong>{comentario.autor}</strong>
                 </div>
+                {comentario.criadoEm && (
+                    <span className="evento-comentario-data">{dataCompleta(comentario.criadoEm)}</span>
+                )}
+
+                <p className="evento-comentario-texto">{comentario.texto}</p>
+
+                <div className="evento-comentario-acoes">
+                    <button
+                        type="button"
+                        className={curtido ? 'is-curtido' : ''}
+                        onClick={() => acoes.curtir(comentario.id)}
+                        aria-pressed={curtido}
+                        aria-label={`Curtir comentário de ${comentario.autor}`}
+                    >
+                        <IconeCoracao />
+                        <span>{comentario.curtidas}</span>
+                    </button>
+                    <button type="button" onClick={() => acoes.alternarResposta(comentario.id)}>
+                        <IconeResponder />
+                        Responder
+                    </button>
+                </div>
+
+                {respondendo && (
+                    <form
+                        className="evento-resposta-form"
+                        onSubmit={(event: FormEvent) => {
+                            event.preventDefault()
+                            acoes.enviarResposta(comentario.id)
+                        }}
+                    >
+                        <input
+                            type="text"
+                            value={textoResposta}
+                            onChange={(event) => acoes.definirResposta(comentario.id, event.target.value)}
+                            placeholder={`Responder ${comentario.handle}`}
+                            aria-label={`Responder ${comentario.autor}`}
+                        />
+                        <button type="submit" disabled={!textoResposta.trim()}>Enviar</button>
+                    </form>
+                )}
+
+                {comentario.respostas && comentario.respostas.length > 0 && (
+                    <div className="evento-comentario-respostas">
+                        {comentario.respostas.map((resposta) => (
+                            <ComentarioItem
+                                key={resposta.id}
+                                comentario={resposta}
+                                nivel={nivel + 1}
+                                acoes={acoes}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
+    )
+}
+
+function EsqueletoEventos() {
+    return (
+        <div className="eventos-esqueleto" aria-hidden="true">
+            <div className="eventos-esqueleto-hero" />
+            <div className="eventos-esqueleto-trilha">
+                {[0, 1, 2, 3, 4, 5, 6].map((item) => (
+                    <div className="eventos-esqueleto-card" key={item} />
+                ))}
+            </div>
+        </div>
+    )
+}
+
+export function Eventos() {
+    const navigate = useNavigate()
+    const [dados, setDados] = useState<{ destaques: EventoApi[]; inscricoes: EventoApi[]; jams: EventoApi[] } | null>(null)
+    const [carregando, setCarregando] = useState(true)
+    const [erro, setErro] = useState<string | null>(null)
+    const [tentativa, setTentativa] = useState(0)
+
+    const [busca, setBusca] = useState('')
+    const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('TODOS')
+    const [tagFiltro, setTagFiltro] = useState<string | null>(null)
+    const [filtrosAbertos, setFiltrosAbertos] = useState(false)
+    const [aviso, setAviso] = useState<string | null>(null)
+
+    const [heroIndice, setHeroIndice] = useState(0)
+
+    const [selecionado, setSelecionado] = useState<EventoApi | null>(null)
+    const [ultimoEvento, setUltimoEvento] = useState<EventoApi | null>(null)
+    const [abaDetalhe, setAbaDetalhe] = useState<AbaDetalhe>('comentarios')
+    const [ordemComentarios, setOrdemComentarios] = useState<OrdemComentarios>('recentes')
+    const [comentarios, setComentarios] = useState<ComentarioApi[]>([])
+    const [curtidos, setCurtidos] = useState<Set<string>>(() => new Set())
+    const [respostaAberta, setRespostaAberta] = useState<string | null>(null)
+    const [respostas, setRespostas] = useState<Record<string, string>>({})
+    const [novoComentario, setNovoComentario] = useState('')
+    const [editorAberto, setEditorAberto] = useState(false)
+    const [procurandoEquipe, setProcurandoEquipe] = useState<Set<string>>(() => new Set())
+    const [agora, setAgora] = useState(() => Date.now())
+
+    const [jogos, setJogos] = useState<Record<string, ConteudoApi[]>>({})
+    const [jogosErro, setJogosErro] = useState<string | null>(null)
+    const [carregandoJogos, setCarregandoJogos] = useState(false)
+
+    const fecharRef = useRef<HTMLButtonElement | null>(null)
+    const comentariosRef = useRef<HTMLDivElement | null>(null)
+    const editorRef = useRef<HTMLInputElement | null>(null)
+
+    useEffect(() => {
+        const controller = new AbortController()
+
+        setCarregando(true)
+        setErro(null)
+
+        buscarEventos(controller.signal)
+            .then((resposta) => {
+                setDados({
+                    destaques: resposta.destaques ?? [],
+                    inscricoes: resposta.inscricoesTerminando ?? [],
+                    jams: resposta.gameJams ?? []
+                })
+                setHeroIndice(0)
+            })
+            .catch((error: unknown) => {
+                if (controller.signal.aborted) return
+                setErro(error instanceof Error ? error.message : 'Não foi possível carregar os eventos.')
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setCarregando(false)
+            })
+
+        return () => controller.abort()
+    }, [tentativa])
+
+    useEffect(() => {
+        if (!aviso) return
+
+        const timer = window.setTimeout(() => setAviso(null), 4500)
+        return () => window.clearTimeout(timer)
+    }, [aviso])
+
+    const destaques = dados?.destaques ?? []
+    const inscricoes = dados?.inscricoes ?? []
+    const jams = dados?.jams ?? []
+
+    const tagsDisponiveis = useMemo(() => {
+        const todas = [...destaques, ...inscricoes, ...jams].flatMap((evento) => evento.tags ?? [])
+        return Array.from(new Set(todas)).sort((a, b) => a.localeCompare(b)).slice(0, 14)
+    }, [destaques, inscricoes, jams])
+
+    const filtrar = useCallback((lista: EventoApi[]) => {
+        const termo = normalizarTexto(busca.trim())
+
+        return lista.filter((evento) => {
+            if (filtroTipo !== 'TODOS' && evento.tipo !== filtroTipo) return false
+            if (tagFiltro && !(evento.tags ?? []).includes(tagFiltro)) return false
+            if (!termo) return true
+
+            const alvo = normalizarTexto([evento.titulo, evento.desenvolvedor, ...(evento.tags ?? [])].join(' '))
+            return alvo.includes(termo)
+        })
+    }, [busca, filtroTipo, tagFiltro])
+
+    const destaquesFiltrados = filtrar(destaques)
+    const inscricoesFiltradas = filtrar(inscricoes)
+    const jamsFiltradas = filtrar(jams)
+
+    const filtrosAtivos = filtroTipo !== 'TODOS' || tagFiltro !== null || busca.trim().length > 0
+    const semResultados = !carregando && !erro && dados !== null
+        && inscricoesFiltradas.length === 0
+        && jamsFiltradas.length === 0
+
+    const heroItens = destaquesFiltrados.length > 0 ? destaquesFiltrados : destaques
+
+    useEffect(() => {
+        if (heroItens.length < 2 || selecionado) return
+
+        const timer = window.setInterval(() => {
+            setHeroIndice((indice) => (indice + 1) % heroItens.length)
+        }, 8000)
+
+        return () => window.clearInterval(timer)
+    }, [heroItens.length, selecionado])
+
+    useEffect(() => {
+        if (heroIndice < heroItens.length) return
+        setHeroIndice(0)
+    }, [heroItens.length, heroIndice])
+
+    useEffect(() => {
+        if (!selecionado) return
+
+        setAgora(Date.now())
+        const timer = window.setInterval(() => setAgora(Date.now()), 1000)
+        return () => window.clearInterval(timer)
+    }, [selecionado])
+
+    const abrirEvento = useCallback((evento: EventoApi) => {
+        setSelecionado(evento)
+        setUltimoEvento(evento)
+        setAbaDetalhe('comentarios')
+        setOrdemComentarios('recentes')
+        setComentarios(clonarComentarios(evento.comentarios))
+        setNovoComentario('')
+        setEditorAberto(false)
+        setRespostaAberta(null)
+        setRespostas({})
+        setJogosErro(null)
+    }, [])
+
+    const fecharEvento = useCallback(() => setSelecionado(null), [])
+
+    const atual = selecionado ?? ultimoEvento
+    const atualId = atual?.id
+
+    useEffect(() => {
+        if (!selecionado) return
+
+        fecharRef.current?.focus()
+
+        const aoTeclar = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') fecharEvento()
+        }
+
+        window.addEventListener('keydown', aoTeclar)
+        return () => window.removeEventListener('keydown', aoTeclar)
+    }, [selecionado, fecharEvento])
+
+    useEffect(() => {
+        if (abaDetalhe !== 'jogos' || !atualId || jogos[atualId]) return
+
+        const controller = new AbortController()
+
+        setCarregandoJogos(true)
+        setJogosErro(null)
+
+        buscarJogosDaJam(atualId, controller.signal)
+            .then((lista) => setJogos((anterior) => ({ ...anterior, [atualId]: lista })))
+            .catch((error: unknown) => {
+                if (controller.signal.aborted) return
+                setJogosErro(error instanceof Error ? error.message : 'Não foi possível carregar os jogos publicados.')
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setCarregandoJogos(false)
+            })
+
+        return () => controller.abort()
+    }, [abaDetalhe, atualId, jogos])
+
+    const comentariosOrdenados = useMemo(() => {
+        const copia = [...comentarios]
+
+        if (ordemComentarios === 'populares') {
+            return copia.sort((a, b) => (b.curtidas ?? 0) - (a.curtidas ?? 0))
+        }
+
+        return copia.sort((a, b) => (b.criadoEm ?? '').localeCompare(a.criadoEm ?? ''))
+    }, [comentarios, ordemComentarios])
+
+    const alternarCurtida = (id: string) => {
+        const jaCurtido = curtidos.has(id)
+
+        setCurtidos((anterior) => {
+            const proximo = new Set(anterior)
+            if (jaCurtido) proximo.delete(id)
+            else proximo.add(id)
+            return proximo
+        })
+
+        setComentarios((lista) => atualizarComentario(lista, id, (comentario) => ({
+            ...comentario,
+            curtidas: Math.max(0, (comentario.curtidas ?? 0) + (jaCurtido ? -1 : 1))
+        })))
+    }
+
+    const alternarResposta = (id: string) => {
+        setRespostaAberta((atualResposta) => (atualResposta === id ? null : id))
+    }
+
+    const definirResposta = (id: string, texto: string) => {
+        setRespostas((anterior) => ({ ...anterior, [id]: texto }))
+    }
+
+    const enviarResposta = (id: string) => {
+        const texto = respostas[id]?.trim()
+        if (!texto) return
+
+        const nova: ComentarioApi = {
+            id: `resposta-local-${Date.now()}`,
+            autor: 'Você',
+            handle: '@voce',
+            avatar: '/icon-perfil.png',
+            texto,
+            curtidas: 0,
+            criadoEm: new Date().toISOString().slice(0, 10),
+            respostas: []
+        }
+
+        setComentarios((lista) => atualizarComentario(lista, id, (comentario) => ({
+            ...comentario,
+            respostas: [...(comentario.respostas ?? []), nova]
+        })))
+
+        setRespostas((anterior) => ({ ...anterior, [id]: '' }))
+        setRespostaAberta(null)
+    }
+
+    const enviarComentario = (event: FormEvent) => {
+        event.preventDefault()
+
+        const texto = novoComentario.trim()
+        if (!texto) return
+
+        const comentario: ComentarioApi = {
+            id: `comentario-local-${Date.now()}`,
+            autor: 'Você',
+            handle: '@voce',
+            avatar: '/icon-perfil.png',
+            texto,
+            curtidas: 0,
+            criadoEm: new Date().toISOString().slice(0, 10),
+            respostas: []
+        }
+
+        setComentarios((lista) => [comentario, ...lista])
+        setNovoComentario('')
+        setOrdemComentarios('recentes')
+    }
+
+    const acoesComentario: AcoesComentario = {
+        curtidos,
+        curtir: alternarCurtida,
+        respostaAberta,
+        alternarResposta,
+        respostas,
+        definirResposta,
+        enviarResposta
+    }
+
+    const irParaComentarios = () => {
+        setAbaDetalhe('comentarios')
+        setEditorAberto(true)
+        comentariosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        window.setTimeout(() => editorRef.current?.focus(), 250)
+    }
+
+    const alternarProcurando = (evento: EventoApi) => {
+        const ativo = procurandoEquipe.has(evento.id)
+
+        setProcurandoEquipe((anterior) => {
+            const proximo = new Set(anterior)
+            if (ativo) proximo.delete(evento.id)
+            else proximo.add(evento.id)
+            return proximo
+        })
+
+        setAviso(ativo
+            ? `Perfil de "procurando equipe" desativado em ${evento.titulo}.`
+            : `Perfil de "procurando equipe" ativado em ${evento.titulo}.`)
+    }
+
+    const limparFiltros = () => {
+        setFiltroTipo('TODOS')
+        setTagFiltro(null)
+        setBusca('')
+    }
+
+    return (
+        <main className={`eventos ${selecionado ? 'has-details' : ''}`}>
+
+            {carregando && <EsqueletoEventos />}
+
+            {!carregando && erro && (
+                <div className="eventos-estado eventos-estado-erro" role="alert">
+                    <p>{erro}</p>
+                    <button type="button" onClick={() => setTentativa((valor) => valor + 1)}>Tentar novamente</button>
+                </div>
+            )}
+
+            {!carregando && !erro && (
+                <>
+                    <HeroEventos
+                        itens={heroItens}
+                        indice={heroItens.length ? heroIndice % heroItens.length : 0}
+                        onIndice={setHeroIndice}
+                    />
+
+                    <div className="eventos-toolbar">
+                        <button
+                            type="button"
+                            className="eventos-criar"
+                            onClick={() => setAviso('A criação de eventos estará disponível em breve.')}
+                        >
+                            <img src="/icon-mais.svg" alt="" />
+                            <span>Criar evento</span>
+                        </button>
+
+                        <div className="eventos-busca">
+                            <BarraDePesquisa
+                                value={busca}
+                                onChange={setBusca}
+                                placeholder="Ex: RPG"
+                                filtroAtivo={filtrosAbertos}
+                                onFiltroClick={() => setFiltrosAbertos((aberto) => !aberto)}
+                            />
+                        </div>
+                    </div>
+
+                    {filtrosAbertos && (
+                        <div className="eventos-filtros">
+                            <div className="eventos-filtros-grupo">
+                                <span>Tipo</span>
+                                {(['TODOS', 'EVENTO', 'GAME_JAM'] as FiltroTipo[]).map((tipo) => (
+                                    <button
+                                        key={tipo}
+                                        type="button"
+                                        className={filtroTipo === tipo ? 'is-active' : ''}
+                                        onClick={() => setFiltroTipo(tipo)}
+                                    >
+                                        {tipo === 'GAME_JAM' ? 'Game Jam' : tipo === 'EVENTO' ? 'Eventos' : 'Todos'}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {tagsDisponiveis.length > 0 && (
+                                <div className="eventos-filtros-grupo">
+                                    <span>Categorias</span>
+                                    {tagsDisponiveis.map((tag) => (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            className={tagFiltro === tag ? 'is-active' : ''}
+                                            onClick={() => setTagFiltro((atualTag) => (atualTag === tag ? null : tag))}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {filtrosAtivos && (
+                                <button type="button" className="eventos-filtros-limpar" onClick={limparFiltros}>
+                                    Limpar filtros
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {aviso && <p className="eventos-aviso" role="status">{aviso}</p>}
+
+                    {semResultados && (
+                        <div className="eventos-estado">
+                            <p>Nenhum evento encontrado com esses filtros.</p>
+                            <button type="button" onClick={limparFiltros}>Limpar filtros</button>
+                        </div>
+                    )}
+
+                    {!semResultados && inscricoesFiltradas.length > 0 && (
+                        <section className="eventos-secao">
+                            <h2 className="eventos-secao-titulo">Inscrições terminando</h2>
+
+                            <TrilhaEventos
+                                titulo="Inscrições terminando"
+                                eventos={inscricoesFiltradas}
+                                onAbrir={abrirEvento}
+                            />
+                        </section>
+                    )}
+
+                    {!semResultados && jamsFiltradas.length > 0 && (
+                        <section className="eventos-secao">
+                            <h2 className="eventos-secao-titulo">Game jam</h2>
+
+                            <TrilhaEventos
+                                titulo="Game jam"
+                                eventos={jamsFiltradas}
+                                onAbrir={abrirEvento}
+                            />
+                        </section>
+                    )}
+                </>
+            )}
+
+            {atual && (
+                <>
+                    <div
+                        className={`evento-detalhe-overlay ${selecionado ? 'is-open' : ''}`}
+                        onClick={fecharEvento}
+                        aria-hidden="true"
+                    />
+
+                    <button
+                        ref={fecharRef}
+                        type="button"
+                        className={`evento-detalhe-voltar ${selecionado ? 'is-open' : ''}`}
+                        onClick={fecharEvento}
+                        aria-label="Fechar detalhes"
+                        tabIndex={selecionado ? 0 : -1}
+                    >
+                        <IconeAvancar />
+                    </button>
+
+                    <aside
+                        className={`evento-detalhe ${selecionado ? 'is-open' : ''}`}
+                        aria-label={`Detalhes de ${atual.titulo}`}
+                    >
+                        <div className="evento-detalhe-capa">
+                            <img src={atual.imagem || '/imagem-polvojam.jpg'} alt={atual.titulo} />
+                        </div>
+
+                        <div className="evento-detalhe-faixa">
+                            <h2>{atual.titulo}</h2>
+                            <span className="evento-detalhe-pill">{categoriaDoEvento(atual)}</span>
+                        </div>
+
+                        <div className="evento-detalhe-corpo">
+                            <strong className="evento-detalhe-dev">{atual.desenvolvedor}</strong>
+                            <span className="evento-detalhe-handle">{handleDe(atual.desenvolvedor)}</span>
+
+                            {atual.tema && <p className="evento-tema">{atual.tema}</p>}
+
+                            <section className="evento-detalhe-secao">
+                                <h3>Descrição</h3>
+                                <p>{atual.descricaoLonga || atual.descricao}</p>
+                            </section>
+
+                            {atual.premios && atual.premios.length > 0 && (
+                                <section className="evento-detalhe-secao">
+                                    <h3>Premiação</h3>
+                                    <div className="evento-premios">
+                                        {atual.premios.map((premio) => (
+                                            <div className="evento-premio" key={`${premio.posicao}-${premio.valor}`}>
+                                                <span className="evento-premio-posicao">{premio.posicao}</span>
+                                                <span className="evento-premio-info" title={premio.descricao}>
+                                                    {premio.valor}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {atual.cronograma && atual.cronograma.length > 0 && (
+                                <section className="evento-detalhe-secao">
+                                    <h3>Cronograma</h3>
+
+                                    <div className="evento-cronograma">
+                                        {atual.cronograma.map((etapa) => {
+                                            const { data, hora } = dividirPeriodo(etapa.periodo)
+
+                                            return (
+                                                <div className="evento-etapa-cron" key={`${etapa.titulo}-${etapa.periodo}`}>
+                                                    <div className="evento-campo">
+                                                        <span>Tempo restante:</span>
+                                                        <div className="evento-campo-box">{contagemLonga(atual.dataInicio, agora)}</div>
+                                                    </div>
+
+                                                    <div className="evento-campo">
+                                                        <span>{etapa.titulo}:</span>
+                                                        <div className={`evento-campo-duplo ${hora ? '' : 'is-unico'}`}>
+                                                            <div className="evento-campo-box">{data}</div>
+                                                            {hora && <div className="evento-campo-box">{hora}</div>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </section>
+                            )}
+
+                            {atual.regras && atual.regras.length > 0 && (
+                                <section className="evento-detalhe-secao">
+                                    <h3>Regras</h3>
+                                    <div className="evento-regras">
+                                        {atual.regras.map((regra) => (
+                                            <p key={regra}>{regra}</p>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            <div className="evento-acoes">
+                                <button
+                                    type="button"
+                                    className="evento-acao is-primaria"
+                                    onClick={() => {
+                                        setSelecionado(null)
+                                        navigate(`/eventos/${atual.id}/inscricao`)
+                                    }}
+                                >
+                                    Inscrever equipe
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="evento-acao is-secundaria"
+                                    onClick={() => {
+                                        setSelecionado(null)
+                                        navigate(`/eventos/${atual.id}/equipes`)
+                                    }}
+                                >
+                                    Equipes inscritas
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`evento-acao is-secundaria ${procurandoEquipe.has(atual.id) ? 'is-ativo' : ''}`}
+                                    onClick={() => alternarProcurando(atual)}
+                                    aria-pressed={procurandoEquipe.has(atual.id)}
+                                >
+                                    {procurandoEquipe.has(atual.id) ? 'Procurando equipe ✓' : 'Procurando equipe'}
+                                </button>
+                            </div>
+
+                            <div className="evento-comentar-bloco">
+                                <button type="button" className="evento-acao is-primaria" onClick={irParaComentarios}>
+                                    Comentar
+                                </button>
+                            </div>
+
+                            <section className="evento-comentarios" ref={comentariosRef}>
+                                <div className="evento-abas" role="tablist" aria-label="Seções do evento">
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={abaDetalhe === 'comentarios'}
+                                        className={abaDetalhe === 'comentarios' ? 'is-active' : ''}
+                                        onClick={() => setAbaDetalhe('comentarios')}
+                                    >
+                                        Comentários
+                                    </button>
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={abaDetalhe === 'jogos'}
+                                        className={abaDetalhe === 'jogos' ? 'is-active' : ''}
+                                        onClick={() => setAbaDetalhe('jogos')}
+                                    >
+                                        Jogos Publicados
+                                    </button>
+                                </div>
+
+                                {abaDetalhe === 'comentarios' && (
+                                    <>
+                                        {editorAberto && (
+                                            <form className="evento-comentario-form" onSubmit={enviarComentario}>
+                                                <img src="/icon-perfil.png" alt="" />
+                                                <input
+                                                    ref={editorRef}
+                                                    type="text"
+                                                    value={novoComentario}
+                                                    onChange={(event) => setNovoComentario(event.target.value)}
+                                                    placeholder="Escreva um comentário..."
+                                                    aria-label="Escreva um comentário"
+                                                />
+                                                <button type="submit" disabled={!novoComentario.trim()}>Comentar</button>
+                                            </form>
+                                        )}
+
+                                        <div className="evento-ordem">
+                                            <button
+                                                type="button"
+                                                className={ordemComentarios === 'recentes' ? 'is-active' : ''}
+                                                onClick={() => setOrdemComentarios('recentes')}
+                                            >
+                                                Recentes
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={ordemComentarios === 'populares' ? 'is-active' : ''}
+                                                onClick={() => setOrdemComentarios('populares')}
+                                            >
+                                                Populares
+                                            </button>
+                                        </div>
+
+                                        {comentariosOrdenados.length === 0 && (
+                                            <p className="evento-comentarios-vazio">Seja a primeira pessoa a comentar.</p>
+                                        )}
+
+                                        <div className="evento-comentarios-lista">
+                                            {comentariosOrdenados.map((comentario) => (
+                                                <ComentarioItem
+                                                    key={comentario.id}
+                                                    comentario={comentario}
+                                                    nivel={0}
+                                                    acoes={acoesComentario}
+                                                />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+
+                                {abaDetalhe === 'jogos' && (
+                                    <div className="evento-jogos">
+                                        {carregandoJogos && <p className="evento-comentarios-vazio">Carregando jogos...</p>}
+
+                                        {!carregandoJogos && jogosErro && (
+                                            <p className="evento-comentarios-vazio">{jogosErro}</p>
+                                        )}
+
+                                        {!carregandoJogos && !jogosErro && (jogos[atual.id] ?? []).length === 0 && (
+                                            <p className="evento-comentarios-vazio">
+                                                {atual.tipo === 'GAME_JAM'
+                                                    ? 'Nenhum jogo publicado nesta jam ainda.'
+                                                    : 'Este evento ainda não tem jogos publicados.'}
+                                            </p>
+                                        )}
+
+                                        {!carregandoJogos && !jogosErro && (jogos[atual.id] ?? []).map((jogo) => (
+                                            <article className="evento-jogo" key={jogo.id}>
+                                                <img src={jogo.imagem} alt="" />
+                                                <div>
+                                                    <strong>{jogo.titulo}</strong>
+                                                    <span>{jogo.desenvolvedor}</span>
+                                                    <p>{jogo.descricao}</p>
+                                                </div>
+                                                <span className="evento-jogo-nota">{jogo.nota?.toFixed(1)}</span>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        </div>
+                    </aside>
+                </>
+            )}
+        </main>
     )
 }

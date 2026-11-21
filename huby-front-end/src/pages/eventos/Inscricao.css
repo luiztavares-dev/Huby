@@ -1,0 +1,1016 @@
+/* =========================
+   INSCRIÇÃO DE EQUIPE
+========================= */
+
+.inscricao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0 20px 80px;
+    background-color: #0b0b0b;
+    color: var(--text1);
+}
+
+.inscricao > * {
+    width: 100%;
+    max-width: 460px;
+}
+
+.inscricao button {
+    font-family: inherit;
+}
+
+/* Topo */
+
+.inscricao-topo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 18px;
+    margin-bottom: 10px;
+    color: #9a9a9a;
+    font-size: 0.8rem;
+}
+
+.inscricao-voltar {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--pink);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.inscricao-voltar:hover {
+    background-color: rgba(250, 41, 95, 0.12);
+}
+
+/* Faixa rosa do evento */
+
+.inscricao-faixa {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 18px 16px;
+    border-radius: 10px;
+    background-color: var(--pink);
+}
+
+.inscricao-faixa h1 {
+    margin: 0;
+    color: var(--white);
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    line-height: 1.12;
+}
+
+.inscricao-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.inscricao-tags span {
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    color: var(--white);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Painel do formulário */
+
+.inscricao-painel {
+    display: flex;
+    flex-direction: column;
+    margin-top: 14px;
+    padding: 16px;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    background-color: #0f0f0f;
+}
+
+.inscricao-modelo strong {
+    display: block;
+    color: var(--text1);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.inscricao-modelo p {
+    margin: 8px 0 0;
+    color: var(--text2);
+    font-size: 0.68rem;
+    line-height: 1.55;
+}
+
+.inscricao-encontrar {
+    width: 100%;
+    height: 34px;
+    margin-top: 14px;
+    padding: 0 18px;
+    border: 1px solid var(--pink);
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--text1);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.inscricao-encontrar:hover {
+    background-color: rgba(250, 41, 95, 0.14);
+}
+
+.inscricao-encontrar.is-ativo {
+    background-color: var(--pink);
+    color: var(--white);
+}
+
+.inscricao-nota {
+    margin: 10px 0 0;
+    color: #8a8a8a;
+    font-size: 0.6rem;
+    line-height: 1.5;
+}
+
+/* Upload da imagem da equipe */
+
+.inscricao-midia {
+    position: relative;
+    height: 116px;
+    margin: 18px 0 28px;
+}
+
+.inscricao-midia-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background-color: #3f3f3f;
+    overflow: hidden;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.inscricao-midia-area:hover {
+    filter: brightness(1.08);
+}
+
+.inscricao-midia-area img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.inscricao-midia-mais {
+    color: #eaeaea;
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.inscricao-midia-status {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.65);
+    color: var(--text1);
+    font-size: 0.62rem;
+    white-space: nowrap;
+}
+
+.inscricao-midia-botao {
+    position: absolute;
+    left: 12px;
+    bottom: -26px;
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    border: 2px solid rgba(250, 41, 95, 0.55);
+    border-radius: 50%;
+    background-color: #101010;
+    box-shadow: 0 0 18px rgba(250, 41, 95, 0.35);
+    color: var(--pink);
+    font-size: 1.7rem;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.inscricao-midia-botao:hover:not(:disabled) {
+    border-color: var(--pink);
+    background-color: #1a0a0e;
+}
+
+.inscricao-midia-botao:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.inscricao-midia-botao img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.inscricao-midia-botao .inscricao-avatar-neutro {
+    width: 34px;
+    height: 34px;
+    color: #6f6f6f;
+}
+
+.inscricao-midia-botao-mais {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #101010;
+    border-radius: 50%;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.inscricao-midia-girando {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-top-color: var(--pink);
+    border-radius: 50%;
+    animation: inscricao-girar 0.8s linear infinite;
+}
+
+@keyframes inscricao-girar {
+    to { transform: rotate(360deg); }
+}
+
+.inscricao-erro-imagem {
+    margin: -16px 0 14px;
+    color: #ffb3c7;
+    font-size: 0.66rem;
+}
+
+/* Nome da equipe */
+
+.inscricao-bloco-nome {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inscricao-bloco-nome > span:first-child,
+.inscricao-subtitulo {
+    color: var(--text1);
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.inscricao-input {
+    position: relative;
+    display: block;
+}
+
+.inscricao-input input {
+    width: 100%;
+    height: 34px;
+    padding: 0 54px 0 10px;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    background-color: #0a0a0a;
+    color: var(--text1);
+    font-family: inherit;
+    font-size: 0.75rem;
+}
+
+.inscricao-input input::placeholder {
+    color: #6f6f6f;
+}
+
+.inscricao-input input:focus {
+    outline: none;
+    border-color: var(--pink);
+}
+
+.inscricao-input small {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8a8a8a;
+    font-size: 0.66rem;
+}
+
+/* Integrantes */
+
+.inscricao-integrantes {
+    display: flex;
+    flex-direction: column;
+    margin-top: 18px;
+}
+
+.inscricao-subtitulo {
+    margin-bottom: 12px;
+}
+
+.inscricao-integrante {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 158px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.inscricao-integrante.tem-remover {
+    grid-template-columns: 30px minmax(0, 1fr) 158px 18px;
+}
+
+.inscricao-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #3d3d3d;
+}
+
+.inscricao-avatar-neutro {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: #6b6b6b;
+}
+
+.inscricao-campo-bloco {
+    position: relative;
+    min-width: 0;
+}
+
+.inscricao-campo {
+    display: flex;
+    align-items: center;
+    height: 30px;
+    border: 1px solid #f1f1f1;
+    border-radius: 6px;
+    background-color: #0a0a0a;
+    overflow: hidden;
+}
+
+.inscricao-campo.is-preenchido {
+    border-color: var(--pink);
+}
+
+.inscricao-campo input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0 9px;
+    border: none;
+    background: transparent;
+    color: var(--text1);
+    font-family: inherit;
+    font-size: 0.74rem;
+}
+
+.inscricao-campo input::placeholder {
+    color: #8c8c8c;
+}
+
+.inscricao-campo input:focus {
+    outline: none;
+}
+
+.inscricao-campo:focus-within {
+    border-color: var(--pink);
+}
+
+/* Sugestões de @usuário */
+
+.inscricao-sugestoes {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    max-height: 190px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--pink);
+    border-radius: 6px;
+    background-color: #0e0e0e;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.6);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) #1e1e1e;
+}
+
+.inscricao-sugestoes li + li {
+    border-top: 1px solid #241017;
+}
+
+.inscricao-sugestoes button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 9px;
+    border: none;
+    background: transparent;
+    color: var(--text1);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.inscricao-sugestoes button:hover {
+    background-color: rgba(250, 41, 95, 0.18);
+}
+
+.inscricao-sugestao-avatar {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #242424;
+}
+
+.inscricao-sugestao-avatar.is-neutro {
+    display: grid;
+    place-items: center;
+    padding: 2px;
+    color: #6b6b6b;
+}
+
+.inscricao-sugestao-id {
+    flex-shrink: 0;
+    color: var(--text1);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.inscricao-sugestao-nome {
+    overflow: hidden;
+    color: var(--text2);
+    font-size: 0.64rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.inscricao-remover {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #777;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.inscricao-remover:hover {
+    color: var(--pink);
+    background-color: rgba(250, 41, 95, 0.12);
+}
+
+.inscricao-adicionar {
+    width: 100%;
+    height: 30px;
+    margin-top: 2px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 1.15rem;
+    font-weight: 400;
+    line-height: 1;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.inscricao-adicionar:hover {
+    filter: brightness(1.08);
+}
+
+/* Select de função */
+
+.inscricao-select {
+    position: relative;
+}
+
+.inscricao-select-botao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+    height: 30px;
+    padding: 0 0 0 11px;
+    border: 1px solid var(--pink);
+    border-radius: 8px;
+    background-color: #0a0a0a;
+    color: #8c8c8c;
+    font-size: 0.74rem;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.inscricao-select.is-preenchido .inscricao-select-botao {
+    color: var(--text1);
+}
+
+.inscricao-select-botao > span:first-child {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.inscricao-select-seta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 100%;
+    border-left: 1px solid var(--pink);
+    background-color: transparent;
+    color: var(--white);
+    line-height: 1;
+}
+
+.inscricao-select-seta svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+}
+
+.inscricao-select.is-open .inscricao-select-seta svg {
+    transform: rotate(180deg);
+}
+
+.inscricao-select-lista {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--pink);
+    border-radius: 4px;
+    background-color: #0e0e0e;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.55);
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) #1e1e1e;
+}
+
+.inscricao-select-lista button {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    border-bottom: 1px solid #2a151b;
+    background: transparent;
+    color: #e7e7e7;
+    font-size: 0.7rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.inscricao-select-lista button:last-child {
+    border-bottom: none;
+}
+
+.inscricao-select-lista button:hover,
+.inscricao-select-lista button.is-ativo {
+    background-color: rgba(250, 41, 95, 0.18);
+    color: var(--white);
+}
+
+/* Experiência */
+
+.inscricao-experiencia {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.inscricao-experiencia-opcoes {
+    display: flex;
+    gap: 6px;
+}
+
+.inscricao-experiencia-opcoes button {
+    flex: 1;
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid var(--pink);
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--text1);
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.inscricao-experiencia-opcoes button:hover {
+    background-color: rgba(250, 41, 95, 0.14);
+}
+
+.inscricao-experiencia-opcoes button.is-ativo {
+    background-color: var(--pink);
+    color: var(--white);
+}
+
+/* Erro e envio */
+
+.inscricao-erro {
+    margin: 14px 0 0;
+    padding: 8px 12px;
+    border-left: 3px solid var(--pink);
+    border-radius: 4px;
+    background-color: rgba(250, 41, 95, 0.08);
+    color: #ffb3c7;
+    font-size: 0.72rem;
+}
+
+.inscricao-enviar {
+    width: 100%;
+    height: 38px;
+    margin-top: 18px;
+    border: none;
+    border-radius: 999px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.inscricao-enviar:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+.inscricao-enviar:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+/* Cards de modelo */
+
+.inscricao-modelos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.inscricao-modelos-nota {
+    margin: 0 0 2px;
+    color: #8a8a8a;
+    font-size: 0.62rem;
+    line-height: 1.5;
+}
+
+.inscricao-modelo-card {
+    position: relative;
+    display: block;
+    padding: 14px;
+    border: 1px solid #262626;
+    border-radius: 10px;
+    background-color: #141414;
+    color: inherit;
+    text-align: left;
+}
+
+.inscricao-modelo-card.is-ativo {
+    border-color: rgba(250, 41, 95, 0.75);
+    background-color: rgba(250, 41, 95, 0.06);
+}
+
+.inscricao-modelo-selo {
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.5rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.inscricao-modelo-card strong {
+    display: block;
+    color: var(--text1);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.inscricao-modelo-card p {
+    margin: 6px 0 0;
+    color: var(--text2);
+    font-size: 0.66rem;
+    line-height: 1.55;
+}
+
+/* Estados */
+
+.inscricao-carregando {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 40px;
+}
+
+.inscricao-esqueleto-faixa,
+.inscricao-esqueleto-painel {
+    border-radius: 10px;
+    background: linear-gradient(100deg, #1a1a1a 30%, #242424 50%, #1a1a1a 70%);
+    background-size: 220% 100%;
+    animation: inscricao-pulso 1.4s ease-in-out infinite;
+}
+
+.inscricao-esqueleto-faixa {
+    height: 92px;
+}
+
+.inscricao-esqueleto-painel {
+    height: 420px;
+}
+
+@keyframes inscricao-pulso {
+    0% { background-position: 120% 0; }
+    100% { background-position: -20% 0; }
+}
+
+.inscricao-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 48px;
+    padding: 36px 24px;
+    border: 1px dashed var(--gray3);
+    border-radius: 8px;
+    color: var(--text2);
+    text-align: center;
+}
+
+.inscricao-estado p {
+    margin: 0;
+    font-size: 0.82rem;
+}
+
+.inscricao-estado button {
+    height: 32px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 999px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.inscricao-estado button.is-secundaria {
+    background-color: transparent;
+    border: 1px solid var(--pink);
+    color: var(--pink);
+}
+
+/* Sucesso */
+
+.inscricao-sucesso {
+    padding: 24px 20px;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    background-color: #131313;
+}
+
+.inscricao-sucesso-midia {
+    position: relative;
+    margin: 0 0 28px;
+}
+
+.inscricao-sucesso-imagem {
+    height: 150px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #1b1b1b;
+}
+
+.inscricao-sucesso-imagem img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.inscricao-sucesso-avatar {
+    position: absolute;
+    left: 10px;
+    bottom: -22px;
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    border: 3px solid #131313;
+    border-radius: 50%;
+    background-color: #242424;
+    overflow: hidden;
+}
+
+.inscricao-sucesso-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.inscricao-sucesso-avatar .inscricao-avatar-neutro {
+    width: 70%;
+    height: 70%;
+    color: #6f6f6f;
+}
+
+.inscricao-sucesso h1 {
+    margin: 0 0 8px;
+    color: var(--text1);
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.inscricao-sucesso > p {
+    margin: 0;
+    color: var(--text2);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.inscricao-sucesso > p strong {
+    color: var(--text1);
+}
+
+.inscricao-sucesso-modelo {
+    margin-top: 6px !important;
+    font-weight: 700;
+}
+
+.inscricao-sucesso ul {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inscricao-sucesso li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid #262626;
+    border-radius: 4px;
+    color: var(--text1);
+    font-size: 0.76rem;
+}
+
+.inscricao-sucesso li small {
+    color: var(--text2);
+    font-size: 0.68rem;
+}
+
+.inscricao-sucesso-integrante {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.inscricao-sucesso-integrante > img,
+.inscricao-sucesso-integrante-neutro {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #242424;
+}
+
+.inscricao-sucesso-integrante-neutro {
+    display: grid;
+    place-items: center;
+    padding: 2px;
+    color: #6b6b6b;
+}
+
+.inscricao-sucesso .inscricao-sucesso-convites {
+    margin-top: 14px;
+    color: var(--text2);
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+.inscricao-sucesso .inscricao-sucesso-aberta {
+    margin-top: 14px;
+    color: var(--pink);
+    font-size: 0.72rem;
+}
+
+.inscricao-sucesso button {
+    height: 36px;
+    margin-top: 20px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 999px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* Responsividade */
+
+@media (max-width: 600px) {
+    .inscricao {
+        padding: 0 14px 64px;
+    }
+
+    .inscricao-faixa {
+        padding: 15px 14px 13px;
+    }
+
+    .inscricao-faixa h1 {
+        font-size: 1.25rem;
+    }
+
+    .inscricao-painel {
+        padding: 14px;
+    }
+
+    .inscricao-midia {
+        height: 102px;
+    }
+
+    .inscricao-integrante {
+        grid-template-columns: 30px minmax(0, 1fr) 140px;
+    }
+
+    .inscricao-integrante.tem-remover {
+        grid-template-columns: 30px minmax(0, 1fr) 140px 16px;
+    }
+}

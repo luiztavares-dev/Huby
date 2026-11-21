@@ -17,6 +17,31 @@ interface Mensagem {
   texto: string;
   minha: boolean;
   hora: string;
+  tipo?: string;
+  destinatarioId?: string;
+  equipeId?: string;
+  eventoId?: string;
+  eventoTitulo?: string;
+  equipeNome?: string;
+  funcao?: string;
+  conviteStatus?: 'PENDENTE' | 'ACEITO' | 'RECUSADO' | '';
+}
+
+function formatarMensagem(m: any, meuId: string): Mensagem {
+  return {
+    id: m.id,
+    texto: m.texto,
+    minha: m.remetenteId === meuId,
+    hora: new Date(m.dataHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    tipo: m.tipo || 'TEXTO',
+    destinatarioId: m.destinatarioId || '',
+    equipeId: m.equipeId || '',
+    eventoId: m.eventoId || '',
+    eventoTitulo: m.eventoTitulo || '',
+    equipeNome: m.equipeNome || '',
+    funcao: m.funcao || '',
+    conviteStatus: m.conviteStatus || ''
+  };
 }
 
 export function Mensagens() {
@@ -30,6 +55,7 @@ export function Mensagens() {
   const [chatAtivo, setChatAtivo] = useState<UsuarioData | null>(null);
   const [inputMsg, setInputMsg] = useState('');
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [erroConvite, setErroConvite] = useState<string | null>(null);
   const fimDoChatRef = useRef<HTMLDivElement>(null);
 
  
@@ -70,12 +96,7 @@ export function Mensagens() {
           if (resHistorico.ok) {
             const histDB = await resHistorico.json();
             
-            const histFormatado = histDB.map((m: any) => ({
-              id: m.id,
-              texto: m.texto,
-              minha: m.remetenteId === loggedUser.id,
-              hora: new Date(m.dataHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }));
+            const histFormatado = histDB.map((m: any) => formatarMensagem(m, loggedUser.id));
             setMensagens(histFormatado);
           }
         } else {
@@ -107,20 +128,24 @@ export function Mensagens() {
           const novaMsgDoBanco = JSON.parse(mensagemRecebida.body);
           
           setChatAtivo(chatAtual => {
-            if (chatAtual && chatAtual.id === novaMsgDoBanco.remetenteId) {
-              setMensagens(prev => {
-                if (prev.some(m => m.id === novaMsgDoBanco.id)) {
-                  return prev; 
-                }
-                
-                return [...prev, {
-                  id: novaMsgDoBanco.id,
-                  texto: novaMsgDoBanco.texto,
-                  minha: false,
-                  hora: new Date(novaMsgDoBanco.dataHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                }];
-              });
-            }
+            if (!chatAtual) return chatAtual;
+
+            const fazParteDaConversa = novaMsgDoBanco.remetenteId === chatAtual.id
+              || novaMsgDoBanco.destinatarioId === chatAtual.id;
+
+            if (!fazParteDaConversa) return chatAtual;
+
+            setMensagens(prev => {
+              const formatada = formatarMensagem(novaMsgDoBanco, loggedUser.id);
+              const existente = prev.find(m => m.id === formatada.id);
+
+              if (existente) {
+                return prev.map(m => (m.id === formatada.id ? formatada : m));
+              }
+
+              return [...prev, formatada];
+            });
+
             return chatAtual;
           });
         });
@@ -156,12 +181,7 @@ export function Mensagens() {
       if (resposta.ok) {
         const msgSalva = await resposta.json();
         
-        setMensagens(prev => [...prev, {
-          id: msgSalva.id,
-          texto: msgSalva.texto,
-          minha: true,
-          hora: new Date(msgSalva.dataHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }]);
+        setMensagens(prev => [...prev, formatarMensagem(msgSalva, loggedUser.id)]);
       }
     } catch (erro) {
       console.error("Erro ao enviar mensagem:", erro);
@@ -179,6 +199,38 @@ export function Mensagens() {
       }
     } catch (erro) {
       console.error("Erro ao deletar mensagem:", erro);
+    }
+  };
+
+  const handleResponder = async (msg: Mensagem, aceitar: boolean) => {
+    if (!loggedUser) return;
+
+    const ehPedido = msg.tipo === 'PEDIDO_EQUIPE';
+    const acao = ehPedido ? 'pedido' : 'convite';
+
+    setErroConvite(null);
+
+    try {
+      const resposta = await fetch(`http://localhost:8080/api/mensagens/${msg.id}/${acao}/${aceitar ? 'aceitar' : 'recusar'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuarioId: loggedUser.id })
+      });
+
+      const corpo = await resposta.json().catch(() => null);
+
+      if (!resposta.ok) {
+        setErroConvite(corpo?.mensagem || `Não foi possível responder ao ${acao}.`);
+        return;
+      }
+
+      const novoStatus = (corpo?.conviteStatus || (aceitar ? 'ACEITO' : 'RECUSADO')) as Mensagem['conviteStatus'];
+
+      setMensagens(prev => prev.map(m => (
+        m.id === msg.id ? { ...m, conviteStatus: novoStatus } : m
+      )));
+    } catch {
+      setErroConvite(`Não foi possível responder ao ${acao}.`);
     }
   };
 
@@ -262,7 +314,7 @@ export function Mensagens() {
                 {mensagens.map(msg => (
                   <div key={msg.id} className={`msg-linha ${msg.minha ? 'minha' : 'deles'}`}>
                     
-                    {msg.minha && (
+                    {msg.minha && msg.tipo === 'TEXTO' && (
                       <button 
                         className="btn-deletar-msg" 
                         onClick={() => handleDeletarMensagem(msg.id)} 
@@ -275,14 +327,78 @@ export function Mensagens() {
                       </button>
                     )}
 
-                    <div className="msg-balao">
-                      <p>{msg.texto}</p>
-                      <span className="msg-hora">{msg.hora}</span>
-                    </div>
+                    {(msg.tipo === 'CONVITE_EQUIPE' || msg.tipo === 'PEDIDO_EQUIPE') ? (
+                      <div className="msg-balao convite">
+                        <span className="convite-titulo">
+                          {msg.tipo === 'PEDIDO_EQUIPE' ? 'Pedido de entrada' : 'Convite de equipe'}
+                        </span>
+                        <p className="convite-texto">{msg.texto}</p>
+
+                        <div className="convite-dados">
+                          {msg.equipeNome && <span><strong>Equipe</strong>{msg.equipeNome}</span>}
+                          {msg.eventoTitulo && <span><strong>Evento</strong>{msg.eventoTitulo}</span>}
+                          {msg.tipo === 'CONVITE_EQUIPE' && msg.funcao && (
+                            <span><strong>Função</strong>{msg.funcao}</span>
+                          )}
+                        </div>
+
+                        {!msg.minha && msg.conviteStatus === 'PENDENTE' && (
+                          <div className="convite-acoes">
+                            <button type="button" className="aceitar" onClick={() => handleResponder(msg, true)}>
+                              Aceitar
+                            </button>
+                            <button type="button" className="recusar" onClick={() => handleResponder(msg, false)}>
+                              Recusar
+                            </button>
+                          </div>
+                        )}
+
+                        {msg.conviteStatus === 'ACEITO' && (
+                          <span className="convite-status aceito">
+                            {msg.tipo === 'PEDIDO_EQUIPE'
+                              ? (msg.minha
+                                ? 'Pedido aceito — você entrou na equipe!'
+                                : 'Pedido aceito — o integrante entrou na equipe.')
+                              : (msg.minha
+                                ? 'Convite aceito pelo integrante.'
+                                : 'Convite aceito — você entrou na equipe!')}
+                          </span>
+                        )}
+
+                        {msg.conviteStatus === 'RECUSADO' && (
+                          <span className="convite-status recusado">
+                            {msg.tipo === 'PEDIDO_EQUIPE'
+                              ? (msg.minha
+                                ? 'Pedido recusado — você não entrou na equipe.'
+                                : 'Pedido recusado pela equipe.')
+                              : (msg.minha
+                                ? 'Convite recusado pelo integrante.'
+                                : 'Convite recusado — você não entrou na equipe.')}
+                          </span>
+                        )}
+
+                        {msg.minha && msg.conviteStatus === 'PENDENTE' && (
+                          <span className="convite-status pendente">
+                            {msg.tipo === 'PEDIDO_EQUIPE'
+                              ? 'Aguardando resposta da equipe.'
+                              : 'Aguardando resposta do integrante.'}
+                          </span>
+                        )}
+
+                        <span className="msg-hora">{msg.hora}</span>
+                      </div>
+                    ) : (
+                      <div className="msg-balao">
+                        <p>{msg.texto}</p>
+                        <span className="msg-hora">{msg.hora}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
                 <div ref={fimDoChatRef} />
               </div>
+
+              {erroConvite && <p className="convite-erro" role="alert">{erroConvite}</p>}
 
               <div className="chat-input-area">
                 <input 

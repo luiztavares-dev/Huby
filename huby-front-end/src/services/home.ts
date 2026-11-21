@@ -29,7 +29,7 @@ export type CarrosselApi = {
     itens: ConteudoApi[]
 }
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:8080'
+export const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:8080'
 
 export async function buscarCarrosseisHome(signal?: AbortSignal): Promise<CarrosselApi[]> {
     const resposta = await fetch(`${API_URL}/api/home/carrosseis`, { signal })
