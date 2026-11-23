@@ -2,7 +2,6 @@ import './Home.css'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import Banner from '../../components/banner/Banner'
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
 import GameDetails, { type Game } from '../../components/gameDetails/GameDetails'
 import categoriesData from '../../data/DadosCategories.json'
@@ -83,13 +82,13 @@ type Filtros = {
 const filtrosIniciais: Filtros = {
     categorias: [],
     preco: 'todos',
-    precoMinimo: 10,
-    precoMaximo: 200,
+    precoMinimo: 0,
+    precoMaximo: 50,
     ordenacao: 'padrao'
 }
 const categoriasFiltro = Object.keys(categoriaMap)
-const precoMinimo = 10
-const precoMaximo = 200
+const precoMinimo = 0
+const precoMaximo = 50
 const plataformasValidas = new Set(['website', 'mobile', 'pc'])
 
 function paraGame(item: ConteudoApi): HomeGame {
@@ -117,12 +116,16 @@ function paraGame(item: ConteudoApi): HomeGame {
     }
 }
 
-function paraSecao(carrossel: CarrosselApi): Secao {
+function paraSecao(carrossel: CarrosselApi): Secao | null {
+    const jogos = carrossel.itens.filter((item) => item.tipo === 'JOGO')
+
+    if (jogos.length === 0) return null
+
     return {
         id: carrossel.id,
         title: carrossel.titulo,
         subtitle: carrossel.subtitulo ?? undefined,
-        items: carrossel.itens.map(paraGame)
+        items: jogos.map(paraGame)
     }
 }
 
@@ -172,7 +175,7 @@ function Stars({ score }: { score: number }) {
 }
 
 function GameCard({ game, isSelected, onSelect }: {
-    game: Game
+    game: HomeGame
     isSelected: boolean
     onSelect: (game: Game) => void
 }) {
@@ -223,6 +226,9 @@ function GameCard({ game, isSelected, onSelect }: {
                     <div className="game-card-rating">
                         <Stars score={game.score} />
                         <small>{game.score.toFixed(1)} ({game.reviews})</small>
+                        <strong className={`game-card-price ${game.preco === 0 ? 'is-free' : ''}`}>
+                            {game.preco === 0 ? 'Gratuito' : formatarPreco(game.preco)}
+                        </strong>
                     </div>
                 ) : (
                     <div className="game-card-event-meta">
@@ -274,7 +280,7 @@ function GameCard({ game, isSelected, onSelect }: {
 function CarouselSection({ title, subtitle, items, selectedId, onSelect }: {
     title: string
     subtitle?: string
-    items: Game[]
+    items: HomeGame[]
     selectedId: string | null
     onSelect: (game: Game) => void
 }) {
@@ -586,15 +592,15 @@ function PainelFiltros({ isOpen, filtros, onAplicar, onCancelar }: {
 
                 <section className="home-filtros-secao" aria-labelledby="home-filtros-ordenar">
                     <h3 id="home-filtros-ordenar">Ordenar por</h3>
-                    <div className="home-filtros-opcoes">
+                    <div className="home-filtros-opcoes home-filtros-ordenar">
                         <select
                             aria-label="Ordenar por data"
                             value={['recentes', 'antigos'].includes(rascunho.ordenacao) ? rascunho.ordenacao : ''}
                             onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
                         >
                             <option value="">Data</option>
-                            <option value="recentes">Mais recentes</option>
-                            <option value="antigos">Mais antigos</option>
+                            <option value="recentes">Recentes</option>
+                            <option value="antigos">Antigos</option>
                         </select>
                         <select
                             aria-label="Ordenar por preço"
@@ -602,8 +608,8 @@ function PainelFiltros({ isOpen, filtros, onAplicar, onCancelar }: {
                             onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
                         >
                             <option value="">Preço</option>
-                            <option value="menor-preco">Menor preço</option>
-                            <option value="maior-preco">Maior preço</option>
+                            <option value="menor-preco">Menor</option>
+                            <option value="maior-preco">Maior</option>
                         </select>
                         <select
                             aria-label="Ordenar por avaliação"
@@ -611,8 +617,8 @@ function PainelFiltros({ isOpen, filtros, onAplicar, onCancelar }: {
                             onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
                         >
                             <option value="">Avaliação</option>
-                            <option value="melhor-avaliacao">Maior avaliação</option>
-                            <option value="menor-avaliacao">Menor avaliação</option>
+                            <option value="melhor-avaliacao">Maior</option>
+                            <option value="menor-avaliacao">Menor</option>
                         </select>
                     </div>
                 </section>
@@ -644,7 +650,11 @@ export function Home() {
         setErro(null)
 
         buscarCarrosseisHome(controller.signal)
-            .then((carrosseis) => setSecoes(carrosseis.map(paraSecao)))
+            .then((carrosseis) => setSecoes(
+                carrosseis
+                    .map(paraSecao)
+                    .filter((secao): secao is Secao => secao !== null)
+            ))
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return
                 setErro(error instanceof Error ? error.message : 'Não foi possível carregar os destaques.')
@@ -700,8 +710,6 @@ export function Home() {
 
     return (
         <main className="home">
-
-            <Banner />
 
             <section className="home-catalog" aria-busy={carregando}>
 

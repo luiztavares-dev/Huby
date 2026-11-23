@@ -76,8 +76,10 @@ public class DataSeeder implements CommandLineRunner {
             boolean precisaTamanho = atual.getTamanhoEquipe() == null && seed.getTamanhoEquipe() != null;
             boolean precisaModelo = seed.getModeloEquipe() != null
                     && !seed.getModeloEquipe().equals(atual.getModeloEquipe());
+            boolean precisaPreco = seed.getTipo() == TipoConteudo.JOGO
+                    && !seed.getPreco().equals(atual.getPreco());
 
-            if (precisaDetalhes || precisaTamanho || precisaModelo) {
+            if (precisaDetalhes || precisaTamanho || precisaModelo || precisaPreco) {
                 if (precisaDetalhes) {
                     atual.setTema(seed.getTema());
                     atual.setInscricoesAte(seed.getInscricoesAte());
@@ -95,6 +97,10 @@ public class DataSeeder implements CommandLineRunner {
 
                 if (precisaModelo) {
                     atual.setModeloEquipe(seed.getModeloEquipe());
+                }
+
+                if (precisaPreco) {
+                    atual.setPreco(seed.getPreco());
                 }
 
                 repository.save(atual);
@@ -645,7 +651,24 @@ public class DataSeeder implements CommandLineRunner {
                 "jam-ludum-dare-60", "INDIVIDUAL"
         );
 
+        Map<String, Double> precosJogos = Map.of(
+                "jogo-silksong", 19.90,
+                "jogo-jundu", 7.90,
+                "jogo-semente-zero", 0.0,
+                "jogo-coral-em-fluxo", 0.0,
+                "jogo-ruido-branco", 0.0,
+                "jogo-linha-de-mare", 0.0,
+                "jogo-jardim-de-vidro", 0.0,
+                "jogo-arquivo-07", 0.0,
+                "jogo-cidade-submersa", 14.90,
+                "jogo-orbita-baixa", 9.90
+        );
+
         seeds.forEach((conteudo) -> {
+            if (conteudo.getTipo() == TipoConteudo.JOGO) {
+                conteudo.setPreco(precosJogos.getOrDefault(conteudo.getId(), 0.0));
+            }
+
             if (conteudo.getTipo() == TipoConteudo.EVENTO || conteudo.getTipo() == TipoConteudo.GAME_JAM) {
                 conteudo.setTamanhoEquipe(tamanhosEquipe.getOrDefault(conteudo.getId(), 4));
                 conteudo.setModeloEquipe(modelosEquipe.getOrDefault(conteudo.getId(), "COMUM"));
