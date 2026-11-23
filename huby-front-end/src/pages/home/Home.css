@@ -19,7 +19,52 @@
 }
 
 .home-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 60%;
+}
+
+.home-postar-jogo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex-shrink: 0;
+    height: 44px;
+    padding: 0 15px;
+    border: none;
+    border-radius: 3px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.home-postar-jogo:hover {
+    filter: brightness(1.1);
+}
+
+.home-postar-jogo img {
+    width: 12px;
+    height: 12px;
+}
+
+.home-busca {
+    flex: 1;
+    min-width: 0;
+}
+
+.home-publicacao-aviso {
+    margin: 12px 0 0;
+    color: var(--pink);
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 
 .home-limpar-filtros {
@@ -370,7 +415,8 @@
 
 .home-filtros button:focus-visible,
 .home-filtros select:focus-visible,
-.home-limpar-filtros:focus-visible {
+.home-limpar-filtros:focus-visible,
+.home-postar-jogo:focus-visible {
     outline: 2px solid var(--white);
     outline-offset: 3px;
 }
@@ -846,5 +892,17 @@
 
     .game-card {
         flex-basis: 300px;
+    }
+}
+
+@media (max-width: 600px) {
+    .home-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .home-postar-jogo {
+        align-self: flex-start;
+        height: 34px;
     }
 }

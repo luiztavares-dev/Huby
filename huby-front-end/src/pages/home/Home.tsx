@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
 import GameDetails, { type Game } from '../../components/gameDetails/GameDetails'
+import { PostarJogo } from '../../components/postarJogo/PostarJogo'
 import categoriesData from '../../data/DadosCategories.json'
 import { buscarCarrosseisHome, linkJogoValido, type CarrosselApi, type ConteudoApi } from '../../services/home'
 import { usuarioLogado } from '../../services/sessao'
@@ -649,6 +650,8 @@ export function Home() {
     const [busca, setBusca] = useState('')
     const [filtros, setFiltros] = useState<Filtros>(filtrosIniciais)
     const [filtrosAbertos, setFiltrosAbertos] = useState(false)
+    const [postarAberto, setPostarAberto] = useState(false)
+    const [avisoPublicacao, setAvisoPublicacao] = useState<string | null>(null)
     const [bibliotecaIds, setBibliotecaIds] = useState<Set<string>>(() => new Set())
     const [comprasIds, setComprasIds] = useState<Set<string>>(() => new Set())
     const [acaoPendente, setAcaoPendente] = useState<AcaoPendente | null>(null)
@@ -691,7 +694,20 @@ export function Home() {
         setAviso(null)
     }, [])
     const closeFiltros = useCallback(() => setFiltrosAbertos(false), [])
+    const closePostarJogo = useCallback(() => setPostarAberto(false), [])
     const recarregar = useCallback(() => setTentativa((valor) => valor + 1), [])
+
+    const abrirPostarJogo = () => {
+        if (!usuario.id) {
+            navigate('/login')
+            return
+        }
+
+        setSelectedGame(null)
+        setFiltrosAbertos(false)
+        setAviso(null)
+        setPostarAberto(true)
+    }
 
     const salvar = async (game: Game) => {
         if (!usuario.id) {
@@ -792,13 +808,23 @@ export function Home() {
             <section className="home-catalog" aria-busy={carregando}>
 
                 <div className="home-toolbar">
-                    <BarraDePesquisa
-                        value={busca}
-                        onChange={setBusca}
-                        filtroAtivo={filtrosAbertos}
-                        onFiltroClick={() => setFiltrosAbertos(true)}
-                    />
+                    <button type="button" className="home-postar-jogo" onClick={abrirPostarJogo}>
+                        <img src="/icon-mais.svg" alt="" />
+                        <span>Postar jogo</span>
+                    </button>
+                    <div className="home-busca">
+                        <BarraDePesquisa
+                            value={busca}
+                            onChange={setBusca}
+                            filtroAtivo={filtrosAbertos}
+                            onFiltroClick={() => setFiltrosAbertos(true)}
+                        />
+                    </div>
                 </div>
+
+                {avisoPublicacao && (
+                    <p className="home-publicacao-aviso" role="status">{avisoPublicacao}</p>
+                )}
 
                 {filtrosAtivos && (
                     <button type="button" className="home-limpar-filtros" onClick={() => setFiltros(filtrosIniciais)}>
@@ -860,6 +886,17 @@ export function Home() {
                 notice={aviso}
                 onSave={salvar}
                 onBuy={comprar}
+            />
+
+            <PostarJogo
+                isOpen={postarAberto}
+                onClose={closePostarJogo}
+                usuarioId={usuario.id}
+                desenvolvedor={usuario.username}
+                onPublished={(jogo) => {
+                    setAvisoPublicacao(`${jogo.titulo} foi publicado e já está no catálogo.`)
+                    setTentativa((valor) => valor + 1)
+                }}
             />
 
         </main>

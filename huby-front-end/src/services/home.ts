@@ -32,6 +32,21 @@ export type CarrosselApi = {
     itens: ConteudoApi[]
 }
 
+export type PlataformaJogoApi = 'pc' | 'mobile' | 'website'
+
+export type NovoJogoApi = {
+    criadorId: string
+    titulo: string
+    descricao: string
+    descricaoLonga: string
+    desenvolvedor: string
+    imagem?: string
+    linkUrl: string
+    tags: string[]
+    plataformas: PlataformaJogoApi[]
+    preco: number
+}
+
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:8080'
 
 export function linkJogoValido(link?: string | null): string | null {
@@ -59,4 +74,19 @@ export async function buscarJogos(signal?: AbortSignal): Promise<ConteudoApi[]> 
     const resposta = await fetch(`${API_URL}/api/home/jogos`, { signal })
     if (!resposta.ok) throw new Error('Não foi possível carregar os jogos.')
     return resposta.json() as Promise<ConteudoApi[]>
+}
+
+export async function publicarJogo(payload: NovoJogoApi): Promise<ConteudoApi> {
+    const resposta = await fetch(`${API_URL}/api/jogos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+
+    if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => null) as { message?: string } | null
+        throw new Error(corpo?.message ?? `Não foi possível publicar o jogo (HTTP ${resposta.status}).`)
+    }
+
+    return resposta.json() as Promise<ConteudoApi>
 }
