@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,20 +14,38 @@ import java.util.Optional;
 /**
  * Popula a coleção de conteúdos com dados fictícios.
  * Na primeira execução salva todos os documentos; nas seguintes, adiciona os que
- * faltam e completa os detalhes de eventos criados antes desse recurso existir.
+ * faltam e completa os detalhes de eventos e comunidades criados antes do recurso existir.
  */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
     private final ConteudoRepository repository;
     private final FuncaoEquipeRepository funcaoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Value("${huby.seed.enabled:true}")
     private boolean seedEnabled;
 
-    public DataSeeder(ConteudoRepository repository, FuncaoEquipeRepository funcaoRepository) {
+    private static final List<String> CARGOS_SEED = List.of("DONO", "ADMIN", "MEMBRO", "MEMBRO");
+
+    private static final String[] PEDIDOS_SEED = {
+            "Estou procurando gente pra testar meu jogo e quero ajudar nos outros também.",
+            "Trabalho com arte 2D e gostaria de participar das jams da comunidade."
+    };
+
+    private static final String[] ASSUNTOS_SEED = {
+            "Boa! Fechei o protótipo que comecei no último encontro e o feedback de vocês salvou o projeto.",
+            "Estou com dúvida sobre exportar pra navegador. Alguém já subiu build no Huby com WebGL?",
+            "Abri um tópico de oferta de colaboração. Tenho programador sobrando e falta artista pra duas ideias.",
+            "Encontro da semana que vem vai ser sobre balanceamento. Trouxeram um caso real do jogo de plataforma?"
+    };
+
+    public DataSeeder(ConteudoRepository repository,
+                      FuncaoEquipeRepository funcaoRepository,
+                      UsuarioRepository usuarioRepository) {
         this.repository = repository;
         this.funcaoRepository = funcaoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
@@ -81,6 +100,129 @@ public class DataSeeder implements CommandLineRunner {
                 repository.save(atual);
             }
         }
+
+        semearComunidades();
+    }
+
+    /**
+     * Completa as comunidades criadas antes da gestão de membros existir:
+     * cargos reais, pedidos pendentes e publicações no fórum.
+     */
+    private void semearComunidades() {
+        List<Usuario> usuarios = new ArrayList<>(usuarioRepository.findAll());
+        int janela = CARGOS_SEED.size() + PEDIDOS_SEED.length;
+
+        if (usuarios.size() < janela) {
+            return;
+        }
+
+        usuarios.sort(Comparator.comparing(usuario -> usuario.getId() == null ? "" : usuario.getId()));
+
+        int cursor = 0;
+
+        for (Conteudo comunidade : repository.findByTipoOrderByRelevanciaDescNotaDesc(TipoConteudo.COMUNIDADE)) {
+            boolean semMembros = comunidade.getMembros() == null || comunidade.getMembros().isEmpty();
+            boolean semPublicacoes = comunidade.getComentarios() == null || comunidade.getComentarios().isEmpty();
+
+            if (!semMembros && !semPublicacoes) {
+                continue;
+            }
+
+            if (semMembros) {
+                comunidade.setMembros(novosMembros(usuarios, cursor));
+                comunidade.setDonoId(comunidade.getMembros().get(0).getUsuarioId());
+                comunidade.setSolicitacoes(novosPedidos(usuarios, cursor + CARGOS_SEED.size()));
+            }
+
+            if (semPublicacoes) {
+                comunidade.setComentarios(novasPublicacoes(comunidade, usuarios, cursor));
+            }
+
+            repository.save(comunidade);
+            cursor += janela;
+        }
+    }
+
+    private List<IntegranteComunidade> novosMembros(List<Usuario> usuarios, int inicio) {
+        List<IntegranteComunidade> membros = new ArrayList<>();
+        LocalDate hoje = LocalDate.now();
+
+        for (int i = 0; i < CARGOS_SEED.size(); i++) {
+            Usuario usuario = usuarioNaPosicao(usuarios, inicio + i);
+            IntegranteComunidade membro = new IntegranteComunidade(
+                    usuario.getId(), usuario.getUsername(), avatarDe(usuario), CARGOS_SEED.get(i));
+            membro.setEntrouEm(hoje.minusDays((long) (CARGOS_SEED.size() - i) * 11));
+            membros.add(membro);
+        }
+
+        return membros;
+    }
+
+    private List<SolicitacaoComunidade> novosPedidos(List<Usuario> usuarios, int inicio) {
+        List<SolicitacaoComunidade> pedidos = new ArrayList<>();
+        LocalDate hoje = LocalDate.now();
+
+        for (int i = 0; i < PEDIDOS_SEED.length; i++) {
+            Usuario usuario = usuarioNaPosicao(usuarios, inicio + i);
+            SolicitacaoComunidade pedido = new SolicitacaoComunidade(
+                    "solicitacao-" + usuario.getId(),
+                    usuario.getId(),
+                    usuario.getUsername(),
+                    avatarDe(usuario),
+                    PEDIDOS_SEED[i]);
+            pedido.setCriadoEm(hoje.minusDays((long) i + 1));
+            pedidos.add(pedido);
+        }
+
+        return pedidos;
+    }
+
+    private List<ComentarioConteudo> novasPublicacoes(Conteudo comunidade, List<Usuario> usuarios, int inicio) {
+        List<ComentarioConteudo> publicacoes = new ArrayList<>();
+        LocalDate hoje = LocalDate.now();
+
+        for (int i = 0; i < ASSUNTOS_SEED.length; i++) {
+            Usuario autor = usuarioNaPosicao(usuarios, inicio + i);
+            String texto = ASSUNTOS_SEED[(inicio + i) % ASSUNTOS_SEED.length];
+            int curtidas = 8 + ((inicio + i) * 7) % 41;
+            List<ComentarioConteudo> respostas = new ArrayList<>();
+
+            if (i == 1) {
+                Usuario respondente = usuarioNaPosicao(usuarios, inicio + 2);
+                respostas.add(new ComentarioConteudo(
+                        "publicacao-" + comunidade.getId() + "-" + i + "-r",
+                        nomeDe(respondente), handleDe(respondente), avatarDe(respondente),
+                        "Também passei por isso. Achei que era o projeto, mas era só o costume de salvar no fim.",
+                        Math.max(1, curtidas / 3), hoje.minusDays(15L), List.of()));
+            }
+
+            publicacoes.add(new ComentarioConteudo(
+                    "publicacao-" + comunidade.getId() + "-" + i,
+                    nomeDe(autor), handleDe(autor), avatarDe(autor), texto, curtidas,
+                    hoje.minusDays(18L - i * 4L), respostas));
+        }
+
+        return publicacoes;
+    }
+
+    private Usuario usuarioNaPosicao(List<Usuario> usuarios, int posicao) {
+        return usuarios.get(Math.floorMod(posicao, usuarios.size()));
+    }
+
+    private String avatarDe(Usuario usuario) {
+        String avatar = usuario.getAvatarUrl() == null ? "" : usuario.getAvatarUrl().trim();
+        return avatar.isEmpty() ? "/icon-perfil.png" : avatar;
+    }
+
+    private String nomeDe(Usuario usuario) {
+        if (usuario.getNomeExibicao() != null && !usuario.getNomeExibicao().isBlank()) {
+            return usuario.getNomeExibicao();
+        }
+        return usuario.getUsername() == null ? "Alguém" : usuario.getUsername();
+    }
+
+    private String handleDe(Usuario usuario) {
+        return "@" + (usuario.getUsername() == null ? "" : usuario.getUsername());
     }
 
     /** Funções disponíveis no select de integrantes da inscrição de equipe. */

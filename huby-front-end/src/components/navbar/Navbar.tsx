@@ -66,7 +66,7 @@ export function Navbar ({activeLink}: NavbarProps) {
                 <Link to="/mensagens" className="navbar-link" style={{
                     backgroundColor: activeLink === 'mensagens' ? 'var(--pink)' : '' 
                 }}>
-                    <img src="chat.svg" alt="mensagens" />
+                    <img src="/icon-chat.svg" alt="mensagens" />
                 </Link>
 
                 <Link to="/comunidades" className="navbar-link" style={{

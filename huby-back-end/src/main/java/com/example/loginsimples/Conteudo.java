@@ -66,6 +66,15 @@ public class Conteudo {
     /** Quantidade de integrantes exigida na inscrição de uma equipe. */
     private Integer tamanhoEquipe;
 
+    /** Usuário com poder total sobre a comunidade (apenas para tipo COMUNIDADE). */
+    private String donoId = "";
+
+    private List<IntegranteComunidade> membros = new ArrayList<>();
+    private List<SolicitacaoComunidade> solicitacoes = new ArrayList<>();
+
+    /** Quando falso, a comunidade não aceita pedidos de entrada. */
+    private Boolean abertaParaSolicitacoes = true;
+
     public Conteudo() {
     }
 
@@ -155,4 +164,18 @@ public class Conteudo {
 
     public Integer getTamanhoEquipe() { return tamanhoEquipe; }
     public void setTamanhoEquipe(Integer tamanhoEquipe) { this.tamanhoEquipe = tamanhoEquipe; }
+
+    public String getDonoId() { return donoId; }
+    public void setDonoId(String donoId) { this.donoId = donoId; }
+
+    public List<IntegranteComunidade> getMembros() { return membros; }
+    public void setMembros(List<IntegranteComunidade> membros) { this.membros = membros; }
+
+    public List<SolicitacaoComunidade> getSolicitacoes() { return solicitacoes; }
+    public void setSolicitacoes(List<SolicitacaoComunidade> solicitacoes) { this.solicitacoes = solicitacoes; }
+
+    public Boolean getAbertaParaSolicitacoes() { return abertaParaSolicitacoes; }
+    public void setAbertaParaSolicitacoes(Boolean abertaParaSolicitacoes) {
+        this.abertaParaSolicitacoes = abertaParaSolicitacoes;
+    }
 }

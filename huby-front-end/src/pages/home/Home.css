@@ -11,7 +11,6 @@
     background-color: var(--gray1);
     color: var(--text1);
     overflow-x: hidden;
-    transition: padding-right 0.3s ease;
 }
 
 .home-catalog {
@@ -451,16 +450,6 @@
 
 .game-card-tooltip.is-open p {
     opacity: 1;
-}
-
-/* =========================
-   SIDEBAR ABERTA (EMPURRA CONTEÚDO)
-========================= */
-
-@media (min-width: 769px) {
-    .home.has-details {
-        padding-right: 440px;
-    }
 }
 
 /* =========================

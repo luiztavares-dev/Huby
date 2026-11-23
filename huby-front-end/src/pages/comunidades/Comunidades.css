@@ -1,0 +1,1088 @@
+/* =========================
+   PÁGINA DE COMUNIDADES (FÓRUM)
+========================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+.comunidades {
+    --comunidades-px: 68px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 32%, 610px);
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--gray1);
+    color: var(--text1);
+    overflow-x: hidden;
+}
+
+.comunidades button {
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--text1);
+    background: none;
+    border: 1px solid var(--white);
+    border-radius: 5px;
+    padding: 0 16px;
+    min-height: 40px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.comunidades button:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.comunidades button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.comunidades button.is-primario {
+    background-color: var(--pink);
+    border-color: var(--pink);
+    font-weight: 600;
+}
+
+.comunidades button.is-primario:hover:not(:disabled) {
+    background-color: #e01f51;
+}
+
+.comunidades button.is-perigo {
+    border-color: var(--pink);
+    color: var(--pink);
+}
+
+.comunidades button.is-perigo:hover:not(:disabled) {
+    background-color: var(--pink);
+    color: var(--white);
+}
+
+.comunidades button.is-enviado {
+    border-color: var(--gray2);
+    color: var(--text2);
+}
+
+/* =========================
+   ESTADOS DA PÁGINA
+========================= */
+
+.comunidades-estado {
+    grid-column: 1 / -1;
+    display: grid;
+    place-content: center;
+    gap: 14px;
+    min-height: 60vh;
+    text-align: center;
+    color: var(--text2);
+    font-size: 0.95rem;
+}
+
+.comunidades-estado-erro p {
+    color: var(--pink);
+}
+
+.comunidades-vazio {
+    color: var(--gray2);
+    font-size: 0.85rem;
+    font-weight: 300;
+    margin: 0;
+}
+
+/* =========================
+   FEED
+========================= */
+
+.comunidades-feed {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0 var(--comunidades-px) 0 var(--comunidades-px);
+}
+
+.comunidades-feed-cabeca {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0 18px;
+    margin-bottom: 8px;
+    background-color: var(--gray1);
+    border-bottom: 1px solid var(--gray3);
+}
+
+.comunidades-feed-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--gray3);
+    background-color: #1b1b1b;
+}
+
+.comunidades-feed-titulo h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+.comunidades-feed-titulo p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: var(--text2);
+    overflow-wrap: anywhere;
+}
+
+.comunidades-feed-acoes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comunidades-feed-tag {
+    font-size: 0.75rem;
+    font-weight: 300;
+    color: var(--text2);
+    white-space: nowrap;
+}
+
+.comunidades-feed-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 22px 0 30px;
+    flex: 1;
+}
+
+.comunidades-feed-lista::-webkit-scrollbar,
+.comunidades-dash::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comunidades-feed-lista::-webkit-scrollbar-track,
+.comunidades-dash::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.comunidades-feed-lista::-webkit-scrollbar-thumb,
+.comunidades-dash::-webkit-scrollbar-thumb {
+    background: var(--pink);
+    border-radius: 999px;
+}
+
+/* ---------- publicações ---------- */
+
+.comunidades-post {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 14px;
+}
+
+.comunidades-post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--white);
+    background-color: #1b1b1b;
+}
+
+.comunidades-post-corpo {
+    min-width: 0;
+}
+
+.comunidades-post-topo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.comunidades-post-topo h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.comunidades-post-data {
+    font-size: 0.75rem;
+    font-weight: 300;
+    color: var(--text2);
+    text-shadow: 0 0 10px #000;
+}
+
+.comunidades-post-respondendo {
+    margin: 6px 0 0;
+    font-size: 0.75rem;
+    font-weight: 300;
+    color: var(--gray2);
+    text-shadow: 0 0 10px #000;
+}
+
+.comunidades-post-respondendo span {
+    color: var(--pink);
+}
+
+.comunidades-post-texto {
+    margin: 12px 0 0;
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.55;
+    color: var(--text1);
+    text-shadow: 0 0 10px #000;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.comunidades-post-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.comunidades-post-acoes button {
+    min-height: 30px;
+    padding: 0 10px;
+    border-color: transparent;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--text2);
+}
+
+.comunidades-post-acoes button:hover:not(:disabled) {
+    background-color: var(--gray3);
+    color: var(--text1);
+}
+
+.comunidades-post-edicao {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.comunidades-post-edicao-campo {
+    width: 100%;
+    min-height: 84px;
+    padding: 10px 14px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.55;
+    color: var(--text1);
+    background-color: #1b1b1b;
+    border: 1px solid var(--gray3);
+    border-radius: 5px;
+    resize: vertical;
+}
+
+.comunidades-post-edicao-campo:focus {
+    outline: none;
+    border-color: var(--pink);
+}
+
+.comunidades-post-edicao-campo:disabled {
+    opacity: 0.6;
+}
+
+.comunidades-post-edicao-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.comunidades-post-edicao-acoes button {
+    min-height: 32px;
+    padding: 0 14px;
+    font-size: 0.78rem;
+}
+
+.comunidades-post-responder {
+    margin-left: auto;
+}
+
+.comunidades-post-responder.is-ativo {
+    color: var(--pink);
+}
+
+.comunidades-post-respostas {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    margin-top: 26px;
+    padding-left: 26px;
+    border-left: 2px solid var(--gray3);
+}
+
+/* ---------- compositor ---------- */
+
+.comunidades-feed-rodape {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding: 16px 0 20px;
+    background-color: var(--gray1);
+    border-top: 1px solid var(--gray3);
+}
+
+.comunidades-compositor-alvo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 0.75rem;
+    font-weight: 300;
+    color: var(--gray2);
+}
+
+.comunidades-compositor-alvo button {
+    min-height: 26px;
+    padding: 0 8px;
+    border-color: var(--gray3);
+}
+
+.comunidades-compositor-alvo button svg {
+    width: 14px;
+    height: 14px;
+}
+
+.comunidades-compositor {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+}
+
+.comunidades-compositor input {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 14px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--text1);
+    background-color: var(--gray1);
+    border: 1px solid var(--white);
+    border-radius: 5px;
+}
+
+.comunidades-compositor input::placeholder {
+    color: var(--gray2);
+}
+
+.comunidades-compositor input:disabled {
+    opacity: 0.6;
+}
+
+/* =========================
+   DASHBOARD LATERAL
+========================= */
+
+.comunidades-dash {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 50px 48px 40px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-left: 1px solid var(--gray3);
+    background-color: var(--gray1);
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) #1e1e1e;
+}
+
+.comunidades-dash-canal {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 75px;
+    padding: 0 20px;
+    border-radius: 5px;
+    background-color: var(--pink);
+}
+
+.comunidades-dash-canal svg {
+    width: 35px;
+    height: 35px;
+    flex: none;
+    color: var(--white);
+}
+
+.comunidades-dash-canal span {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.comunidades-dash-canal button {
+    margin-left: auto;
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 0.75rem;
+    border-color: var(--white);
+    flex: none;
+}
+
+.comunidades-dash-canal button.is-ativo {
+    background-color: var(--white);
+    color: var(--pink);
+}
+
+.comunidades-dash-aviso {
+    margin: 16px 0 0;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--pink);
+    background-color: rgba(250, 41, 95, 0.08);
+    border: 1px solid rgba(250, 41, 95, 0.35);
+    border-radius: 5px;
+}
+
+.comunidades-dash-busca,
+.comunidades-dash-dados {
+    margin-top: 34px;
+}
+
+/* ---------- busca ---------- */
+
+.comunidades-campo-busca {
+    position: relative;
+    display: block;
+}
+
+.comunidades-campo-busca input {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 46px 0 9px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--text1);
+    background-color: var(--gray1);
+    border: 1px solid var(--white);
+    border-radius: 5px;
+}
+
+.comunidades-campo-busca input::placeholder {
+    color: var(--gray2);
+}
+
+.comunidades-campo-busca svg {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    color: var(--white);
+}
+
+.comunidades-dash-bloco {
+    margin-top: 20px;
+}
+
+.comunidades-dash-bloco-dividido {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray2);
+}
+
+.comunidades-dash-bloco h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 20px;
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--text1);
+    text-shadow: 0 0 10px #000;
+}
+
+.comunidades-contagem {
+    display: inline-grid;
+    place-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--pink);
+    border-radius: 999px;
+}
+
+.comunidades-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.comunidades-lista li {
+    min-width: 0;
+}
+
+.comunidades-linha {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 50px;
+    padding: 0;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.comunidades-linha:hover:not(:disabled) {
+    background: none;
+}
+
+.comunidades-linha-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--gray3);
+    background-color: #1b1b1b;
+    transition: border-color 0.2s ease;
+}
+
+.comunidades-linha-nome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--text1);
+    overflow-wrap: anywhere;
+}
+
+.comunidades-linha-ponto {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--pink);
+    flex: none;
+}
+
+.comunidades-linha.is-ativa .comunidades-linha-avatar {
+    border-color: var(--pink);
+}
+
+.comunidades-linha.is-ativa .comunidades-linha-nome {
+    color: var(--pink);
+    font-weight: 600;
+}
+
+.comunidades-ver-mais {
+    margin-top: 20px;
+    padding: 0;
+    min-height: auto;
+    border: none;
+    font-size: 1rem;
+    font-weight: 300;
+    text-decoration: underline;
+    color: var(--text1);
+    background: none;
+}
+
+.comunidades-ver-mais:hover:not(:disabled) {
+    background: none;
+    color: var(--pink);
+}
+
+/* ---------- painel de dados ---------- */
+
+.comunidades-dash-dados-cabeca {
+    margin-bottom: 24px;
+}
+
+.comunidades-dash-dados-cabeca > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 0.78rem;
+    border-color: var(--gray3);
+    color: var(--text2);
+}
+
+.comunidades-dash-dados-cabeca svg {
+    width: 16px;
+    height: 16px;
+}
+
+.comunidades-dash-dados-cabeca h2 {
+    margin: 16px 0 6px;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.comunidades-dash-dados-cabeca p {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: var(--text2);
+}
+
+.comunidades-cargo {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    flex: none;
+}
+
+.comunidades-cargo-dono {
+    background-color: var(--pink);
+    color: var(--white);
+}
+
+.comunidades-cargo-admin {
+    border: 1px solid var(--pink);
+    color: var(--pink);
+}
+
+/* membros */
+
+.comunidades-lista-membros {
+    gap: 16px;
+}
+
+.comunidades-membro,
+.comunidades-pedido {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+}
+
+.comunidades-membro-avatar,
+.comunidades-pedido-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--gray3);
+    background-color: #1b1b1b;
+}
+
+.comunidades-membro-corpo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.comunidades-membro-nome {
+    font-size: 0.95rem;
+    font-weight: 300;
+    overflow-wrap: anywhere;
+}
+
+.comunidades-membro-voce {
+    font-size: 0.7rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--gray2);
+}
+
+.comunidades-membro-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comunidades-membro-acoes button {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 0.72rem;
+    border-color: var(--gray3);
+    color: var(--text2);
+}
+
+.comunidades-membro-acoes button:hover:not(:disabled) {
+    border-color: var(--white);
+    color: var(--text1);
+}
+
+.comunidades-membro-acoes button.is-perigo {
+    padding: 0 8px;
+    border-color: transparent;
+}
+
+.comunidades-membro-acoes button.is-perigo svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* pedidos */
+
+.comunidades-lista-pedidos {
+    gap: 22px;
+}
+
+.comunidades-pedido {
+    align-items: start;
+}
+
+.comunidades-pedido-corpo {
+    min-width: 0;
+}
+
+.comunidades-pedido-nome {
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.comunidades-pedido-corpo p {
+    margin: 4px 0;
+    font-size: 0.8rem;
+    font-weight: 300;
+    line-height: 1.5;
+    color: var(--text2);
+    overflow-wrap: anywhere;
+}
+
+.comunidades-pedido-data {
+    font-size: 0.7rem;
+    font-weight: 300;
+    color: var(--gray2);
+}
+
+.comunidades-pedido-acoes {
+    display: flex;
+    gap: 8px;
+}
+
+.comunidades-pedido-acoes button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 0.72rem;
+}
+
+.comunidades-pedido-acoes button svg {
+    width: 14px;
+    height: 14px;
+}
+
+.comunidades-pedido-acoes .is-aceitar {
+    background-color: var(--pink);
+    border-color: var(--pink);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.comunidades-pedido-acoes .is-aceitar:hover:not(:disabled) {
+    background-color: #e01f51;
+}
+
+.comunidades-pedido-acoes .is-recusar {
+    border-color: var(--gray3);
+    color: var(--text2);
+}
+
+/* configurações */
+
+.comunidades-config-campo {
+    display: block;
+    margin-bottom: 18px;
+}
+
+.comunidades-config-campo > span,
+.comunidades-config-campo > label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text2);
+}
+
+.comunidades-config-campo input[type='text'] {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--text1);
+    background-color: #1b1b1b;
+    border: 1px solid var(--gray3);
+    border-radius: 5px;
+}
+
+.comunidades-config-campo input[type='text']:focus {
+    outline: none;
+    border-color: var(--pink);
+}
+
+.comunidades-config-campo em {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.72rem;
+    font-weight: 300;
+    font-style: normal;
+    color: var(--pink);
+}
+
+.comunidades-config-imagem {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+}
+
+.comunidades-config-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--gray3);
+    background-color: #1b1b1b;
+}
+
+.comunidades-config-url {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+
+.comunidades-config-url button {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 0.75rem;
+    border-color: var(--gray3);
+    color: var(--text2);
+    white-space: nowrap;
+}
+
+.comunidades-config-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 20px;
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: var(--text2);
+    cursor: pointer;
+}
+
+.comunidades-config-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--pink);
+}
+
+.comunidades-dash-dados > section > button.is-primario {
+    width: 100%;
+}
+
+.comunidades-dash-perigos {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.comunidades-dash-perigos button {
+    width: 100%;
+}
+
+/* =========================
+   CONFIRMAÇÃO
+========================= */
+
+.comunidades-confirmacao-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.72);
+}
+
+.comunidades-confirmacao {
+    width: min(440px, 100%);
+    padding: 26px 28px;
+    background-color: #0e0e0e;
+    border: 1px solid var(--gray3);
+    border-radius: 8px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.comunidades-confirmacao h3 {
+    margin: 0 0 12px;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.comunidades-confirmacao p {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 300;
+    line-height: 1.65;
+    color: #b7b7b7;
+}
+
+.comunidades-confirmacao-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+/* acima de 900px só as publicações rolam; cabeçalho, compositor e painel ficam parados */
+@media (min-width: 901px) {
+    .comunidades {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .comunidades-feed {
+        height: 100%;
+        min-height: 0;
+    }
+
+    .comunidades-feed-cabeca,
+    .comunidades-feed-rodape {
+        position: static;
+        flex: none;
+    }
+
+    .comunidades-feed-lista {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: var(--pink) #1e1e1e;
+    }
+}
+
+@media (max-width: 1180px) {
+    .comunidades {
+        --comunidades-px: 32px;
+        grid-template-columns: minmax(0, 1fr) 380px;
+    }
+
+    .comunidades-dash {
+        padding: 32px 28px 40px;
+    }
+}
+
+@media (max-width: 900px) {
+    .comunidades {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .comunidades-feed {
+        min-height: auto;
+        padding-bottom: 12px;
+    }
+
+    .comunidades-dash {
+        position: static;
+        height: auto;
+        border-left: none;
+        border-top: 1px solid var(--gray3);
+    }
+
+    .comunidades-feed-rodape {
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+    .comunidades {
+        --comunidades-px: 16px;
+    }
+
+    .comunidades-feed-cabeca {
+        grid-template-columns: 44px minmax(0, 1fr);
+        row-gap: 12px;
+    }
+
+    .comunidades-feed-acoes {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+
+    .comunidades-feed-avatar {
+        width: 44px;
+        height: 44px;
+    }
+
+    .comunidades-dash {
+        padding: 24px 16px 32px;
+    }
+
+    .comunidades-dash-canal {
+        height: 62px;
+        padding: 0 14px;
+        gap: 12px;
+    }
+
+    .comunidades-dash-canal span {
+        font-size: 1.15rem;
+    }
+
+    .comunidades-post {
+        grid-template-columns: 34px minmax(0, 1fr);
+    }
+
+    .comunidades-post-avatar {
+        width: 34px;
+        height: 34px;
+    }
+
+    .comunidades-post-topo h3 {
+        font-size: 1.05rem;
+    }
+
+    .comunidades-compositor {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .comunidades-compositor button {
+        width: 100%;
+    }
+}

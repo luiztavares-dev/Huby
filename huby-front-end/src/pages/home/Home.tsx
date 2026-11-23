@@ -79,7 +79,8 @@ function paraGame(item: ConteudoApi): Game {
         dataInicio: item.dataInicio,
         dataFim: item.dataFim,
         participantes: item.participantes,
-        local: item.local
+        local: item.local,
+        comentarios: item.comentarios ?? []
     }
 }
 
@@ -387,7 +388,7 @@ export function Home() {
     const recarregar = useCallback(() => setTentativa((valor) => valor + 1), [])
 
     return (
-        <main className={`home ${selectedGame ? 'has-details' : ''}`}>
+        <main className="home">
 
             <Banner />
 

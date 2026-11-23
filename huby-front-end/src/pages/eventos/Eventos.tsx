@@ -6,10 +6,10 @@ import BarraDePesquisa from '../../components/searchBar/SearchBar'
 import {
     buscarEventos,
     buscarJogosDaJam,
-    type ComentarioApi,
     type EventoApi
 } from '../../services/eventos'
 import type { ConteudoApi } from '../../services/home'
+import type { ComentarioApi } from '../../types/conteudo'
 import './Eventos.css'
 
 type FiltroTipo = 'TODOS' | 'EVENTO' | 'GAME_JAM'

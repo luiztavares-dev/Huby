@@ -12,24 +12,12 @@ export type EtapaCronogramaApi = {
     periodo: string
 }
 
-export type ComentarioApi = {
-    id: string
-    autor: string
-    handle: string
-    avatar?: string | null
-    texto: string
-    curtidas: number
-    criadoEm?: string | null
-    respostas?: ComentarioApi[] | null
-}
-
 export type EventoApi = ConteudoApi & {
     tema?: string | null
     inscricoesAte?: string | null
     premios?: PremioApi[] | null
     cronograma?: EtapaCronogramaApi[] | null
     regras?: string[] | null
-    comentarios?: ComentarioApi[] | null
     equipes?: string[] | null
     equipesInscritas?: number | null
     tamanhoEquipe?: number | null

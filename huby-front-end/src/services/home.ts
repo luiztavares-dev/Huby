@@ -1,4 +1,4 @@
-import type { TipoConteudo } from '../types/conteudo'
+import type { ComentarioApi, TipoConteudo } from '../types/conteudo'
 
 export type ConteudoApi = {
     id: string
@@ -20,6 +20,7 @@ export type ConteudoApi = {
     participantes?: number | null
     local?: string | null
     gameJamId?: string | null
+    comentarios?: ComentarioApi[] | null
 }
 
 export type CarrosselApi = {

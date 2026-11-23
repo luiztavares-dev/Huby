@@ -28,17 +28,15 @@ function App() {
         <Route path="/eventos/:id/inscricao" element={<Standart page={<InscricaoEvento />} activeLink="eventos" />} />
         <Route path="/eventos/:id/equipes" element={<Standart page={<EquipesInscritas />} activeLink="eventos" />} />
         <Route path="/biblioteca" element={<Standart page={<Eventos />} activeLink="biblioteca" />} />
-        <Route path="/comunidades" element={<Standart page={<Eventos />} activeLink="comunidades" />} />
+        <Route path="/comunidades" element={<Standart page={<Comunidades />} activeLink="comunidades" />} />
         <Route path="/carrinho" element={<Standart page={<Eventos />} activeLink="carrinho" />} />
         <Route path="/configuracoes" element={<Standart page={<Eventos />} activeLink="configuracoes" />} />
         <Route path="/*" element={<Standart page={<Pagina404 />} activeLink="404" />} />
         <Route path="/biblioteca" element={<Standart page={<Biblioteca />} activeLink="biblioteca" />} />
-        <Route path="/comunidades" element={<Standart page={<Comunidades />} activeLink="comunidades" />} />
         <Route path="/carrinho" element={<Standart page={<Carrinho />} activeLink="carrinho" />} />
         <Route path="/configuracoes" element={<Standart page={<Configuracoes />} activeLink="configuracoes" />} />
         <Route path="/perfil" element={<Standart page={<Perfil />} activeLink="perfil" />} />
-        <Route path="/perfil" element={<Perfil />} />
-        <Route path="/perfil/:id" element={<Perfil />} />
+        <Route path="/perfil/:id" element={<Standart page={<Perfil />} activeLink="perfil" />} />
         <Route path="/mensagens" element={<Mensagens />} />
         <Route path="/mensagens/:id" element={<Mensagens />} />
        <Route path="/login" element={<Login />} />
