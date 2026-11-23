@@ -80,12 +80,6 @@ export function Navbar ({activeLink}: NavbarProps) {
                 }}>
                     <img src="/icon-carrinho.svg" alt="carrinho" />
                 </Link>
-
-                <Link to="/configuracoes" className="navbar-link" style={{
-                    backgroundColor: activeLink === 'configuracoes' ? 'var(--pink)' : '' 
-                }}>
-                    <img src="/icon-configuracoes.svg" alt="configuracoes" />
-                </Link>
             </div>
         </>
     );

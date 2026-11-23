@@ -78,8 +78,11 @@ public class DataSeeder implements CommandLineRunner {
                     && !seed.getModeloEquipe().equals(atual.getModeloEquipe());
             boolean precisaPreco = seed.getTipo() == TipoConteudo.JOGO
                     && !seed.getPreco().equals(atual.getPreco());
+            boolean precisaPlataformas = seed.getTipo() == TipoConteudo.JOGO
+                    && (atual.getPlataformas() == null
+                        || !seed.getPlataformas().equals(atual.getPlataformas()));
 
-            if (precisaDetalhes || precisaTamanho || precisaModelo || precisaPreco) {
+            if (precisaDetalhes || precisaTamanho || precisaModelo || precisaPreco || precisaPlataformas) {
                 if (precisaDetalhes) {
                     atual.setTema(seed.getTema());
                     atual.setInscricoesAte(seed.getInscricoesAte());
@@ -101,6 +104,10 @@ public class DataSeeder implements CommandLineRunner {
 
                 if (precisaPreco) {
                     atual.setPreco(seed.getPreco());
+                }
+
+                if (precisaPlataformas) {
+                    atual.setPlataformas(seed.getPlataformas());
                 }
 
                 repository.save(atual);
@@ -358,14 +365,14 @@ public class DataSeeder implements CommandLineRunner {
                         "Ação e aventura metroidvania no reino de Pharloom.",
                         "No controle de Hornet, o jogador explora um reino desconhecido cheio de perigos, enfrenta criaturas desafiadoras e descobre novas habilidades em uma jornada até o pico do mundo.",
                         "/Silksong.png", 4.8, 582, 98,
-                        List.of("AVENTURA", "METROIDVANIA"), List.of("pc", "website"), true,
+                        List.of("AVENTURA", "METROIDVANIA"), List.of("pc"), true,
                         LocalDate.of(2026, 11, 18), null),
 
                 jogo("jogo-jundu", "Jundu's Sprouts", "Jundu Studios",
                         "Plataforma 2D sobre um pequeno alienígena e suas sementes.",
                         "Controle Jundu, um pequeno alienígena que precisa coletar sementes e evitar obstáculos para salvar seu planeta natal em uma aventura de plataforma cheia de personalidade.",
                         "/imagem-insperarte.jpg", 4.6, 312, 94,
-                        List.of("PLATAFORMA", "PIXEL ART"), List.of("pc", "website"), true,
+                        List.of("PLATAFORMA", "PIXEL ART"), List.of("pc"), true,
                         LocalDate.of(2026, 10, 20), null),
 
                 jogo("jogo-semente-zero", "Semente Zero", "Coletivo Polvo",
@@ -393,7 +400,7 @@ public class DataSeeder implements CommandLineRunner {
                         "Exploração costeira com navegação e descobertas.",
                         "Navegue por uma costa fictícia, mapeie vilarejos e descubra histórias locais em um jogo de exploração tranquilo, feito para sessões curtas.",
                         "/imagem-bgj.jpg", 4.2, 97, 78,
-                        List.of("AVENTURA", "EXPLORAÇÃO"), List.of("pc", "website"), false,
+                        List.of("AVENTURA", "EXPLORAÇÃO"), List.of("pc"), false,
                         LocalDate.of(2026, 11, 14), "jam-polvo-2026-03"),
 
                 jogo("jogo-jardim-de-vidro", "Jardim de Vidro", "Estúdio Estufa",
@@ -414,7 +421,7 @@ public class DataSeeder implements CommandLineRunner {
                         "Aventura sobre memória e cidades que afundam.",
                         "Explore uma cidade submersa em ruínas e reconstrua suas histórias por meio de objetos e cartas encontrados nos prédios abandonados.",
                         "/imagem-bgj.jpg", 4.4, 245, 89,
-                        List.of("AVENTURA", "NARRATIVA"), List.of("pc", "website"), false,
+                        List.of("AVENTURA", "NARRATIVA"), List.of("pc"), false,
                         LocalDate.of(2026, 9, 30), null),
 
                 jogo("jogo-orbita-baixa", "Órbita Baixa", "Nave Mãe",
@@ -423,6 +430,62 @@ public class DataSeeder implements CommandLineRunner {
                         "/imagem-ggj.png", 4.1, 138, 79,
                         List.of("ARCADE", "AÇÃO"), List.of("pc", "mobile"), false,
                         LocalDate.of(2026, 9, 12), null),
+
+                jogo("jogo-brasa-de-vidro", "Brasa de Vidro", "Forja Sul",
+                        "Roguelike de ação em uma forja que nunca apaga.",
+                        "Explore uma forja que muda a cada noite, combine armas improvisadas e enfrente guardiões feitos de vidro e brasas. Cada derrota deixa uma nova pista para a próxima expedição.",
+                        "/imagem-ggj.png", 4.7, 286, 97,
+                        List.of("AÇÃO", "ROGUELIKE"), List.of("pc"), true,
+                        LocalDate.of(2026, 11, 22), null),
+
+                jogo("jogo-mapa-de-areia", "Mapa de Areia", "Duna Digital",
+                        "Estratégia em turnos para desenhar rotas no deserto.",
+                        "Reúna uma caravana, registre fontes de água e escolha caminhos seguros por um deserto que se transforma a cada tempestade. Cada decisão altera o mapa e o destino da jornada.",
+                        "/imagem-polvojam.jpg", 4.6, 194, 95,
+                        List.of("ESTRATÉGIA", "TBS"), List.of("pc"), true,
+                        LocalDate.of(2026, 11, 21), null),
+
+                jogo("jogo-piquenique-sideral", "Piquenique Sideral", "Lua Baixa",
+                        "Party game com receitas, caos e gravidade zero.",
+                        "Organize um piquenique interestelar com até quatro pessoas. Prepare receitas malucas, desvie de cometas e mantenha a comida flutuando longe dos vizinhos mais famintos.",
+                        "/imagem-insperarte.png", 4.5, 176, 93,
+                        List.of("CASUAL", "PARTY"), List.of("pc", "mobile"), true,
+                        LocalDate.of(2026, 11, 20), null),
+
+                jogo("jogo-coracao-de-cobre", "Coração de Cobre", "Oficina do Vento",
+                        "Narrativa interativa sobre memórias de uma cidade mecânica.",
+                        "Restaude relógios, oficinas e praças de uma cidade movida a cordas e engrenagens. Ao consertar suas máquinas, você reconstrói a história das pessoas que ainda moram ali.",
+                        "/imagem-bgj.jpg", 4.4, 142, 91,
+                        List.of("NARRATIVA", "AVENTURA"), List.of("website", "pc"), true,
+                        LocalDate.of(2026, 11, 19), null),
+
+                jogo("jogo-vale-das-engrenagens", "Vale das Engrenagens", "Torno Norte",
+                        "Gestão de uma pequena vila movida a energia.",
+                        "Transforme um vale abandonado em uma comunidade autossustentável. Equilibre produção, moradia e descanso enquanto descobre maneiras criativas de aproveitar cada fonte de energia.",
+                        "/imagem-polvojam.jpg", 4.2, 118, 87,
+                        List.of("GESTÃO", "ESTRATÉGIA"), List.of("pc"), false,
+                        LocalDate.of(2026, 11, 18), null),
+
+                jogo("jogo-entre-trens", "Entre Trens", "Trilho Curto",
+                        "Exploração serena por estações e histórias esquecidas.",
+                        "Viaje por uma ferrovia costeira e ajude cada estação a reencontrar seu propósito. Converse com passageiros, encontre objetos perdidos e escolha quais destinos merecem uma nova parada.",
+                        "/imagem-insperarte.png", 4.3, 86, 84,
+                        List.of("AVENTURA", "EXPLORAÇÃO"), List.of("pc"), false,
+                        LocalDate.of(2026, 11, 17), null),
+
+                jogo("jogo-sob-pressao", "Sob Pressão", "Fundo do Mar",
+                        "Sobrevivência em uma base subaquática sem energia.",
+                        "Administre oxigênio, alimentos e reparos em uma base isolada no fundo do mar. O oceano guarda respostas para o apagão, mas cada mergulho pode ser o último.",
+                        "/imagem-ggj.png", 4.1, 104, 82,
+                        List.of("SOBREVIVÊNCIA", "HORROR"), List.of("pc"), true,
+                        LocalDate.of(2026, 11, 16), null),
+
+                jogo("jogo-cartas-de-marte", "Cartas de Marte", "Órbita Vermelha",
+                        "Deckbuilding tático para colonizar um planeta hostil.",
+                        "Monte um baralho de expedições, estruturas e descobertas para estabelecer a primeira colônia em Marte. Combine cartas para enfrentar tempestades e manter a equipe unida.",
+                        "/imagem-bgj.jpg", 4.0, 68, 76,
+                        List.of("DECKBUILDING", "ESTRATÉGIA"), List.of("website", "pc"), false,
+                        LocalDate.of(2026, 11, 11), null),
 
                 detalhes(
                         evento("evento-insperarte", "Insperarte 2026", "Coletivo Insper",
@@ -651,17 +714,25 @@ public class DataSeeder implements CommandLineRunner {
                 "jam-ludum-dare-60", "INDIVIDUAL"
         );
 
-        Map<String, Double> precosJogos = Map.of(
-                "jogo-silksong", 19.90,
-                "jogo-jundu", 7.90,
-                "jogo-semente-zero", 0.0,
-                "jogo-coral-em-fluxo", 0.0,
-                "jogo-ruido-branco", 0.0,
-                "jogo-linha-de-mare", 0.0,
-                "jogo-jardim-de-vidro", 0.0,
-                "jogo-arquivo-07", 0.0,
-                "jogo-cidade-submersa", 14.90,
-                "jogo-orbita-baixa", 9.90
+        Map<String, Double> precosJogos = Map.ofEntries(
+                Map.entry("jogo-silksong", 19.90),
+                Map.entry("jogo-jundu", 7.90),
+                Map.entry("jogo-semente-zero", 0.0),
+                Map.entry("jogo-coral-em-fluxo", 0.0),
+                Map.entry("jogo-ruido-branco", 0.0),
+                Map.entry("jogo-linha-de-mare", 0.0),
+                Map.entry("jogo-jardim-de-vidro", 0.0),
+                Map.entry("jogo-arquivo-07", 0.0),
+                Map.entry("jogo-cidade-submersa", 14.90),
+                Map.entry("jogo-orbita-baixa", 9.90),
+                Map.entry("jogo-brasa-de-vidro", 12.90),
+                Map.entry("jogo-mapa-de-areia", 0.0),
+                Map.entry("jogo-piquenique-sideral", 9.90),
+                Map.entry("jogo-coracao-de-cobre", 0.0),
+                Map.entry("jogo-vale-das-engrenagens", 7.90),
+                Map.entry("jogo-entre-trens", 0.0),
+                Map.entry("jogo-sob-pressao", 14.90),
+                Map.entry("jogo-cartas-de-marte", 0.0)
         );
 
         seeds.forEach((conteudo) -> {

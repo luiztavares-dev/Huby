@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +15,7 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class HomeController {
 
-    private static final int LIMITE_POR_CARROSSEL = 8;
+    private static final int LIMITE_POR_CARROSSEL = 10;
 
     private final ConteudoRepository conteudoRepository;
 
@@ -28,57 +29,87 @@ public class HomeController {
     @GetMapping("/carrosseis")
     public List<CarrosselDTO> carrosseis() {
         List<CarrosselDTO> carrosseis = new ArrayList<>();
+        List<Conteudo> jogos = conteudoRepository
+                .findByTipoOrderByRelevanciaDescNotaDesc(TipoConteudo.JOGO);
 
         Optional<Conteudo> ultimaJam = conteudoRepository.findFirstByTipoOrderByDataFimDesc(TipoConteudo.GAME_JAM);
 
-        if (ultimaJam.isPresent()) {
-            List<Conteudo> jogosDaJam = conteudoRepository
-                    .findByGameJamIdOrderByRelevanciaDesc(ultimaJam.get().getId());
+        ultimaJam.ifPresent(jam -> adicionarCarrossel(
+                carrosseis,
+                "ultima-gamejam",
+                "Última Game Jam",
+                jam.getTitulo(),
+                conteudoRepository.findByGameJamIdOrderByRelevanciaDesc(jam.getId())
+        ));
 
-            if (!jogosDaJam.isEmpty()) {
-                carrosseis.add(new CarrosselDTO(
-                        "ultima-gamejam",
-                        "Última Game Jam",
-                        ultimaJam.get().getTitulo(),
-                        limitar(jogosDaJam)
-                ));
-            }
-        }
+        adicionarCarrossel(
+                carrosseis,
+                "jogos-relevantes",
+                "Jogos Mais Relevantes",
+                "Os jogos mais bem avaliados pela comunidade",
+                jogos
+        );
 
-        List<Conteudo> relevantes = conteudoRepository
-                .findByTipoOrderByRelevanciaDescNotaDesc(TipoConteudo.JOGO);
+        List<Conteudo> recentes = jogos.stream()
+                .sorted(Comparator.comparing(Conteudo::getDataPublicacao,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
 
-        if (!relevantes.isEmpty()) {
-            carrosseis.add(new CarrosselDTO(
-                    "jogos-relevantes",
-                    "Jogos Mais Relevantes",
-                    "Os jogos mais bem avaliados pela comunidade",
-                    limitar(relevantes)
-            ));
-        }
+        adicionarCarrossel(
+                carrosseis,
+                "lancamentos-recentes",
+                "Lançamentos Recentes",
+                "Novos mundos e histórias recém-chegados ao Huby",
+                recentes
+        );
 
-        List<Conteudo> destaques = conteudoRepository.findByDestaqueTrueOrderByDataPublicacaoDesc();
+        List<Conteudo> gratuitos = jogos.stream()
+                .filter(jogo -> jogo.getPreco() != null && jogo.getPreco() == 0.0)
+                .toList();
 
-        if (!destaques.isEmpty()) {
-            carrosseis.add(new CarrosselDTO(
-                    "em-destaque",
-                    "Em Destaque",
-                    "Selecionados pela curadoria do Huby",
-                    limitar(destaques)
-            ));
-        }
+        adicionarCarrossel(
+                carrosseis,
+                "jogos-gratuitos",
+                "Jogos Gratuitos",
+                "Experiências completas para começar a jogar sem pagar nada",
+                gratuitos
+        );
 
-        List<Conteudo> comunidadeEventos = conteudoRepository
-                .findByTipoInOrderByDataPublicacaoDesc(List.of(TipoConteudo.EVENTO, TipoConteudo.COMUNIDADE));
+        List<Conteudo> acessiveis = jogos.stream()
+                .filter(jogo -> jogo.getPreco() != null && jogo.getPreco() <= 10.0)
+                .toList();
 
-        if (!comunidadeEventos.isEmpty()) {
-            carrosseis.add(new CarrosselDTO(
-                    "comunidade-eventos",
-                    "Comunidade e Eventos",
-                    "Encontros, mostras e coletivos ativos",
-                    limitar(comunidadeEventos)
-            ));
-        }
+        adicionarCarrossel(
+                carrosseis,
+                "jogos-ate-dez",
+                "Até R$ 10",
+                "Uma seleção de jogos por um preço bem acessível",
+                acessiveis
+        );
+
+        List<Conteudo> noNavegador = jogos.stream()
+                .filter(jogo -> jogo.getPlataformas() != null && jogo.getPlataformas().contains("website"))
+                .toList();
+
+        adicionarCarrossel(
+                carrosseis,
+                "jogos-no-navegador",
+                "Jogos no Navegador",
+                "Para jogar direto no navegador, sem instalação",
+                noNavegador
+        );
+
+        List<Conteudo> destaques = jogos.stream()
+                .filter(jogo -> Boolean.TRUE.equals(jogo.getDestaque()))
+                .toList();
+
+        adicionarCarrossel(
+                carrosseis,
+                "em-destaque",
+                "Em Destaque",
+                "Selecionados pela curadoria do Huby",
+                destaques
+        );
 
         return carrosseis;
     }
@@ -86,6 +117,17 @@ public class HomeController {
     @GetMapping("/jogos")
     public List<Conteudo> jogos() {
         return conteudoRepository.findByTipoOrderByRelevanciaDescNotaDesc(TipoConteudo.JOGO);
+    }
+
+    private void adicionarCarrossel(List<CarrosselDTO> carrosseis, String id, String titulo,
+                                    String subtitulo, List<Conteudo> itens) {
+        List<Conteudo> jogos = itens.stream()
+                .filter(item -> item.getTipo() == TipoConteudo.JOGO)
+                .toList();
+
+        if (!jogos.isEmpty()) {
+            carrosseis.add(new CarrosselDTO(id, titulo, subtitulo, limitar(jogos)));
+        }
     }
 
     private List<Conteudo> limitar(List<Conteudo> itens) {

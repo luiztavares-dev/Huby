@@ -34,6 +34,17 @@ export type CarrosselApi = {
 
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:8080'
 
+export function linkJogoValido(link?: string | null): string | null {
+    if (!link) return null
+
+    try {
+        const url = new URL(link)
+        return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null
+    } catch {
+        return null
+    }
+}
+
 export async function buscarCarrosseisHome(signal?: AbortSignal): Promise<CarrosselApi[]> {
     const resposta = await fetch(`${API_URL}/api/home/carrosseis`, { signal })
 

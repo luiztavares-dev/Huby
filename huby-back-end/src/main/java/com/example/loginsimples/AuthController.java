@@ -21,6 +21,9 @@ public class AuthController {
     @Autowired
     private UsuarioRepository repository;
 
+    @Autowired
+    private ConteudoRepository conteudoRepository;
+
 
     @PostMapping("/registrar")
     public ResponseEntity<?> registrar(@RequestBody Usuario novoUsuario) {
@@ -163,6 +166,43 @@ public class AuthController {
         Usuario euAtualizado = repository.save(eu);
 
         return ResponseEntity.ok(euAtualizado);
+    }
+
+    @GetMapping("/perfil/{id}/compras")
+    public ResponseEntity<List<String>> buscarCompras(@PathVariable String id) {
+        Optional<Usuario> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of());
+        }
+        return ResponseEntity.ok(opt.get().getComprasIds() == null
+                ? List.of() : opt.get().getComprasIds());
+    }
+
+    @PostMapping("/perfil/{id}/compras/{jogoId}")
+    public ResponseEntity<?> comprarJogo(@PathVariable String id, @PathVariable String jogoId) {
+        Optional<Usuario> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
+        }
+
+        Optional<Conteudo> optJogo = conteudoRepository.findById(jogoId);
+        if (optJogo.isEmpty() || optJogo.get().getTipo() != TipoConteudo.JOGO) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Jogo não encontrado.");
+        }
+
+        Conteudo jogo = optJogo.get();
+        if (jogo.getPreco() == null || jogo.getPreco() <= 0) {
+            return ResponseEntity.badRequest().body("Este jogo é gratuito e pode ser salvo na biblioteca.");
+        }
+
+        Usuario usuario = opt.get();
+        if (usuario.getComprasIds() == null) usuario.setComprasIds(new ArrayList<>());
+        if (!usuario.getComprasIds().contains(jogoId)) usuario.getComprasIds().add(jogoId);
+
+        if (usuario.getBibliotecaIds() == null) usuario.setBibliotecaIds(new ArrayList<>());
+        if (!usuario.getBibliotecaIds().contains(jogoId)) usuario.getBibliotecaIds().add(jogoId);
+
+        return ResponseEntity.ok(repository.save(usuario));
     }
 
     @GetMapping("/perfil/{id}/biblioteca")

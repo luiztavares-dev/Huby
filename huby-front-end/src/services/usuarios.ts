@@ -38,6 +38,20 @@ export async function buscarBiblioteca(usuarioId: string, signal?: AbortSignal):
     return resposta.json() as Promise<string[]>
 }
 
+export async function buscarCompras(usuarioId: string, signal?: AbortSignal): Promise<string[]> {
+    const resposta = await fetch(`${API_URL}/api/perfil/${encodeURIComponent(usuarioId)}/compras`, { signal })
+    if (!resposta.ok) throw new Error('Não foi possível carregar suas compras.')
+    return resposta.json() as Promise<string[]>
+}
+
+export async function comprarJogo(usuarioId: string, jogoId: string): Promise<void> {
+    const resposta = await fetch(
+        `${API_URL}/api/perfil/${encodeURIComponent(usuarioId)}/compras/${encodeURIComponent(jogoId)}`,
+        { method: 'POST' }
+    )
+    if (!resposta.ok) throw new Error('Não foi possível concluir a compra do jogo.')
+}
+
 export async function adicionarBiblioteca(usuarioId: string, jogoId: string): Promise<void> {
     const resposta = await fetch(
         `${API_URL}/api/perfil/${encodeURIComponent(usuarioId)}/biblioteca/${encodeURIComponent(jogoId)}`,

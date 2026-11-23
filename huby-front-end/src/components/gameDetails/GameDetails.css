@@ -196,6 +196,74 @@
     text-align: right;
 }
 
+.game-details-aquisicao-acoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.game-details-aquisicao-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid var(--white);
+    border-radius: 5px;
+    background-color: var(--white);
+    color: #111;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.game-details-aquisicao-acoes .game-details-aquisicao-botao:only-child {
+    grid-column: 1 / -1;
+}
+
+.game-details-aquisicao-botao.is-comprar {
+    border-color: var(--pink);
+    background-color: var(--pink);
+    color: var(--white);
+}
+
+.game-details-aquisicao-botao:hover:not(:disabled) {
+    border-color: var(--pink);
+    background-color: var(--pink);
+    color: var(--white);
+}
+
+.game-details-aquisicao-botao:disabled {
+    border-color: rgba(255, 255, 255, 0.55);
+    background-color: transparent;
+    color: var(--gray2);
+    cursor: default;
+}
+
+.game-details-aquisicao-botao.is-salvo:disabled,
+.game-details-aquisicao-botao.is-comprado:disabled {
+    border-color: var(--pink);
+    background-color: #1f1f1f;
+    color: var(--pink);
+    opacity: 1;
+}
+
+.game-details-aquisicao-botao:focus-visible,
+.game-details-download:focus-visible,
+.game-details-play:focus-visible,
+.game-details-acao:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: 3px;
+}
+
+.game-details-aquisicao-aviso {
+    margin-top: 10px;
+}
+
 .game-details-downloads {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

@@ -657,27 +657,6 @@
     object-fit: cover;
 }
 
-.game-card-more {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    width: 30px;
-    height: 24px;
-    padding: 0;
-    border: none;
-    border-radius: 12px;
-    color: var(--white);
-    background-color: rgba(0, 0, 0, 0.72);
-    font-size: 0.8rem;
-    line-height: 1;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-
-.game-card-more:hover {
-    background-color: var(--pink);
-}
-
 .game-card-body {
     padding: 14px 14px 16px;
     display: flex;

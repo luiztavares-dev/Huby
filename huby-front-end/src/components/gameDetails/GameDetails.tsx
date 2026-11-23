@@ -17,6 +17,8 @@ export type Game = {
     score: number
     reviews: number
     platforms: ('website' | 'mobile' | 'pc')[]
+    preco?: number | null
+    linkUrl?: string | null
     comentarios: ComentarioApi[]
     dataInicio?: string | null
     dataFim?: string | null
@@ -50,6 +52,11 @@ const downloadLabels: Record<DownloadPlatform, string> = {
     macos: 'MacOS',
     android: 'Android'
 }
+
+const formatarPreco = (valor: number) => valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+})
 
 const normalizarTexto = (valor: string) =>
     valor
@@ -334,9 +341,15 @@ interface GameDetailsProps {
     game: Game | null
     isOpen: boolean
     onClose: () => void
+    isSaved?: boolean
+    isPurchased?: boolean
+    actionPending?: 'salvar' | 'comprar' | null
+    notice?: string | null
+    onSave?: (game: Game) => void
+    onBuy?: (game: Game) => void
 }
 
-export default function GameDetails({ game, isOpen, onClose }: GameDetailsProps) {
+export default function GameDetails({ game, isOpen, onClose, isSaved = false, isPurchased = false, actionPending = null, notice, onSave, onBuy }: GameDetailsProps) {
     const [lastGame, setLastGame] = useState<Game | null>(null)
     const [downloads, setDownloads] = useState<Partial<Record<DownloadPlatform, DownloadState>>>({})
     const [lastDownload, setLastDownload] = useState<DownloadPlatform | null>(null)
@@ -433,6 +446,7 @@ export default function GameDetails({ game, isOpen, onClose }: GameDetailsProps)
     if (!current) return null
 
     const isJogo = current.tipo === 'JOGO'
+    const preco = Math.max(0, current.preco ?? 0)
     const participantes = formatarParticipantes(current.participantes)
 
     const isAvailable = (platform: DownloadPlatform) => {
@@ -456,6 +470,11 @@ export default function GameDetails({ game, isOpen, onClose }: GameDetailsProps)
 
     const togglePlay = () => {
         if (!current.platforms.includes('website')) return
+
+        if (current.linkUrl) {
+            window.open(current.linkUrl, '_blank', 'noopener,noreferrer')
+            return
+        }
 
         if (playState === 'running') {
             setPlayState('idle')
@@ -680,9 +699,47 @@ export default function GameDetails({ game, isOpen, onClose }: GameDetailsProps)
                         </section>
                     )}
 
+                    {isJogo && (onSave || onBuy || isSaved || isPurchased) && (
+                        <section className="game-details-secao game-details-aquisicao">
+                            <h3>Aquisição</h3>
+                            <div className="game-details-aquisicao-acoes">
+                                {preco > 0 && (onBuy || isPurchased) && (
+                                    <button
+                                        type="button"
+                                        className={`game-details-aquisicao-botao is-comprar ${isPurchased ? 'is-comprado' : ''}`}
+                                        disabled={!onBuy || isPurchased || actionPending !== null}
+                                        onClick={() => onBuy?.(current)}
+                                    >
+                                        {actionPending === 'comprar' && <span className="game-details-spinner" aria-hidden="true" />}
+                                        {actionPending === 'comprar'
+                                            ? 'Comprando…'
+                                            : isPurchased ? 'Comprado' : `Comprar ${formatarPreco(preco)}`}
+                                    </button>
+                                )}
+
+                                {(onSave || isSaved) && (
+                                    <button
+                                        type="button"
+                                        className={`game-details-aquisicao-botao is-salvar ${isSaved ? 'is-salvo' : ''}`}
+                                        disabled={!onSave || isSaved || actionPending !== null}
+                                        onClick={() => onSave?.(current)}
+                                    >
+                                        {actionPending === 'salvar' && <span className="game-details-spinner" aria-hidden="true" />}
+                                        {actionPending === 'salvar'
+                                            ? 'Salvando…'
+                                            : isSaved ? 'Salvo na biblioteca' : 'Salvar'}
+                                    </button>
+                                )}
+                            </div>
+                            {notice && (
+                                <p className="game-details-status game-details-aquisicao-aviso" role="status">{notice}</p>
+                            )}
+                        </section>
+                    )}
+
                     {isJogo && (
                         <section className="game-details-secao">
-                            <h3>Downloads</h3>
+                            <h3>Baixar</h3>
                             <div className="game-details-downloads">
                                 {(Object.keys(downloadLabels) as DownloadPlatform[]).map((platform) => {
                                     const state = downloads[platform] ?? 'idle'
@@ -716,34 +773,35 @@ export default function GameDetails({ game, isOpen, onClose }: GameDetailsProps)
                         </section>
                     )}
 
+                    {isJogo && current.platforms.includes('website') && (
+                        <section className="game-details-secao">
+                            <h3>Jogar no navegador</h3>
+                            <button
+                                type="button"
+                                className={`game-details-play ${playState === 'running' ? 'is-running' : ''}`}
+                                onClick={togglePlay}
+                            >
+                                {playState === 'launching' ? (
+                                    <span className="game-details-spinner" aria-hidden="true" />
+                                ) : playState === 'running' ? (
+                                    <IconeParar />
+                                ) : (
+                                    <IconePlay />
+                                )}
+                                <span>
+                                    {playState === 'launching' ? 'Abrindo…' : playState === 'running' ? 'Parar' : 'Jogar'}
+                                </span>
+                            </button>
+                            {playState === 'running' && (
+                                <p className="game-details-status" role="status">
+                                    {current.title} está rodando no navegador.
+                                </p>
+                            )}
+                        </section>
+                    )}
+
                     {isJogo && (
                         <>
-                            <section className="game-details-secao">
-                                <h3>Jogar no Browser</h3>
-                                <button
-                                    type="button"
-                                    className={`game-details-play ${playState === 'running' ? 'is-running' : ''}`}
-                                    disabled={!current.platforms.includes('website')}
-                                    onClick={togglePlay}
-                                >
-                                    {playState === 'launching' ? (
-                                        <span className="game-details-spinner" aria-hidden="true" />
-                                    ) : playState === 'running' ? (
-                                        <IconeParar />
-                                    ) : (
-                                        <IconePlay />
-                                    )}
-                                    <span>
-                                        {playState === 'launching' ? 'Abrindo…' : playState === 'running' ? 'Parar' : 'Jogar'}
-                                    </span>
-                                </button>
-                                {playState === 'running' && (
-                                    <p className="game-details-status" role="status">
-                                        {current.title} está rodando no navegador.
-                                    </p>
-                                )}
-                            </section>
-
                             <div className="game-details-divisor" />
 
                             <div className="game-details-acoes">

@@ -1,11 +1,20 @@
 import './Home.css'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
 import GameDetails, { type Game } from '../../components/gameDetails/GameDetails'
 import categoriesData from '../../data/DadosCategories.json'
-import { buscarCarrosseisHome, type CarrosselApi, type ConteudoApi } from '../../services/home'
+import { buscarCarrosseisHome, linkJogoValido, type CarrosselApi, type ConteudoApi } from '../../services/home'
+import { usuarioLogado } from '../../services/sessao'
+import {
+    adicionarBiblioteca,
+    buscarBiblioteca,
+    buscarCompras,
+    comprarJogo,
+    removerBiblioteca
+} from '../../services/usuarios'
 import { formatarParticipantes, formatarPeriodo } from '../../utils/formato'
 
 type CategoriaMap = Record<string, {
@@ -59,6 +68,12 @@ const getCategoriaInfo = (tag: string) => {
 type HomeGame = Game & {
     dataPublicacao?: string | null
     preco: number
+    linkUrl?: string | null
+}
+
+type AcaoPendente = {
+    id: string
+    tipo: 'salvar' | 'comprar'
 }
 
 type Secao = {
@@ -107,6 +122,7 @@ function paraGame(item: ConteudoApi): HomeGame {
         platforms: (item.plataformas ?? []).filter(
             (plataforma): plataforma is 'website' | 'mobile' | 'pc' => plataformasValidas.has(plataforma)
         ),
+        linkUrl: linkJogoValido(item.linkUrl),
         dataPublicacao: item.dataPublicacao,
         dataInicio: item.dataInicio,
         dataFim: item.dataFim,
@@ -177,7 +193,7 @@ function Stars({ score }: { score: number }) {
 function GameCard({ game, isSelected, onSelect }: {
     game: HomeGame
     isSelected: boolean
-    onSelect: (game: Game) => void
+    onSelect: (game: HomeGame) => void
 }) {
     const [activeTag, setActiveTag] = useState<{ tag: string; descricao: string } | null>(null)
 
@@ -205,17 +221,6 @@ function GameCard({ game, isSelected, onSelect }: {
         >
             <div className="game-card-image">
                 <img src={game.image} alt={game.title} />
-                <button
-                    type="button"
-                    className="game-card-more"
-                    aria-label={`Mais opções para ${game.title}`}
-                    onClick={(event) => {
-                        event.stopPropagation()
-                        onSelect(game)
-                    }}
-                >
-                    •••
-                </button>
             </div>
 
             <div className="game-card-body">
@@ -282,7 +287,7 @@ function CarouselSection({ title, subtitle, items, selectedId, onSelect }: {
     subtitle?: string
     items: HomeGame[]
     selectedId: string | null
-    onSelect: (game: Game) => void
+    onSelect: (game: HomeGame) => void
 }) {
     const trackRef = useRef<HTMLDivElement | null>(null)
     const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -634,6 +639,8 @@ function PainelFiltros({ isOpen, filtros, onAplicar, onCancelar }: {
 }
 
 export function Home() {
+    const navigate = useNavigate()
+    const [usuario] = useState(() => usuarioLogado())
     const [selectedGame, setSelectedGame] = useState<Game | null>(null)
     const [secoes, setSecoes] = useState<Secao[]>([])
     const [carregando, setCarregando] = useState(true)
@@ -642,6 +649,10 @@ export function Home() {
     const [busca, setBusca] = useState('')
     const [filtros, setFiltros] = useState<Filtros>(filtrosIniciais)
     const [filtrosAbertos, setFiltrosAbertos] = useState(false)
+    const [bibliotecaIds, setBibliotecaIds] = useState<Set<string>>(() => new Set())
+    const [comprasIds, setComprasIds] = useState<Set<string>>(() => new Set())
+    const [acaoPendente, setAcaoPendente] = useState<AcaoPendente | null>(null)
+    const [aviso, setAviso] = useState<string | null>(null)
 
     useEffect(() => {
         const controller = new AbortController()
@@ -649,12 +660,21 @@ export function Home() {
         setCarregando(true)
         setErro(null)
 
-        buscarCarrosseisHome(controller.signal)
-            .then((carrosseis) => setSecoes(
-                carrosseis
+        const colecao = usuario.id
+            ? Promise.all([
+                buscarBiblioteca(usuario.id, controller.signal),
+                buscarCompras(usuario.id, controller.signal)
+            ]).then(([salvos, comprados]) => ({ salvos, comprados }))
+            : Promise.resolve({ salvos: [], comprados: [] })
+
+        Promise.all([buscarCarrosseisHome(controller.signal), colecao])
+            .then(([carrosseis, { salvos, comprados }]) => {
+                setSecoes(carrosseis
                     .map(paraSecao)
-                    .filter((secao): secao is Secao => secao !== null)
-            ))
+                    .filter((secao): secao is Secao => secao !== null))
+                setBibliotecaIds(new Set(salvos))
+                setComprasIds(new Set(comprados))
+            })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return
                 setErro(error instanceof Error ? error.message : 'Não foi possível carregar os destaques.')
@@ -664,11 +684,69 @@ export function Home() {
             })
 
         return () => controller.abort()
-    }, [tentativa])
+    }, [tentativa, usuario.id])
 
-    const closeDetails = useCallback(() => setSelectedGame(null), [])
+    const closeDetails = useCallback(() => {
+        setSelectedGame(null)
+        setAviso(null)
+    }, [])
     const closeFiltros = useCallback(() => setFiltrosAbertos(false), [])
     const recarregar = useCallback(() => setTentativa((valor) => valor + 1), [])
+
+    const salvar = async (game: Game) => {
+        if (!usuario.id) {
+            navigate('/login')
+            return
+        }
+        if (acaoPendente) return
+
+        const removendo = bibliotecaIds.has(game.id)
+        setAcaoPendente({ id: game.id, tipo: 'salvar' })
+        setAviso(null)
+
+        try {
+            if (removendo) {
+                await removerBiblioteca(usuario.id, game.id)
+                setBibliotecaIds((atual) => {
+                    const proximo = new Set(atual)
+                    proximo.delete(game.id)
+                    return proximo
+                })
+                setAviso(`${game.title} foi removido da biblioteca.`)
+            } else {
+                await adicionarBiblioteca(usuario.id, game.id)
+                setBibliotecaIds((atual) => new Set(atual).add(game.id))
+                setAviso(`${game.title} foi salvo na biblioteca.`)
+            }
+        } catch (error) {
+            setAviso(error instanceof Error ? error.message : 'Não foi possível atualizar a biblioteca.')
+        } finally {
+            setAcaoPendente(null)
+        }
+    }
+
+    const comprar = async (game: Game) => {
+        if (!usuario.id) {
+            navigate('/login')
+            return
+        }
+        if (acaoPendente || (game.preco ?? 0) <= 0 || comprasIds.has(game.id)) return
+
+        setAcaoPendente({ id: game.id, tipo: 'comprar' })
+        setAviso(null)
+
+        try {
+            await comprarJogo(usuario.id, game.id)
+            setComprasIds((atual) => new Set(atual).add(game.id))
+            setBibliotecaIds((atual) => new Set(atual).add(game.id))
+            setAviso(`Compra concluída. ${game.title} foi adicionado à sua biblioteca.`)
+        } catch (error) {
+            setAviso(error instanceof Error ? error.message : 'Não foi possível concluir a compra do jogo.')
+        } finally {
+            setAcaoPendente(null)
+        }
+    }
+
     const filtrosAtivos = filtros.categorias.length > 0 || filtros.preco !== 'todos' || filtros.ordenacao !== 'padrao'
 
     const secoesFiltradas = useMemo(() => {
@@ -776,6 +854,12 @@ export function Home() {
                 game={selectedGame}
                 isOpen={selectedGame !== null}
                 onClose={closeDetails}
+                isSaved={selectedGame ? bibliotecaIds.has(selectedGame.id) : false}
+                isPurchased={selectedGame ? comprasIds.has(selectedGame.id) : false}
+                actionPending={selectedGame ? acaoPendente?.tipo ?? null : null}
+                notice={aviso}
+                onSave={salvar}
+                onBuy={comprar}
             />
 
         </main>
