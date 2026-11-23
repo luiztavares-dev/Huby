@@ -15,6 +15,7 @@ import { Biblioteca } from './pages/biblioteca/Biblioteca'
 import './index.css'
 import {Cadastro} from './pages/login/Cadastro';
 import { Mensagens } from './pages/Mensagens/Mensagens';
+import { CriarEvento } from './pages/eventos/CriarEvento';
 
 
 
@@ -25,12 +26,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Standart page={<Home />} activeLink="home" />} />
         <Route path="/eventos" element={<Standart page={<Eventos />} activeLink="eventos" />} />
+        <Route path="/eventos/criar" element={<Standart page={<CriarEvento />} activeLink="eventos" />} />
         <Route path="/eventos/:id/inscricao" element={<Standart page={<InscricaoEvento />} activeLink="eventos" />} />
         <Route path="/eventos/:id/equipes" element={<Standart page={<EquipesInscritas />} activeLink="eventos" />} />
-        <Route path="/biblioteca" element={<Standart page={<Eventos />} activeLink="biblioteca" />} />
         <Route path="/comunidades" element={<Standart page={<Comunidades />} activeLink="comunidades" />} />
-        <Route path="/carrinho" element={<Standart page={<Eventos />} activeLink="carrinho" />} />
-        <Route path="/configuracoes" element={<Standart page={<Eventos />} activeLink="configuracoes" />} />
         <Route path="/*" element={<Standart page={<Pagina404 />} activeLink="404" />} />
         <Route path="/biblioteca" element={<Standart page={<Biblioteca />} activeLink="biblioteca" />} />
         <Route path="/carrinho" element={<Standart page={<Carrinho />} activeLink="carrinho" />} />
@@ -41,8 +40,6 @@ function App() {
         <Route path="/mensagens/:id" element={<Mensagens />} />
        <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/cadastro" element={<Cadastro />} />
       </Routes>
     </>
   )

@@ -83,6 +83,11 @@ public class HomeController {
         return carrosseis;
     }
 
+    @GetMapping("/jogos")
+    public List<Conteudo> jogos() {
+        return conteudoRepository.findByTipoOrderByRelevanciaDescNotaDesc(TipoConteudo.JOGO);
+    }
+
     private List<Conteudo> limitar(List<Conteudo> itens) {
         return itens.size() > LIMITE_POR_CARROSSEL
                 ? itens.subList(0, LIMITE_POR_CARROSSEL)

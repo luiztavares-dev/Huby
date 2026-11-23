@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/eventos")
@@ -71,6 +72,9 @@ public class EquipesController {
     public record SolicitacaoEquipeDTO(String usuarioId) {
     }
 
+    public record EntregaDTO(String usuarioId, String titulo, String descricao, String linkUrl, String imagem) {
+    }
+
     @GetMapping("/funcoes")
     public List<FuncaoEquipe> funcoes() {
         return funcaoRepository.findAllByOrderByOrdemAsc();
@@ -96,6 +100,15 @@ public class EquipesController {
         if (evento.getTipo() != TipoConteudo.EVENTO && evento.getTipo() != TipoConteudo.GAME_JAM) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Só é possível inscrever equipes em eventos e game jams.");
+        }
+
+        LocalDate hoje = LocalDate.now();
+        if (evento.getInscricoesAte() != null && hoje.isAfter(evento.getInscricoesAte())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O prazo de inscrição deste evento terminou.");
+        }
+        if (evento.getDataInicio() != null && hoje.isAfter(evento.getDataInicio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "As inscrições encerram antes do início da game jam.");
         }
 
         String experiencia = normalizar(dto.experiencia());
@@ -153,6 +166,19 @@ public class EquipesController {
             String avatarIntegrante = usuarioCadastrado.getAvatarUrl() == null
                     ? "" : usuarioCadastrado.getAvatarUrl().trim();
             integrantes.add(new IntegranteEquipe(usuario, funcao, avatarIntegrante));
+        }
+
+        for (IntegranteEquipe candidato : integrantes) {
+            boolean jaInscrito = equipeRepository.findByEventoIdOrderByCriadoEmDesc(id).stream()
+                    .anyMatch(equipeExistente -> equipeExistente.getIntegrantes() != null
+                            && equipeExistente.getIntegrantes().stream()
+                            .anyMatch(item -> item != null
+                                    && item.getNomeUsuario() != null
+                                    && item.getNomeUsuario().equalsIgnoreCase(candidato.getNomeUsuario())));
+            if (jaInscrito) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "O usuário @" + candidato.getNomeUsuario() + " já está inscrito neste evento.");
+            }
         }
 
         String nome;
@@ -237,6 +263,98 @@ public class EquipesController {
         conteudoRepository.save(evento);
 
         return salva;
+    }
+
+    @PostMapping("/{id}/equipes/{equipeId}/entrega")
+    public Equipe enviarEntrega(@PathVariable String id, @PathVariable String equipeId,
+                                @RequestBody EntregaDTO dto) {
+        Conteudo evento = conteudoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado."));
+        Equipe equipe = equipeRepository.findById(equipeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipe não encontrada."));
+        if (!id.equals(equipe.getEventoId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipe não encontrada neste evento.");
+        }
+
+        LocalDate hoje = LocalDate.now();
+        if (evento.getDataInicio() != null && hoje.isBefore(evento.getDataInicio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O envio só pode ser feito após o início da game jam.");
+        }
+        if (evento.getDataFim() != null && hoje.isAfter(evento.getDataFim())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O prazo de envio desta game jam terminou.");
+        }
+
+        String usuarioId = dto == null || dto.usuarioId() == null ? "" : dto.usuarioId().trim();
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "Entre na conta que participa da equipe."));
+
+        boolean participa = usuario.getUsername() != null
+                && equipe.getIntegrantes() != null
+                && equipe.getIntegrantes().stream().anyMatch(item -> item != null
+                        && item.getNomeUsuario() != null
+                        && item.getNomeUsuario().equalsIgnoreCase(usuario.getUsername()));
+        if (!participa) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente integrantes da equipe podem enviar o jogo.");
+        }
+
+        String titulo = dto.titulo() == null ? "" : dto.titulo().trim();
+        String descricao = dto.descricao() == null ? "" : dto.descricao().trim();
+        String link = dto.linkUrl() == null ? "" : dto.linkUrl().trim();
+        if (titulo.length() < 3) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe o título do jogo.");
+        }
+        if (link.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe o link externo do jogo.");
+        }
+        try {
+            URI uri = URI.create(link);
+            if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
+                throw new IllegalArgumentException();
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O link do jogo deve começar com http:// ou https://.");
+        }
+
+        equipe.setEntregaTitulo(titulo);
+        equipe.setEntregaDescricao(descricao);
+        equipe.setEntregaLink(link);
+        equipe.setEntregaImagem(dto.imagem() == null ? "" : dto.imagem().trim());
+        equipe.setEntregueEm(hoje);
+
+        Conteudo jogo;
+        if (equipe.getJogoId() != null && !equipe.getJogoId().isBlank()) {
+            jogo = conteudoRepository.findById(equipe.getJogoId()).orElseGet(Conteudo::new);
+        } else {
+            jogo = new Conteudo();
+        }
+        jogo.setTipo(TipoConteudo.JOGO);
+        jogo.setTitulo(titulo);
+        jogo.setDescricao(descricao);
+        jogo.setDescricaoLonga(descricao);
+        jogo.setDesenvolvedor(usuario.getNomeExibicao() == null
+                ? usuario.getUsername() : usuario.getNomeExibicao());
+        jogo.setImagem(dto.imagem() == null || dto.imagem().trim().isEmpty()
+                ? evento.getImagem() : dto.imagem().trim());
+        jogo.setTags(evento.getTags() == null ? new ArrayList<>() : new ArrayList<>(evento.getTags()));
+        jogo.setPlataformas(new ArrayList<>());
+        jogo.setDataPublicacao(hoje);
+        jogo.setGameJamId(id);
+        jogo.setLinkUrl(link);
+        jogo.setCriadorId(usuarioId);
+        jogo.setRelevancia(0);
+        jogo.setNota(0.0);
+        jogo.setAvaliacoes(0);
+
+        Conteudo jogoSalvo = conteudoRepository.save(jogo);
+        equipe.setJogoId(jogoSalvo.getId());
+        return equipeRepository.save(equipe);
     }
 
     @PostMapping("/{id}/equipes/{equipeId}/solicitacoes")

@@ -490,3 +490,79 @@
         max-width: none !important;
     }
 }
+
+.equipe-entrega-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.equipe-entrega {
+    width: min(520px, 100%);
+    box-sizing: border-box;
+    padding: 20px;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    background: #171717;
+    color: var(--text1);
+}
+
+.equipe-entrega h2 {
+    margin: 0 0 14px;
+    color: var(--pink);
+}
+
+.equipe-entrega label {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.equipe-entrega input,
+.equipe-entrega textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 5px;
+    border: 1px solid #555;
+    border-radius: 3px;
+    background: #262626;
+    color: var(--text1);
+    padding: 10px;
+}
+
+.equipe-entrega textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.equipe-entrega-erro {
+    color: #ff8096;
+    font-size: 0.72rem;
+}
+
+.equipe-entrega-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.equipe-entrega-acoes button {
+    height: 36px;
+    min-width: 90px;
+    border: 1px solid #555;
+    border-radius: 3px;
+    background: #2b2b2b;
+    color: white;
+}
+
+.equipe-entrega-acoes button[type="submit"] {
+    border-color: var(--pink);
+    background: var(--pink);
+    font-weight: 800;
+}

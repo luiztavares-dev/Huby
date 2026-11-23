@@ -24,6 +24,14 @@ public class Equipe {
     private String avatar = "";
     private Boolean abertaParaSolicitacoes = false;
     private List<IntegranteEquipe> integrantes = new ArrayList<>();
+    private String entregaTitulo = "";
+    private String entregaDescricao = "";
+    private String entregaLink = "";
+    private String entregaImagem = "";
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate entregueEm;
+    private String jogoId = "";
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate criadoEm;
@@ -62,6 +70,19 @@ public class Equipe {
 
     public List<IntegranteEquipe> getIntegrantes() { return integrantes; }
     public void setIntegrantes(List<IntegranteEquipe> integrantes) { this.integrantes = integrantes; }
+
+    public String getEntregaTitulo() { return entregaTitulo; }
+    public void setEntregaTitulo(String entregaTitulo) { this.entregaTitulo = entregaTitulo; }
+    public String getEntregaDescricao() { return entregaDescricao; }
+    public void setEntregaDescricao(String entregaDescricao) { this.entregaDescricao = entregaDescricao; }
+    public String getEntregaLink() { return entregaLink; }
+    public void setEntregaLink(String entregaLink) { this.entregaLink = entregaLink; }
+    public String getEntregaImagem() { return entregaImagem; }
+    public void setEntregaImagem(String entregaImagem) { this.entregaImagem = entregaImagem; }
+    public LocalDate getEntregueEm() { return entregueEm; }
+    public void setEntregueEm(LocalDate entregueEm) { this.entregueEm = entregueEm; }
+    public String getJogoId() { return jogoId; }
+    public void setJogoId(String jogoId) { this.jogoId = jogoId; }
 
     public LocalDate getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDate criadoEm) { this.criadoEm = criadoEm; }

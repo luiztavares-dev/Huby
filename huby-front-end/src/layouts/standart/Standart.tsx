@@ -5,7 +5,7 @@ import { Navbar } from '../../components/navbar/Navbar'
 
 interface StandartProps {
     page: ReactElement<React.JSXElementConstructor<any> | string>
-    activeLink?: String
+    activeLink?: string
 }
 
 export function Standart ({page, activeLink}: StandartProps) {

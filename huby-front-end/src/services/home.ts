@@ -20,6 +20,7 @@ export type ConteudoApi = {
     participantes?: number | null
     local?: string | null
     gameJamId?: string | null
+    linkUrl?: string | null
     comentarios?: ComentarioApi[] | null
 }
 
@@ -40,4 +41,10 @@ export async function buscarCarrosseisHome(signal?: AbortSignal): Promise<Carros
     }
 
     return resposta.json() as Promise<CarrosselApi[]>
+}
+
+export async function buscarJogos(signal?: AbortSignal): Promise<ConteudoApi[]> {
+    const resposta = await fetch(`${API_URL}/api/home/jogos`, { signal })
+    if (!resposta.ok) throw new Error('Não foi possível carregar os jogos.')
+    return resposta.json() as Promise<ConteudoApi[]>
 }

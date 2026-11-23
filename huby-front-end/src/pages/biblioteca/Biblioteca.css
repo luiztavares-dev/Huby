@@ -1,0 +1,11 @@
+.biblioteca { min-height: 100vh; box-sizing: border-box; padding: 24px; background: var(--gray1); color: var(--text1); }
+.biblioteca header h1 { margin: 0 0 18px; font-size: 1.2rem; }
+.biblioteca-vazia { color: var(--text2); }
+.biblioteca-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.biblioteca-card { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; padding: 10px; border: 1px solid #3a3a3a; border-radius: 4px; background: #1a1a1a; }
+.biblioteca-card img { width: 64px; height: 64px; border-radius: 3px; object-fit: cover; }
+.biblioteca-card div { min-width: 0; }
+.biblioteca-card strong, .biblioteca-card span { display: block; }
+.biblioteca-card span { color: var(--text2); font-size: 0.68rem; }
+.biblioteca-card a, .biblioteca-card button { grid-column: 1 / -1; height: 32px; border: 1px solid #555; border-radius: 3px; background: #292929; color: var(--text1); text-align: center; line-height: 32px; font-size: 0.68rem; font-weight: 800; text-decoration: none; }
+.biblioteca-card button { border-color: var(--pink); color: var(--pink); cursor: pointer; }

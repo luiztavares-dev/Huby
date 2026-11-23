@@ -164,4 +164,38 @@ public class AuthController {
 
         return ResponseEntity.ok(euAtualizado);
     }
+
+    @GetMapping("/perfil/{id}/biblioteca")
+    public ResponseEntity<List<String>> buscarBiblioteca(@PathVariable String id) {
+        Optional<Usuario> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of());
+        }
+        return ResponseEntity.ok(opt.get().getBibliotecaIds() == null
+                ? List.of() : opt.get().getBibliotecaIds());
+    }
+
+    @PostMapping("/perfil/{id}/biblioteca/{jogoId}")
+    public ResponseEntity<?> adicionarBiblioteca(@PathVariable String id, @PathVariable String jogoId) {
+        Optional<Usuario> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
+        }
+        Usuario usuario = opt.get();
+        if (usuario.getBibliotecaIds() == null) usuario.setBibliotecaIds(new ArrayList<>());
+        if (!usuario.getBibliotecaIds().contains(jogoId)) usuario.getBibliotecaIds().add(jogoId);
+        return ResponseEntity.ok(repository.save(usuario));
+    }
+
+    @DeleteMapping("/perfil/{id}/biblioteca/{jogoId}")
+    public ResponseEntity<?> removerBiblioteca(@PathVariable String id, @PathVariable String jogoId) {
+        Optional<Usuario> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
+        }
+        Usuario usuario = opt.get();
+        if (usuario.getBibliotecaIds() == null) usuario.setBibliotecaIds(new ArrayList<>());
+        usuario.getBibliotecaIds().remove(jogoId);
+        return ResponseEntity.ok(repository.save(usuario));
+    }
 }

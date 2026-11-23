@@ -14,6 +14,9 @@ export type EtapaCronogramaApi = {
 
 export type EventoApi = ConteudoApi & {
     tema?: string | null
+    bannerUrl?: string | null
+    tipoPremiacao?: 'SEM_PREMIACAO' | 'DINHEIRO' | 'PREMIOS' | 'AMBOS' | null
+    contatos?: string[] | null
     inscricoesAte?: string | null
     premios?: PremioApi[] | null
     cronograma?: EtapaCronogramaApi[] | null
@@ -51,6 +54,12 @@ export type EquipeApi = {
     abertaParaSolicitacoes: boolean
     integrantes: IntegranteEquipeApi[]
     criadoEm?: string | null
+    entregaTitulo?: string | null
+    entregaDescricao?: string | null
+    entregaLink?: string | null
+    entregaImagem?: string | null
+    entregueEm?: string | null
+    jogoId?: string | null
 }
 
 export type PedidoEquipeApi = {
@@ -77,6 +86,37 @@ export type EventosApi = {
     destaques: EventoApi[]
     inscricoesTerminando: EventoApi[]
     gameJams: EventoApi[]
+}
+
+export type NovoEventoApi = {
+    criadorId: string
+    tipo: 'EVENTO' | 'GAME_JAM'
+    titulo: string
+    descricao: string
+    imagem?: string
+    bannerUrl?: string
+    tipoPremiacao?: 'SEM_PREMIACAO' | 'DINHEIRO' | 'PREMIOS' | 'AMBOS'
+    contatos?: string[]
+    organizador: string
+    tema: string
+    local: string
+    dataInicio: string
+    dataFim: string
+    inscricoesAte?: string
+    tamanhoEquipe: number
+    modeloEquipe: ModeloEquipeApi
+    tags: string[]
+    regras: string[]
+    premios: PremioApi[]
+    cronograma: EtapaCronogramaApi[]
+}
+
+export type EntregaEquipeApi = {
+    usuarioId: string
+    titulo: string
+    descricao: string
+    linkUrl: string
+    imagem?: string
 }
 
 export async function buscarEventos(signal?: AbortSignal): Promise<EventosApi> {
@@ -192,5 +232,41 @@ export async function inscreverEquipe(id: string, equipe: NovaEquipeApi, signal?
         throw new Error(mensagem)
     }
 
+    return resposta.json() as Promise<EquipeApi>
+}
+
+export async function criarEvento(evento: NovoEventoApi, signal?: AbortSignal): Promise<EventoApi> {
+    const resposta = await fetch(`${API_URL}/api/eventos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(evento),
+        signal
+    })
+    if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => null) as { mensagem?: string } | null
+        throw new Error(corpo?.mensagem ?? `Não foi possível criar o evento (HTTP ${resposta.status}).`)
+    }
+    return resposta.json() as Promise<EventoApi>
+}
+
+export async function enviarEntrega(
+    eventoId: string,
+    equipeId: string,
+    entrega: EntregaEquipeApi,
+    signal?: AbortSignal
+): Promise<EquipeApi> {
+    const resposta = await fetch(
+        `${API_URL}/api/eventos/${encodeURIComponent(eventoId)}/equipes/${encodeURIComponent(equipeId)}/entrega`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(entrega),
+            signal
+        }
+    )
+    if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => null) as { mensagem?: string } | null
+        throw new Error(corpo?.mensagem ?? `Não foi possível enviar o jogo (HTTP ${resposta.status}).`)
+    }
     return resposta.json() as Promise<EquipeApi>
 }

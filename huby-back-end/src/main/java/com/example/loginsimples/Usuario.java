@@ -33,6 +33,7 @@ public class Usuario {
   
     private List<String> seguindo = new ArrayList<>();
     private List<String> seguidores = new ArrayList<>();
+    private List<String> bibliotecaIds = new ArrayList<>();
 
     public Usuario() {}
 
@@ -85,4 +86,6 @@ public class Usuario {
 
     public List<String> getSeguidores() { return seguidores; }
     public void setSeguidores(List<String> seguidores) { this.seguidores = seguidores; }
+    public List<String> getBibliotecaIds() { return bibliotecaIds; }
+    public void setBibliotecaIds(List<String> bibliotecaIds) { this.bibliotecaIds = bibliotecaIds; }
 }

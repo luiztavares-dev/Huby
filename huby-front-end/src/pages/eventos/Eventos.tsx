@@ -6,9 +6,13 @@ import BarraDePesquisa from '../../components/searchBar/SearchBar'
 import {
     buscarEventos,
     buscarJogosDaJam,
-    type EventoApi
+    criarEvento,
+    type NovoEventoApi,
+    type EventoApi,
+    type PremioApi
 } from '../../services/eventos'
 import type { ConteudoApi } from '../../services/home'
+import { adicionarBiblioteca, buscarBiblioteca } from '../../services/usuarios'
 import type { ComentarioApi } from '../../types/conteudo'
 import './Eventos.css'
 
@@ -51,31 +55,35 @@ const dataCompleta = (iso?: string | null) => {
     return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const contagemLonga = (iso?: string | null, agora = Date.now()) => {
+const formatarDataHoraEvento = (iso: string) => {
     if (!iso) return ''
-
-    const alvo = new Date(`${iso}T00:00:00`).getTime()
-    if (Number.isNaN(alvo)) return ''
-
-    const restante = alvo - agora
-    if (restante <= 0) return 'Encerrado'
-
-    const totalSegundos = Math.floor(restante / 1000)
-    const horas = Math.floor(totalSegundos / 3600)
-    const minutos = Math.floor((totalSegundos % 3600) / 60)
-    const segundos = totalSegundos % 60
-
-    return `${horas}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`
+    const [data, hora] = iso.split('T')
+    const [ano, mes, dia] = (data || '').split('-')
+    if (!ano || !mes || !dia) return iso
+    return `${dia}/${mes}/${ano.slice(-2)}${hora ? ` ${hora.slice(0, 5)}` : ''}`
 }
 
-const dividirPeriodo = (periodo: string) => {
-    const indice = periodo.indexOf(' · ')
-    if (indice === -1) return { data: periodo, hora: '' }
+const partesPeriodoEvento = (periodo: string) => {
+    const partes = periodo.split(' - ')
+    if (partes.length >= 2) return [partes[0], partes[1]]
+    return [periodo, '']
+}
 
-    return {
-        data: periodo.slice(0, indice),
-        hora: periodo.slice(indice + 3)
-    }
+const statusPeriodoEvento = (inicio?: string, fim?: string, agora = Date.now()) => {
+    if (!inicio || !fim) return '-'
+    const inicioMs = new Date(inicio).getTime()
+    const fimMs = new Date(fim).getTime()
+    if (!Number.isFinite(inicioMs) || !Number.isFinite(fimMs)) return '-'
+    if (agora < inicioMs) return '-'
+    if (agora > fimMs) return 'Encerrado'
+
+    const restante = Math.max(0, Math.floor((fimMs - agora) / 1000))
+    const dias = Math.floor(restante / 86400)
+    const horas = Math.floor((restante % 86400) / 3600)
+    const minutos = Math.floor((restante % 3600) / 60)
+    const segundos = restante % 60
+    if (dias > 0) return `${dias}d ${horas}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`
+    return `${horas}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`
 }
 
 const clonarComentarios = (lista?: ComentarioApi[] | null): ComentarioApi[] =>
@@ -101,6 +109,19 @@ const atualizarComentario = (
 
         return comentario
     })
+
+const agruparPremiosEvento = (premios?: PremioApi[] | null) => {
+    const resultado = new Map<number, { dinheiro: string; premio: string }>()
+    for (const premio of premios ?? []) {
+        const atual = resultado.get(premio.posicao) ?? { dinheiro: '', premio: '' }
+        if (premio.valor) atual.dinheiro = premio.valor
+        if (premio.descricao) atual.premio = premio.descricao
+        resultado.set(premio.posicao, atual)
+    }
+    return Array.from(resultado.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([posicao, valores]) => ({ posicao, ...valores }))
+}
 
 function IconeTrofeu() {
     return (
@@ -444,6 +465,28 @@ export function Eventos() {
     const [jogos, setJogos] = useState<Record<string, ConteudoApi[]>>({})
     const [jogosErro, setJogosErro] = useState<string | null>(null)
     const [carregandoJogos, setCarregandoJogos] = useState(false)
+    const [criacaoAberta, setCriacaoAberta] = useState(false)
+    const [criandoEvento, setCriandoEvento] = useState(false)
+    const [erroCriacao, setErroCriacao] = useState<string | null>(null)
+    const [novoEvento, setNovoEvento] = useState({
+        tipo: 'GAME_JAM' as 'EVENTO' | 'GAME_JAM',
+        titulo: '',
+        descricao: '',
+        imagem: '',
+        organizador: '',
+        tema: '',
+        local: '',
+        dataInicio: '',
+        dataFim: '',
+        inscricoesAte: '',
+        tamanhoEquipe: 4,
+        modeloEquipe: 'COMUM' as 'COMUM' | 'SURPRESA' | 'INDIVIDUAL',
+        tags: '',
+        regras: '',
+        premioDescricao: '',
+        premioValor: ''
+    })
+    const [bibliotecaIds, setBibliotecaIds] = useState<Set<string>>(() => new Set())
 
     const fecharRef = useRef<HTMLButtonElement | null>(null)
     const comentariosRef = useRef<HTMLDivElement | null>(null)
@@ -481,6 +524,21 @@ export function Eventos() {
         const timer = window.setTimeout(() => setAviso(null), 4500)
         return () => window.clearTimeout(timer)
     }, [aviso])
+
+    useEffect(() => {
+        const controller = new AbortController()
+        let usuarioId = ''
+        try {
+            usuarioId = (JSON.parse(localStorage.getItem('huby_user') || '{}') as { id?: string }).id || ''
+        } catch {
+            usuarioId = ''
+        }
+        if (!usuarioId) return
+        buscarBiblioteca(usuarioId, controller.signal)
+            .then((ids) => setBibliotecaIds(new Set(ids)))
+            .catch(() => undefined)
+        return () => controller.abort()
+    }, [])
 
     const destaques = dados?.destaques ?? []
     const inscricoes = dados?.inscricoes ?? []
@@ -708,6 +766,91 @@ export function Eventos() {
         setBusca('')
     }
 
+    const adicionarJogoBiblioteca = async (jogoId: string) => {
+        let usuarioId = ''
+        try {
+            usuarioId = (JSON.parse(localStorage.getItem('huby_user') || '{}') as { id?: string }).id || ''
+        } catch {
+            usuarioId = ''
+        }
+        if (!usuarioId) {
+            setAviso('Entre na sua conta para adicionar jogos à biblioteca.')
+            return
+        }
+        try {
+            await adicionarBiblioteca(usuarioId, jogoId)
+            setBibliotecaIds((anterior) => new Set([...anterior, jogoId]))
+            setAviso('Jogo adicionado à biblioteca.')
+        } catch (error) {
+            setAviso(error instanceof Error ? error.message : 'Não foi possível adicionar o jogo.')
+        }
+    }
+
+    const enviarCriacao = async (event: FormEvent) => {
+        event.preventDefault()
+
+        let criadorId = ''
+        try {
+            const dados = JSON.parse(localStorage.getItem('huby_user') || '{}') as { id?: string }
+            criadorId = dados.id || ''
+        } catch {
+            criadorId = ''
+        }
+        if (!criadorId) {
+            setErroCriacao('Entre na sua conta antes de criar um evento.')
+            return
+        }
+        if (!novoEvento.titulo.trim() || !novoEvento.dataInicio || !novoEvento.dataFim) {
+            setErroCriacao('Informe título, data de início e data de término.')
+            return
+        }
+        if (novoEvento.dataFim < novoEvento.dataInicio) {
+            setErroCriacao('A data de término não pode ser anterior ao início.')
+            return
+        }
+
+        const premios = novoEvento.premioDescricao.trim() || novoEvento.premioValor.trim()
+            ? [{
+                posicao: 1,
+                descricao: novoEvento.premioDescricao.trim(),
+                valor: novoEvento.premioValor.trim()
+            }]
+            : []
+        const payload: NovoEventoApi = {
+            criadorId,
+            tipo: novoEvento.tipo,
+            titulo: novoEvento.titulo.trim(),
+            descricao: novoEvento.descricao.trim(),
+            imagem: novoEvento.imagem.trim() || undefined,
+            organizador: novoEvento.organizador.trim(),
+            tema: novoEvento.tema.trim(),
+            local: novoEvento.local.trim(),
+            dataInicio: novoEvento.dataInicio,
+            dataFim: novoEvento.dataFim,
+            inscricoesAte: novoEvento.inscricoesAte || undefined,
+            tamanhoEquipe: novoEvento.tamanhoEquipe,
+            modeloEquipe: novoEvento.modeloEquipe,
+            tags: novoEvento.tags.split(',').map((item) => item.trim()).filter(Boolean),
+            regras: novoEvento.regras.split('\n').map((item) => item.trim()).filter(Boolean),
+            premios,
+            cronograma: []
+        }
+
+        setCriandoEvento(true)
+        setErroCriacao(null)
+        try {
+            const criado = await criarEvento(payload)
+            setCriacaoAberta(false)
+            setTentativa((valor) => valor + 1)
+            setSelecionado(criado)
+            setAviso('Evento criado com sucesso.')
+        } catch (error) {
+            setErroCriacao(error instanceof Error ? error.message : 'Não foi possível criar o evento.')
+        } finally {
+            setCriandoEvento(false)
+        }
+    }
+
     return (
         <main className={`eventos ${selecionado ? 'has-details' : ''}`}>
 
@@ -732,7 +875,7 @@ export function Eventos() {
                         <button
                             type="button"
                             className="eventos-criar"
-                            onClick={() => setAviso('A criação de eventos estará disponível em breve.')}
+                            onClick={() => navigate('/eventos/criar')}
                         >
                             <img src="/icon-mais.svg" alt="" />
                             <span>Criar evento</span>
@@ -748,6 +891,157 @@ export function Eventos() {
                             />
                         </div>
                     </div>
+
+                    {criacaoAberta && (
+                        <div className="evento-criacao-fundo" role="presentation" onMouseDown={(event) => {
+                            if (event.target === event.currentTarget) setCriacaoAberta(false)
+                        }}>
+                            <form className="evento-criacao" onSubmit={enviarCriacao}>
+                                <div className="evento-criacao-midia">
+                                    {novoEvento.imagem
+                                        ? <img src={novoEvento.imagem} alt="" />
+                                        : <span aria-hidden="true">+</span>}
+                                </div>
+                                <input
+                                    className="evento-criacao-capa"
+                                    type="url"
+                                    value={novoEvento.imagem}
+                                    onChange={(event) => setNovoEvento((atual) => ({ ...atual, imagem: event.target.value }))}
+                                    placeholder="Coloque o link da capa aqui"
+                                />
+
+                                <input
+                                    className="evento-criacao-titulo"
+                                    value={novoEvento.titulo}
+                                    onChange={(event) => setNovoEvento((atual) => ({ ...atual, titulo: event.target.value }))}
+                                    placeholder="Coloque o nome aqui"
+                                />
+
+                                <div className="evento-criacao-campo">
+                                    <label>Organizador</label>
+                                    <input
+                                        value={novoEvento.organizador}
+                                        onChange={(event) => setNovoEvento((atual) => ({ ...atual, organizador: event.target.value }))}
+                                        placeholder="@organizador"
+                                    />
+                                </div>
+
+                                <div className="evento-criacao-campo">
+                                    <label>Descrição</label>
+                                    <textarea
+                                        value={novoEvento.descricao}
+                                        onChange={(event) => setNovoEvento((atual) => ({ ...atual, descricao: event.target.value }))}
+                                        placeholder="Conte como será o evento"
+                                    />
+                                </div>
+
+                                <div className="evento-criacao-grid">
+                                    <div className="evento-criacao-campo">
+                                        <label>Tipo</label>
+                                        <select
+                                            value={novoEvento.tipo}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, tipo: event.target.value as 'EVENTO' | 'GAME_JAM' }))}
+                                        >
+                                            <option value="GAME_JAM">Game Jam</option>
+                                            <option value="EVENTO">Evento</option>
+                                        </select>
+                                    </div>
+                                    <div className="evento-criacao-campo">
+                                        <label>Tamanho da equipe</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="12"
+                                            value={novoEvento.tamanhoEquipe}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, tamanhoEquipe: Number(event.target.value) }))}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="evento-criacao-grid">
+                                    <div className="evento-criacao-campo">
+                                        <label>Inscrições até</label>
+                                        <input
+                                            type="date"
+                                            value={novoEvento.inscricoesAte}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, inscricoesAte: event.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="evento-criacao-campo">
+                                        <label>Data de início</label>
+                                        <input
+                                            type="date"
+                                            value={novoEvento.dataInicio}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, dataInicio: event.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="evento-criacao-campo">
+                                        <label>Data de término</label>
+                                        <input
+                                            type="date"
+                                            value={novoEvento.dataFim}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, dataFim: event.target.value }))}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="evento-criacao-campo">
+                                    <label>Premiação</label>
+                                    <div className="evento-criacao-grid">
+                                        <input
+                                            value={novoEvento.premioDescricao}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, premioDescricao: event.target.value }))}
+                                            placeholder="Descrição da premiação"
+                                        />
+                                        <input
+                                            value={novoEvento.premioValor}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, premioValor: event.target.value }))}
+                                            placeholder="Valor ou prêmio"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="evento-criacao-campo">
+                                    <label>Regras</label>
+                                    <textarea
+                                        value={novoEvento.regras}
+                                        onChange={(event) => setNovoEvento((atual) => ({ ...atual, regras: event.target.value }))}
+                                        placeholder="Uma regra por linha"
+                                    />
+                                </div>
+
+                                <div className="evento-criacao-grid">
+                                    <div className="evento-criacao-campo">
+                                        <label>Tags</label>
+                                        <input
+                                            value={novoEvento.tags}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, tags: event.target.value }))}
+                                            placeholder="RPG, Indie"
+                                        />
+                                    </div>
+                                    <div className="evento-criacao-campo">
+                                        <label>Modo de participação</label>
+                                        <select
+                                            value={novoEvento.modeloEquipe}
+                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, modeloEquipe: event.target.value as 'COMUM' | 'SURPRESA' | 'INDIVIDUAL' }))}
+                                        >
+                                            <option value="COMUM">Equipe comum</option>
+                                            <option value="SURPRESA">Equipe surpresa</option>
+                                            <option value="INDIVIDUAL">Individual</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {erroCriacao && <p className="evento-criacao-erro" role="alert">{erroCriacao}</p>}
+                                <div className="evento-criacao-acoes">
+                                    <button type="button" onClick={() => setCriacaoAberta(false)}>Cancelar</button>
+                                    <button type="submit" disabled={criandoEvento}>
+                                        {criandoEvento ? 'Criando...' : 'Enviar'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
 
                     {filtrosAbertos && (
                         <div className="eventos-filtros">
@@ -871,12 +1165,20 @@ export function Eventos() {
                                 <section className="evento-detalhe-secao">
                                     <h3>Premiação</h3>
                                     <div className="evento-premios">
-                                        {atual.premios.map((premio) => (
-                                            <div className="evento-premio" key={`${premio.posicao}-${premio.valor}`}>
+                                        {agruparPremiosEvento(atual.premios).map((premio) => (
+                                            <div
+                                                className={`evento-premio ${premio.dinheiro && premio.premio ? 'is-dupla' : ''}`}
+                                                key={premio.posicao}
+                                            >
                                                 <span className="evento-premio-posicao">{premio.posicao}</span>
-                                                <span className="evento-premio-info" title={premio.descricao}>
-                                                    {premio.valor}
-                                                </span>
+                                                {premio.dinheiro && (
+                                                    <span className="evento-premio-info">R$ {premio.dinheiro}</span>
+                                                )}
+                                                {premio.premio && (
+                                                    <span className="evento-premio-info" title={premio.premio}>
+                                                        {premio.premio}
+                                                    </span>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -889,20 +1191,24 @@ export function Eventos() {
 
                                     <div className="evento-cronograma">
                                         {atual.cronograma.map((etapa) => {
-                                            const { data, hora } = dividirPeriodo(etapa.periodo)
+                                            const [inicio, fim] = partesPeriodoEvento(etapa.periodo)
+                                            const isResultado = etapa.titulo === 'Data do resultado'
+                                            const status = isResultado
+                                                ? (agora > new Date(`${inicio}T23:59:59`).getTime() ? 'Encerrado' : '-')
+                                                : statusPeriodoEvento(inicio, fim, agora)
 
                                             return (
                                                 <div className="evento-etapa-cron" key={`${etapa.titulo}-${etapa.periodo}`}>
                                                     <div className="evento-campo">
                                                         <span>Tempo restante:</span>
-                                                        <div className="evento-campo-box">{contagemLonga(atual.dataInicio, agora)}</div>
+                                                        <div className={`evento-campo-box ${status === 'Encerrado' ? 'is-encerrado' : ''}`}>{status}</div>
                                                     </div>
 
                                                     <div className="evento-campo">
                                                         <span>{etapa.titulo}:</span>
-                                                        <div className={`evento-campo-duplo ${hora ? '' : 'is-unico'}`}>
-                                                            <div className="evento-campo-box">{data}</div>
-                                                            {hora && <div className="evento-campo-box">{hora}</div>}
+                                                        <div className={`evento-campo-duplo ${isResultado ? 'is-unico' : ''}`}>
+                                                            <div className="evento-campo-box">{formatarDataHoraEvento(inicio)}</div>
+                                                            {!isResultado && <div className="evento-campo-box">{formatarDataHoraEvento(fim)}</div>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1058,6 +1364,24 @@ export function Eventos() {
                                                     <strong>{jogo.titulo}</strong>
                                                     <span>{jogo.desenvolvedor}</span>
                                                     <p>{jogo.descricao}</p>
+                                                    {jogo.linkUrl && (
+                                                        <a
+                                                            className="evento-jogo-link"
+                                                            href={jogo.linkUrl}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            Abrir jogo
+                                                        </a>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        className="evento-jogo-biblioteca"
+                                                        onClick={() => adicionarJogoBiblioteca(jogo.id)}
+                                                        disabled={bibliotecaIds.has(jogo.id)}
+                                                    >
+                                                        {bibliotecaIds.has(jogo.id) ? 'Na biblioteca' : 'Adicionar à biblioteca'}
+                                                    </button>
                                                 </div>
                                                 <span className="evento-jogo-nota">{jogo.nota?.toFixed(1)}</span>
                                             </article>

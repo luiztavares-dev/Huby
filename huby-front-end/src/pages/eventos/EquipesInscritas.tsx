@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import {
     buscarEquipes,
     buscarEvento,
     buscarMeusPedidos,
+    enviarEntrega,
     solicitarEntrada,
     type EquipeApi,
     type EventoApi,
@@ -84,6 +86,12 @@ export function EquipesInscritas() {
     const [enviando, setEnviando] = useState<string | null>(null)
     const [aviso, setAviso] = useState<string | null>(null)
     const [erroAcao, setErroAcao] = useState<string | null>(null)
+    const [entregaEquipeId, setEntregaEquipeId] = useState<string | null>(null)
+    const [entregaTitulo, setEntregaTitulo] = useState('')
+    const [entregaDescricao, setEntregaDescricao] = useState('')
+    const [entregaLink, setEntregaLink] = useState('')
+    const [entregaImagem, setEntregaImagem] = useState('')
+    const [erroEntrega, setErroEntrega] = useState<string | null>(null)
 
     useEffect(() => {
         const controller = new AbortController()
@@ -179,6 +187,58 @@ export function EquipesInscritas() {
         const alvo = (username ?? '').trim().toLowerCase()
         if (!alvo) return ''
         return usuarios.find((item) => item.username.toLowerCase() === alvo)?.id ?? ''
+    }
+
+    const abrirEntrega = (equipe: EquipeApi) => {
+        setEntregaEquipeId(equipe.id)
+        setEntregaTitulo(equipe.entregaTitulo || '')
+        setEntregaDescricao(equipe.entregaDescricao || '')
+        setEntregaLink(equipe.entregaLink || '')
+        setEntregaImagem(equipe.entregaImagem || equipe.imagem || '')
+        setErroEntrega(null)
+    }
+
+    const podeEnviarEntregas = (equipe: EquipeApi) => {
+        if (!usuario.id) return false
+        const participa = equipe.integrantes.some((item) =>
+            item.nomeUsuario.toLowerCase() === usuario.username.toLowerCase())
+        if (!participa) return false
+        const hoje = new Date()
+        const inicio = evento?.dataInicio ? new Date(`${evento.dataInicio}T00:00:00`) : null
+        const fim = evento?.dataFim ? new Date(`${evento.dataFim}T23:59:59`) : null
+        if (inicio && hoje < inicio) return false
+        if (fim && hoje > fim) return false
+        return true
+    }
+
+    const enviarEntregadEquipa = async (event: FormEvent) => {
+        event.preventDefault()
+        if (!entregaEquipeId || !usuario.id) {
+            setErroEntrega('Entre na sua conta para enviar o jogo.')
+            return
+        }
+        if (!entregaTitulo.trim() || !entregaLink.trim()) {
+            setErroEntrega('Informe o título e o link externo do jogo.')
+            return
+        }
+        setEnviando(entregaEquipeId)
+        setErroEntrega(null)
+        try {
+            const atualizada = await enviarEntrega(id ?? '', entregaEquipeId, {
+                usuarioId: usuario.id,
+                titulo: entregaTitulo.trim(),
+                descricao: entregaDescricao.trim(),
+                linkUrl: entregaLink.trim(),
+                imagem: entregaImagem.trim() || undefined
+            })
+            setEquipes((lista) => lista.map((equipe) => equipe.id === atualizada.id ? atualizada : equipe))
+            setEntregaEquipeId(null)
+            setAviso('Entrega do jogo enviada com sucesso.')
+        } catch (error) {
+            setErroEntrega(error instanceof Error ? error.message : 'Não foi possível enviar o jogo.')
+        } finally {
+            setEnviando(null)
+        }
     }
 
     if (carregando) {
@@ -378,9 +438,62 @@ export function EquipesInscritas() {
                                         {enviando === equipe.id ? 'Enviando...' : 'Enviar pedido'}
                                     </button>
                                 )}
+
+                                {podeEnviarEntregas(equipe) && (
+                                    <button
+                                        type="button"
+                                        className="equipe-card-pedido"
+                                        onClick={() => abrirEntrega(equipe)}
+                                    >
+                                        {equipe.entregaLink ? 'Editar entrega do jogo' : 'Enviar jogo'}
+                                    </button>
+                                )}
                             </article>
                         )
                     })}
+                </div>
+            )}
+
+            {entregaEquipeId && (
+                <div className="equipe-entrega-fundo" role="presentation" onMouseDown={(event) => {
+                    if (event.target === event.currentTarget) setEntregaEquipeId(null)
+                }}>
+                    <form className="equipe-entrega" onSubmit={enviarEntregadEquipa}>
+                        <h2>Enviar jogo</h2>
+                        <label>
+                            Título
+                            <input value={entregaTitulo} onChange={(event) => setEntregaTitulo(event.target.value)} />
+                        </label>
+                        <label>
+                            Descrição
+                            <textarea value={entregaDescricao} onChange={(event) => setEntregaDescricao(event.target.value)} />
+                        </label>
+                        <label>
+                            Link externo
+                            <input
+                                type="url"
+                                value={entregaLink}
+                                onChange={(event) => setEntregaLink(event.target.value)}
+                                placeholder="https://itch.io/..."
+                            />
+                        </label>
+                        <label>
+                            Imagem ou capa
+                            <input
+                                type="url"
+                                value={entregaImagem}
+                                onChange={(event) => setEntregaImagem(event.target.value)}
+                                placeholder="https://..."
+                            />
+                        </label>
+                        {erroEntrega && <p className="equipe-entrega-erro" role="alert">{erroEntrega}</p>}
+                        <div className="equipe-entrega-acoes">
+                            <button type="button" onClick={() => setEntregaEquipeId(null)}>Cancelar</button>
+                            <button type="submit" disabled={enviando === entregaEquipeId}>
+                                {enviando === entregaEquipeId ? 'Enviando...' : 'Salvar entrega'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </main>

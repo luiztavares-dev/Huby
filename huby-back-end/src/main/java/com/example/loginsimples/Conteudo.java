@@ -46,6 +46,11 @@ public class Conteudo {
 
     /** Id da game jam à qual o jogo pertence (apenas para tipo JOGO). */
     private String gameJamId;
+    private String linkUrl = "";
+    private String criadorId = "";
+    private String bannerUrl = "";
+    private String tipoPremiacao = "SEM_PREMIACAO";
+    private List<String> contatos = new ArrayList<>();
 
     /** Detalhes exibidos na página de eventos (EVENTO e GAME_JAM). */
     private String tema = "";
@@ -134,6 +139,16 @@ public class Conteudo {
 
     public String getGameJamId() { return gameJamId; }
     public void setGameJamId(String gameJamId) { this.gameJamId = gameJamId; }
+    public String getLinkUrl() { return linkUrl; }
+    public void setLinkUrl(String linkUrl) { this.linkUrl = linkUrl; }
+    public String getCriadorId() { return criadorId; }
+    public void setCriadorId(String criadorId) { this.criadorId = criadorId; }
+    public String getBannerUrl() { return bannerUrl; }
+    public void setBannerUrl(String bannerUrl) { this.bannerUrl = bannerUrl; }
+    public String getTipoPremiacao() { return tipoPremiacao; }
+    public void setTipoPremiacao(String tipoPremiacao) { this.tipoPremiacao = tipoPremiacao; }
+    public List<String> getContatos() { return contatos; }
+    public void setContatos(List<String> contatos) { this.contatos = contatos; }
 
     public String getTema() { return tema; }
     public void setTema(String tema) { this.tema = tema; }

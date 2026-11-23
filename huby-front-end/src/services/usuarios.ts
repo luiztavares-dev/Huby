@@ -31,3 +31,25 @@ export async function buscarUsuarios(signal?: AbortSignal): Promise<UsuarioResum
         }))
         .filter((usuario) => usuario.username.length > 0)
 }
+
+export async function buscarBiblioteca(usuarioId: string, signal?: AbortSignal): Promise<string[]> {
+    const resposta = await fetch(`${API_URL}/api/perfil/${encodeURIComponent(usuarioId)}/biblioteca`, { signal })
+    if (!resposta.ok) throw new Error('Não foi possível carregar sua biblioteca.')
+    return resposta.json() as Promise<string[]>
+}
+
+export async function adicionarBiblioteca(usuarioId: string, jogoId: string): Promise<void> {
+    const resposta = await fetch(
+        `${API_URL}/api/perfil/${encodeURIComponent(usuarioId)}/biblioteca/${encodeURIComponent(jogoId)}`,
+        { method: 'POST' }
+    )
+    if (!resposta.ok) throw new Error('Não foi possível adicionar o jogo à biblioteca.')
+}
+
+export async function removerBiblioteca(usuarioId: string, jogoId: string): Promise<void> {
+    const resposta = await fetch(
+        `${API_URL}/api/perfil/${encodeURIComponent(usuarioId)}/biblioteca/${encodeURIComponent(jogoId)}`,
+        { method: 'DELETE' }
+    )
+    if (!resposta.ok) throw new Error('Não foi possível remover o jogo da biblioteca.')
+}
