@@ -1,6 +1,6 @@
 import './Home.css'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import Banner from '../../components/banner/Banner'
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
@@ -33,6 +33,11 @@ const normalizarCategoria = (valor: string) => {
         .replace(/[^a-z0-9]/g, '')
 }
 
+const normalizarFiltroCategoria = (valor: string) => {
+    const categoria = normalizarCategoria(valor)
+    return categoria === 'horror' ? 'terror' : categoria
+}
+
 const getCategoriaInfo = (tag: string) => {
     const tagNormalizada = normalizarCategoria(tag)
     const entradas = Object.entries(categoriaMap)
@@ -52,16 +57,42 @@ const getCategoriaInfo = (tag: string) => {
     return categoriasExtras[tag] ?? 'Categoria do jogo.'
 }
 
+type HomeGame = Game & {
+    dataPublicacao?: string | null
+    preco: number
+}
+
 type Secao = {
     id: string
     title: string
     subtitle?: string
-    items: Game[]
+    items: HomeGame[]
 }
 
+type FiltroPreco = 'todos' | 'gratuito' | 'faixa'
+type Ordenacao = 'padrao' | 'recentes' | 'antigos' | 'menor-preco' | 'maior-preco' | 'melhor-avaliacao' | 'menor-avaliacao'
+
+type Filtros = {
+    categorias: string[]
+    preco: FiltroPreco
+    precoMinimo: number
+    precoMaximo: number
+    ordenacao: Ordenacao
+}
+
+const filtrosIniciais: Filtros = {
+    categorias: [],
+    preco: 'todos',
+    precoMinimo: 10,
+    precoMaximo: 200,
+    ordenacao: 'padrao'
+}
+const categoriasFiltro = Object.keys(categoriaMap)
+const precoMinimo = 10
+const precoMaximo = 200
 const plataformasValidas = new Set(['website', 'mobile', 'pc'])
 
-function paraGame(item: ConteudoApi): Game {
+function paraGame(item: ConteudoApi): HomeGame {
     return {
         id: item.id,
         tipo: item.tipo,
@@ -73,9 +104,11 @@ function paraGame(item: ConteudoApi): Game {
         tags: item.tags ?? [],
         score: item.nota ?? 0,
         reviews: item.avaliacoes ?? 0,
+        preco: item.preco ?? 0,
         platforms: (item.plataformas ?? []).filter(
             (plataforma): plataforma is 'website' | 'mobile' | 'pc' => plataformasValidas.has(plataforma)
         ),
+        dataPublicacao: item.dataPublicacao,
         dataInicio: item.dataInicio,
         dataFim: item.dataFim,
         participantes: item.participantes,
@@ -358,12 +391,251 @@ function HomeSkeleton() {
     )
 }
 
+function IconeAvancarFiltros() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" />
+        </svg>
+    )
+}
+
+const formatarPreco = (valor: number) => valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+})
+
+function PainelFiltros({ isOpen, filtros, onAplicar, onCancelar }: {
+    isOpen: boolean
+    filtros: Filtros
+    onAplicar: (filtros: Filtros) => void
+    onCancelar: () => void
+}) {
+    const painelRef = useRef<HTMLElement>(null)
+    const fecharRef = useRef<HTMLButtonElement>(null)
+    const [rascunho, setRascunho] = useState(filtros)
+    const [abertas, setAbertas] = useState<string[]>(['Ação'])
+    const categorias = categoriasFiltro.map((categoria) => [categoria, categoriaMap[categoria]] as const)
+
+    useEffect(() => {
+        if (!isOpen) return
+        setRascunho(filtros)
+        setAbertas(['Ação'])
+        painelRef.current?.scrollTo({ top: 0 })
+    }, [filtros, isOpen])
+
+    useEffect(() => {
+        if (!isOpen) return
+
+        const focoAnterior = document.activeElement instanceof HTMLElement ? document.activeElement : null
+        fecharRef.current?.focus()
+
+        const aoTeclar = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onCancelar()
+        }
+
+        window.addEventListener('keydown', aoTeclar)
+        return () => {
+            window.removeEventListener('keydown', aoTeclar)
+            focoAnterior?.focus()
+        }
+    }, [isOpen, onCancelar])
+
+    const alternarCategoria = (categoria: string) => {
+        setRascunho((atual) => ({
+            ...atual,
+            categorias: atual.categorias.includes(categoria)
+                ? atual.categorias.filter((item) => item !== categoria)
+                : [...atual.categorias, categoria]
+        }))
+    }
+
+    const alternarPreco = (preco: Exclude<FiltroPreco, 'todos'>) => {
+        setRascunho((atual) => ({ ...atual, preco: atual.preco === preco ? 'todos' : preco }))
+    }
+
+    const posicaoMinima = ((rascunho.precoMinimo - precoMinimo) / (precoMaximo - precoMinimo)) * 100
+    const posicaoMaxima = ((rascunho.precoMaximo - precoMinimo) / (precoMaximo - precoMinimo)) * 100
+
+    return (
+        <>
+            <div
+                className={`home-filtros-overlay ${isOpen ? 'is-open' : ''}`}
+                onClick={onCancelar}
+                aria-hidden="true"
+            />
+
+            <button
+                ref={fecharRef}
+                type="button"
+                className={`home-filtros-voltar ${isOpen ? 'is-open' : ''}`}
+                onClick={onCancelar}
+                aria-label="Fechar filtros"
+                tabIndex={isOpen ? 0 : -1}
+            >
+                <IconeAvancarFiltros />
+            </button>
+
+            <aside
+                ref={painelRef}
+                className={`home-filtros ${isOpen ? 'is-open' : ''}`}
+                aria-labelledby="home-filtros-titulo"
+                aria-hidden={!isOpen}
+            >
+                <div className="home-filtros-cabecalho">
+                    <h2 id="home-filtros-titulo">Filtro</h2>
+                </div>
+
+                <section className="home-filtros-secao" aria-labelledby="home-filtros-preco">
+                    <h3 id="home-filtros-preco">Preço</h3>
+                    <div className="home-filtros-opcoes">
+                        <button
+                            type="button"
+                            className={`home-filtros-chip ${rascunho.preco === 'gratuito' ? 'is-selecionado' : ''}`}
+                            aria-pressed={rascunho.preco === 'gratuito'}
+                            onClick={() => alternarPreco('gratuito')}
+                        >
+                            Gratuito
+                        </button>
+                        <button
+                            type="button"
+                            className={`home-filtros-chip ${rascunho.preco === 'faixa' ? 'is-selecionado' : ''}`}
+                            aria-pressed={rascunho.preco === 'faixa'}
+                            onClick={() => alternarPreco('faixa')}
+                        >
+                            Faixa de preço
+                        </button>
+                    </div>
+                    <div className="home-filtros-faixa">
+                        <div className="home-filtros-faixa-trilha" aria-hidden="true">
+                            <span style={{ left: `${posicaoMinima}%`, right: `${100 - posicaoMaxima}%` }} />
+                        </div>
+                        <input
+                            type="range"
+                            min={precoMinimo}
+                            max={precoMaximo}
+                            value={rascunho.precoMinimo}
+                            aria-label="Preço mínimo"
+                            aria-valuetext={formatarPreco(rascunho.precoMinimo)}
+                            onChange={(event) => setRascunho((atual) => ({
+                                ...atual,
+                                preco: 'faixa',
+                                precoMinimo: Math.min(Number(event.target.value), atual.precoMaximo)
+                            }))}
+                        />
+                        <input
+                            type="range"
+                            min={precoMinimo}
+                            max={precoMaximo}
+                            value={rascunho.precoMaximo}
+                            aria-label="Preço máximo"
+                            aria-valuetext={formatarPreco(rascunho.precoMaximo)}
+                            onChange={(event) => setRascunho((atual) => ({
+                                ...atual,
+                                preco: 'faixa',
+                                precoMaximo: Math.max(Number(event.target.value), atual.precoMinimo)
+                            }))}
+                        />
+                    </div>
+                    <div className="home-filtros-faixa-valores">
+                        <span>{formatarPreco(rascunho.precoMinimo)}</span>
+                        <span>{formatarPreco(rascunho.precoMaximo)}</span>
+                    </div>
+                </section>
+
+                <section className="home-filtros-secao" aria-labelledby="home-filtros-categorias">
+                    <h3 id="home-filtros-categorias">Categorias</h3>
+                    <div className="home-filtros-categorias">
+                        {categorias.map(([categoria, info]) => {
+                            const aberta = abertas.includes(categoria)
+                            const opcoes = (info.SubCategorias?.map((item) => item.Titulo) ?? [categoria])
+                                .map((item) => item === 'Horror' ? 'Terror' : item)
+                            const selecionada = opcoes.some((item) => rascunho.categorias.includes(item))
+
+                            return (
+                                <div className="home-filtros-grupo" key={categoria}>
+                                    <button
+                                        type="button"
+                                        className="home-filtros-grupo-titulo"
+                                        aria-expanded={aberta}
+                                        onClick={() => setAbertas((atual) => aberta ? atual.filter((item) => item !== categoria) : [...atual, categoria])}
+                                    >
+                                        <span className={`home-filtros-seta ${aberta ? 'is-aberta' : ''}`} aria-hidden="true" />
+                                        {categoria === 'Horror' ? 'Terror' : categoria}
+                                        {selecionada && <span className="home-filtros-marcador" aria-label="Categoria com filtros selecionados" />}
+                                    </button>
+                                    {aberta && (
+                                        <div className="home-filtros-opcoes">
+                                            {opcoes.map((opcao) => (
+                                                <button
+                                                    type="button"
+                                                    key={opcao}
+                                                    className={`home-filtros-chip ${rascunho.categorias.includes(opcao) ? 'is-selecionado' : ''}`}
+                                                    aria-pressed={rascunho.categorias.includes(opcao)}
+                                                    onClick={() => alternarCategoria(opcao)}
+                                                >
+                                                    {opcao}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </section>
+
+                <section className="home-filtros-secao" aria-labelledby="home-filtros-ordenar">
+                    <h3 id="home-filtros-ordenar">Ordenar por</h3>
+                    <div className="home-filtros-opcoes">
+                        <select
+                            aria-label="Ordenar por data"
+                            value={['recentes', 'antigos'].includes(rascunho.ordenacao) ? rascunho.ordenacao : ''}
+                            onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
+                        >
+                            <option value="">Data</option>
+                            <option value="recentes">Mais recentes</option>
+                            <option value="antigos">Mais antigos</option>
+                        </select>
+                        <select
+                            aria-label="Ordenar por preço"
+                            value={['menor-preco', 'maior-preco'].includes(rascunho.ordenacao) ? rascunho.ordenacao : ''}
+                            onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
+                        >
+                            <option value="">Preço</option>
+                            <option value="menor-preco">Menor preço</option>
+                            <option value="maior-preco">Maior preço</option>
+                        </select>
+                        <select
+                            aria-label="Ordenar por avaliação"
+                            value={['melhor-avaliacao', 'menor-avaliacao'].includes(rascunho.ordenacao) ? rascunho.ordenacao : ''}
+                            onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
+                        >
+                            <option value="">Avaliação</option>
+                            <option value="melhor-avaliacao">Maior avaliação</option>
+                            <option value="menor-avaliacao">Menor avaliação</option>
+                        </select>
+                    </div>
+                </section>
+
+                <div className="home-filtros-acoes">
+                    <button type="button" className="home-filtros-cancelar" onClick={onCancelar}>Cancelar</button>
+                    <button type="button" className="home-filtros-aplicar" onClick={() => onAplicar(rascunho)}>Aplicar</button>
+                    <button type="button" className="home-filtros-limpar" onClick={() => setRascunho(filtrosIniciais)}>Limpar filtros</button>
+                </div>
+            </aside>
+        </>
+    )
+}
+
 export function Home() {
     const [selectedGame, setSelectedGame] = useState<Game | null>(null)
     const [secoes, setSecoes] = useState<Secao[]>([])
     const [carregando, setCarregando] = useState(true)
     const [erro, setErro] = useState<string | null>(null)
     const [tentativa, setTentativa] = useState(0)
+    const [busca, setBusca] = useState('')
+    const [filtros, setFiltros] = useState<Filtros>(filtrosIniciais)
+    const [filtrosAbertos, setFiltrosAbertos] = useState(false)
 
     useEffect(() => {
         const controller = new AbortController()
@@ -385,7 +657,46 @@ export function Home() {
     }, [tentativa])
 
     const closeDetails = useCallback(() => setSelectedGame(null), [])
+    const closeFiltros = useCallback(() => setFiltrosAbertos(false), [])
     const recarregar = useCallback(() => setTentativa((valor) => valor + 1), [])
+    const filtrosAtivos = filtros.categorias.length > 0 || filtros.preco !== 'todos' || filtros.ordenacao !== 'padrao'
+
+    const secoesFiltradas = useMemo(() => {
+        const termo = normalizarCategoria(busca.trim())
+        const categorias = filtros.categorias.map(normalizarFiltroCategoria)
+
+        return secoes.map((secao) => {
+            const items = secao.items.filter((item) => {
+                const correspondeBusca = !termo || [item.title, item.description, item.developer, ...item.tags]
+                    .some((campo) => normalizarCategoria(campo).includes(termo))
+                const correspondeCategoria = categorias.length === 0 || item.tags
+                    .some((tag) => categorias.includes(normalizarFiltroCategoria(tag)))
+                const correspondePreco = filtros.preco === 'todos'
+                    || (filtros.preco === 'gratuito' && item.preco === 0)
+                    || (filtros.preco === 'faixa' && item.preco >= filtros.precoMinimo && item.preco <= filtros.precoMaximo)
+                return correspondeBusca && correspondeCategoria && correspondePreco
+            })
+
+            if (filtros.ordenacao === 'recentes' || filtros.ordenacao === 'antigos') {
+                items.sort((a, b) => {
+                    if (!a.dataPublicacao) return b.dataPublicacao ? 1 : 0
+                    if (!b.dataPublicacao) return -1
+                    const comparacao = a.dataPublicacao.localeCompare(b.dataPublicacao)
+                    return filtros.ordenacao === 'recentes' ? -comparacao : comparacao
+                })
+            } else if (filtros.ordenacao === 'menor-preco') {
+                items.sort((a, b) => a.preco - b.preco)
+            } else if (filtros.ordenacao === 'maior-preco') {
+                items.sort((a, b) => b.preco - a.preco)
+            } else if (filtros.ordenacao === 'melhor-avaliacao') {
+                items.sort((a, b) => b.score - a.score)
+            } else if (filtros.ordenacao === 'menor-avaliacao') {
+                items.sort((a, b) => a.score - b.score)
+            }
+
+            return { ...secao, items }
+        }).filter((secao) => secao.items.length > 0)
+    }, [busca, filtros, secoes])
 
     return (
         <main className="home">
@@ -395,8 +706,19 @@ export function Home() {
             <section className="home-catalog" aria-busy={carregando}>
 
                 <div className="home-toolbar">
-                    <BarraDePesquisa />
+                    <BarraDePesquisa
+                        value={busca}
+                        onChange={setBusca}
+                        filtroAtivo={filtrosAbertos}
+                        onFiltroClick={() => setFiltrosAbertos(true)}
+                    />
                 </div>
+
+                {filtrosAtivos && (
+                    <button type="button" className="home-limpar-filtros" onClick={() => setFiltros(filtrosIniciais)}>
+                        Limpar filtros
+                    </button>
+                )}
 
                 {carregando && <HomeSkeleton />}
 
@@ -413,7 +735,13 @@ export function Home() {
                     </div>
                 )}
 
-                {!carregando && !erro && secoes.map((secao) => (
+                {!carregando && !erro && secoes.length > 0 && secoesFiltradas.length === 0 && (
+                    <div className="home-state" role="status">
+                        <p>Nenhum resultado encontrado para a busca e os filtros selecionados.</p>
+                    </div>
+                )}
+
+                {!carregando && !erro && secoesFiltradas.map((secao) => (
                     <CarouselSection
                         key={secao.id}
                         title={secao.title}
@@ -425,6 +753,16 @@ export function Home() {
                 ))}
 
             </section>
+
+            <PainelFiltros
+                isOpen={filtrosAbertos}
+                filtros={filtros}
+                onAplicar={(novosFiltros) => {
+                    setFiltros(novosFiltros)
+                    setFiltrosAbertos(false)
+                }}
+                onCancelar={closeFiltros}
+            />
 
             <GameDetails
                 game={selectedGame}

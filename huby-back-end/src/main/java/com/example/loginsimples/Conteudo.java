@@ -27,6 +27,7 @@ public class Conteudo {
 
     private Double nota = 0.0;
     private Integer avaliacoes = 0;
+    private Double preco = 0.0;
 
     private Boolean destaque = false;
     private Integer relevancia = 0;
@@ -115,6 +116,9 @@ public class Conteudo {
 
     public Integer getAvaliacoes() { return avaliacoes; }
     public void setAvaliacoes(Integer avaliacoes) { this.avaliacoes = avaliacoes; }
+
+    public Double getPreco() { return preco; }
+    public void setPreco(Double preco) { this.preco = preco; }
 
     public Boolean getDestaque() { return destaque; }
     public void setDestaque(Boolean destaque) { this.destaque = destaque; }

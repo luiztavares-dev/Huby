@@ -22,9 +22,16 @@ function isoHora(valor: string) {
 }
 
 function formatarData(valor: string) {
-    if (!valor) return '01/01/26'
-    const [ano, mes, dia] = valor.split('-')
+    const data = isoData(valor)
+    if (!data) return '01/01/26'
+    const [ano, mes, dia] = data.split('-')
     return `${dia}/${mes}/${ano.slice(-2)}`
+}
+
+function formatarDataHora(valor: string) {
+    const data = formatarData(valor)
+    const hora = isoHora(valor)
+    return hora ? `${data} ${hora}` : data
 }
 
 function toIsoComHora(data: Date, hora = '09:00') {
@@ -386,6 +393,7 @@ export function CriarEvento() {
     }
 
     const renderPicker = (chave: CronoKey) => {
+        const somenteData = chave === 'resultado'
         return (
             <div className="criar-jam-datepicker">
                 <div className="criar-jam-calendario">

@@ -12,6 +12,7 @@ export type ConteudoApi = {
     plataformas: string[]
     nota: number
     avaliacoes: number
+    preco?: number | null
     destaque: boolean
     relevancia: number
     dataPublicacao?: string | null
