@@ -14,9 +14,9 @@ import {
     adicionarBiblioteca,
     buscarBiblioteca,
     buscarCompras,
-    comprarJogo,
     removerBiblioteca
 } from '../../services/usuarios'
+import { adicionarAoCarrinho } from '../../services/carrinho'
 import { formatarParticipantes, formatarPeriodo } from '../../utils/formato'
 
 type CategoriaMap = Record<string, {
@@ -757,6 +757,7 @@ export function Home() {
         }
     }
 
+    
     const comprar = async (game: Game) => {
         if (!usuario.id) {
             navigate('/login')
@@ -768,12 +769,10 @@ export function Home() {
         setAviso(null)
 
         try {
-            await comprarJogo(usuario.id, game.id)
-            setComprasIds((atual) => new Set(atual).add(game.id))
-            setBibliotecaIds((atual) => new Set(atual).add(game.id))
-            setAviso(`Compra concluída. ${game.title} foi adicionado à sua biblioteca.`)
+            await adicionarAoCarrinho(usuario.id, game.id)
+            setAviso(`${game.title} foi adicionado ao seu carrinho.`)
         } catch (error) {
-            setAviso(error instanceof Error ? error.message : 'Não foi possível concluir a compra do jogo.')
+            setAviso(error instanceof Error ? error.message : 'Não foi possível adicionar o jogo ao carrinho.')
         } finally {
             setAcaoPendente(null)
         }
