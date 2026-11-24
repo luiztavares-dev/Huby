@@ -145,26 +145,14 @@
     text-transform: uppercase;
 }
 
-.biblioteca-ordenar select {
+.biblioteca-ordenar .huby-dropdown {
     width: 100%;
-    height: 34px;
-    padding: 0 34px 0 12px;
-    border: 1px solid var(--gray3);
-    border-radius: 8px;
-    appearance: none;
-    background-color: #191919;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23FFFFFF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 14px 8px;
-    color: var(--text1);
-    font-size: 0.75rem;
-    cursor: pointer;
 }
 
-.biblioteca-ordenar option {
-    background: #191919;
-    color: var(--text1);
+.biblioteca-ordenar .huby-dropdown__trigger {
+    height: 34px;
+    padding: 0 34px 0 12px;
+    font-size: 0.75rem;
 }
 
 .biblioteca-catalogo {
@@ -446,7 +434,7 @@
 .biblioteca-card button:focus-visible,
 .biblioteca-card a:focus-visible,
 .biblioteca-filtros button:focus-visible,
-.biblioteca-ordenar select:focus-visible,
+.biblioteca-ordenar .huby-dropdown__trigger:focus-visible,
 .biblioteca-estado button:focus-visible,
 .biblioteca-estado a:focus-visible {
     outline: 2px solid var(--pink);

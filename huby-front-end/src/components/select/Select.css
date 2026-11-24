@@ -1,0 +1,150 @@
+.huby-dropdown {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.huby-dropdown__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+    padding: 0 38px 0 14px;
+    border: 1px solid var(--pink);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--gray1) 91%, var(--text1) 9%);
+    color: var(--text1);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.huby-dropdown__trigger:hover {
+    background: var(--gray3);
+}
+
+.huby-dropdown__trigger:focus-visible {
+    outline: 2px solid var(--text1);
+    outline-offset: 2px;
+}
+
+.huby-dropdown__trigger:disabled {
+    border-color: var(--gray3);
+    color: var(--text2);
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.huby-dropdown__valor {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.huby-dropdown__seta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 16px;
+    color: var(--text1);
+}
+
+.huby-dropdown__seta svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+}
+
+.huby-dropdown.is-open .huby-dropdown__seta svg {
+    transform: rotate(180deg);
+}
+
+.huby-dropdown__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    z-index: 300;
+    max-height: 240px;
+    box-sizing: border-box;
+    padding: 4px 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--text1);
+    border-radius: 6px;
+    background: var(--gray1);
+    box-shadow: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) var(--gray1);
+}
+
+.huby-dropdown.is-up .huby-dropdown__menu {
+    top: auto;
+    bottom: calc(100% + 4px);
+}
+
+.huby-dropdown__opcao {
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    box-sizing: border-box;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text1);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.huby-dropdown__opcao:hover {
+    background: color-mix(in srgb, var(--gray1) 92%, var(--text1) 8%);
+}
+
+.huby-dropdown__opcao.is-active {
+    background: color-mix(in srgb, var(--gray1) 88%, var(--text1) 12%);
+}
+
+.huby-dropdown__opcao.is-selected {
+    color: var(--text1);
+}
+
+.huby-dropdown__opcao:focus-visible {
+    outline: 2px solid var(--pink);
+    outline-offset: -3px;
+}
+
+.huby-dropdown__menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.huby-dropdown__menu::-webkit-scrollbar-track {
+    background: var(--gray1);
+}
+
+.huby-dropdown__menu::-webkit-scrollbar-thumb {
+    border: 2px solid var(--gray1);
+    border-radius: 999px;
+    background: var(--pink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .huby-dropdown__trigger,
+    .huby-dropdown__seta svg {
+        transition: none;
+    }
+}

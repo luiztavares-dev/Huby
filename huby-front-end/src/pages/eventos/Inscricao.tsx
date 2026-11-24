@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import { Select } from '../../components/select/Select'
 import {
     buscarEvento,
     buscarFuncoes,
@@ -93,74 +94,6 @@ function AvatarNeutro({ className = '' }: { className?: string }) {
     )
 }
 
-function SeletorFuncao({ valor, opcoes, aberto, onAlternar, onSelecionar }: {
-    valor: string
-    opcoes: FuncaoApi[]
-    aberto: boolean
-    onAlternar: (aberto: boolean) => void
-    onSelecionar: (funcao: string) => void
-}) {
-    const caixaRef = useRef<HTMLDivElement | null>(null)
-
-    useEffect(() => {
-        if (!aberto) return
-
-        const aoClicarFora = (event: MouseEvent) => {
-            if (!caixaRef.current?.contains(event.target as Node)) onAlternar(false)
-        }
-        const aoTeclar = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onAlternar(false)
-        }
-
-        document.addEventListener('mousedown', aoClicarFora)
-        document.addEventListener('keydown', aoTeclar)
-
-        return () => {
-            document.removeEventListener('mousedown', aoClicarFora)
-            document.removeEventListener('keydown', aoTeclar)
-        }
-    }, [aberto, onAlternar])
-
-    return (
-        <div className={`inscricao-select ${aberto ? 'is-open' : ''} ${valor ? 'is-preenchido' : ''}`} ref={caixaRef}>
-            <button
-                type="button"
-                className="inscricao-select-botao"
-                onClick={() => onAlternar(!aberto)}
-                aria-haspopup="listbox"
-                aria-expanded={aberto}
-            >
-                <span>{valor || 'Função'}</span>
-                <span className="inscricao-select-seta" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                </span>
-            </button>
-
-            {aberto && (
-                <div className="inscricao-select-lista" role="listbox" aria-label="Funções da equipe">
-                    {opcoes.map((opcao) => (
-                        <button
-                            key={opcao.id}
-                            type="button"
-                            role="option"
-                            aria-selected={opcao.nome === valor}
-                            className={opcao.nome === valor ? 'is-ativo' : ''}
-                            onClick={() => {
-                                onSelecionar(opcao.nome)
-                                onAlternar(false)
-                            }}
-                        >
-                            {opcao.nome}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
-    )
-}
-
 export function InscricaoEvento() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
@@ -177,7 +110,6 @@ export function InscricaoEvento() {
     const [experiencia, setExperiencia] = useState<Experiencia | ''>('')
     const [abertaParaSolicitacoes, setAbertaParaSolicitacoes] = useState(false)
     const [integrantes, setIntegrantes] = useState<IntegranteForm[]>([])
-    const [funcaoAberta, setFuncaoAberta] = useState<number | null>(null)
     const [campoFocado, setCampoFocado] = useState<number | null>(null)
 
     const [bannerEquipe, setBannerEquipe] = useState('')
@@ -286,10 +218,6 @@ export function InscricaoEvento() {
             })
             .slice(0, 5)
     }
-
-    const alternarFuncao = useCallback((indice: number, aberto: boolean) => {
-        setFuncaoAberta(aberto ? indice : null)
-    }, [])
 
     const adicionarIntegrante = () => {
         setIntegrantes((lista) => (lista.length >= maximoIntegrantes ? lista : [...lista, novoIntegrante()]))
@@ -690,12 +618,13 @@ export function InscricaoEvento() {
                                     )}
                                 </div>
 
-                                <SeletorFuncao
-                                    valor={integrante.funcao}
-                                    opcoes={funcoes}
-                                    aberto={funcaoAberta === indice}
-                                    onAlternar={(aberto) => alternarFuncao(indice, aberto)}
-                                    onSelecionar={(funcao) => alterarIntegrante(indice, { funcao })}
+                                <Select
+                                    className="inscricao-select"
+                                    ariaLabel={`Função do integrante ${indice + 1}`}
+                                    placeholder="Função"
+                                    value={integrante.funcao}
+                                    onChange={(funcao) => alterarIntegrante(indice, { funcao })}
+                                    options={funcoes.map((funcao) => ({ value: funcao.nome, label: funcao.nome }))}
                                 />
 
                                 {podeRemover && (

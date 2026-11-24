@@ -454,14 +454,92 @@
 
 .galeria-jogos-body {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   min-height: 520px;
+  padding: 24px 16px 16px;
+}
+
+.perfil-atividades-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+  width: 100%;
+}
+
+.perfil-atividade-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--gray3);
+  border-radius: 8px;
+  background: var(--gray1);
+}
+
+.perfil-atividade-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--gray3);
+}
+
+.perfil-atividade-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.perfil-atividade-tipo {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--pink);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.perfil-atividade-conteudo {
+  padding: 12px;
+}
+
+.perfil-atividade-conteudo h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text1);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.perfil-atividade-conteudo p {
+  display: -webkit-box;
+  min-height: 33px;
+  margin: 7px 0 10px;
+  overflow: hidden;
+  color: var(--text2);
+  font-size: 11px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.perfil-atividade-conteudo small {
+  color: var(--text3);
+  font-size: 9.5px;
+  font-weight: 600;
 }
 
 .empty-publications {
   text-align: center;
   max-width: 320px;
+  margin: auto;
   padding: 24px;
 }
 
@@ -476,6 +554,10 @@
   font-size: 12px;
   line-height: 1.6;
   color: var(--text3);
+}
+
+.empty-publications .btn-salvar {
+  margin-top: 14px;
 }
 
 
@@ -493,6 +575,12 @@
   .perfil-identidade {
     flex-direction: column;
     gap: 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  .perfil-atividades-lista {
+    grid-template-columns: 1fr;
   }
 }
 

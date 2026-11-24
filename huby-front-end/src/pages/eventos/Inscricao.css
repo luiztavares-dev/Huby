@@ -530,98 +530,14 @@
 
 /* Select de função */
 
-.inscricao-select {
-    position: relative;
-}
-
-.inscricao-select-botao {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    width: 100%;
+.inscricao-select .huby-dropdown__trigger {
     height: 30px;
-    padding: 0 0 0 11px;
-    border: 1px solid var(--pink);
-    border-radius: 8px;
-    background-color: #0a0a0a;
-    color: #8c8c8c;
+    padding-left: 11px;
     font-size: 0.74rem;
-    text-align: left;
-    cursor: pointer;
-    overflow: hidden;
 }
 
-.inscricao-select.is-preenchido .inscricao-select-botao {
-    color: var(--text1);
-}
-
-.inscricao-select-botao > span:first-child {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.inscricao-select-seta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 30px;
-    height: 100%;
-    border-left: 1px solid var(--pink);
-    background-color: transparent;
-    color: var(--white);
-    line-height: 1;
-}
-
-.inscricao-select-seta svg {
-    width: 14px;
-    height: 14px;
-    transition: transform 0.2s ease;
-}
-
-.inscricao-select.is-open .inscricao-select-seta svg {
-    transform: rotate(180deg);
-}
-
-.inscricao-select-lista {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    z-index: 30;
+.inscricao-select .huby-dropdown__menu {
     max-height: 220px;
-    overflow-y: auto;
-    border: 1px solid var(--pink);
-    border-radius: 4px;
-    background-color: #0e0e0e;
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.55);
-    scrollbar-width: thin;
-    scrollbar-color: var(--pink) #1e1e1e;
-}
-
-.inscricao-select-lista button {
-    display: block;
-    width: 100%;
-    padding: 7px 10px;
-    border: none;
-    border-bottom: 1px solid #2a151b;
-    background: transparent;
-    color: #e7e7e7;
-    font-size: 0.7rem;
-    text-align: left;
-    cursor: pointer;
-}
-
-.inscricao-select-lista button:last-child {
-    border-bottom: none;
-}
-
-.inscricao-select-lista button:hover,
-.inscricao-select-lista button.is-ativo {
-    background-color: rgba(250, 41, 95, 0.18);
-    color: var(--white);
 }
 
 /* Experiência */

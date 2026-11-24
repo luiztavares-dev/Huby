@@ -1475,8 +1475,7 @@
 .evento-criacao-capa,
 .evento-criacao-titulo,
 .evento-criacao-campo input,
-.evento-criacao-campo textarea,
-.evento-criacao-campo select {
+.evento-criacao-campo textarea {
     width: 100%;
     box-sizing: border-box;
     border: 1px solid #555;
@@ -1517,10 +1516,13 @@
     font-weight: 800;
 }
 
-.evento-criacao-campo input,
-.evento-criacao-campo select {
+.evento-criacao-campo input {
     height: 38px;
     padding: 0 10px;
+}
+
+.evento-criacao-campo .huby-dropdown__trigger {
+    height: 38px;
 }
 
 .evento-criacao-campo textarea {
