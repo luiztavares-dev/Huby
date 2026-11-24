@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
+import { Select } from '../../components/select/Select'
 import {
     buscarEventos,
     buscarJogosDaJam,
@@ -938,13 +939,15 @@ export function Eventos() {
                                 <div className="evento-criacao-grid">
                                     <div className="evento-criacao-campo">
                                         <label>Tipo</label>
-                                        <select
+                                        <Select
+                                            ariaLabel="Tipo"
                                             value={novoEvento.tipo}
-                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, tipo: event.target.value as 'EVENTO' | 'GAME_JAM' }))}
-                                        >
-                                            <option value="GAME_JAM">Game Jam</option>
-                                            <option value="EVENTO">Evento</option>
-                                        </select>
+                                            onChange={(valor) => setNovoEvento((atual) => ({ ...atual, tipo: valor as 'EVENTO' | 'GAME_JAM' }))}
+                                            options={[
+                                                { value: 'GAME_JAM', label: 'Game Jam' },
+                                                { value: 'EVENTO', label: 'Evento' }
+                                            ]}
+                                        />
                                     </div>
                                     <div className="evento-criacao-campo">
                                         <label>Tamanho da equipe</label>
@@ -1021,14 +1024,16 @@ export function Eventos() {
                                     </div>
                                     <div className="evento-criacao-campo">
                                         <label>Modo de participação</label>
-                                        <select
+                                        <Select
+                                            ariaLabel="Modo de participação"
                                             value={novoEvento.modeloEquipe}
-                                            onChange={(event) => setNovoEvento((atual) => ({ ...atual, modeloEquipe: event.target.value as 'COMUM' | 'SURPRESA' | 'INDIVIDUAL' }))}
-                                        >
-                                            <option value="COMUM">Equipe comum</option>
-                                            <option value="SURPRESA">Equipe surpresa</option>
-                                            <option value="INDIVIDUAL">Individual</option>
-                                        </select>
+                                            onChange={(valor) => setNovoEvento((atual) => ({ ...atual, modeloEquipe: valor as 'COMUM' | 'SURPRESA' | 'INDIVIDUAL' }))}
+                                            options={[
+                                                { value: 'COMUM', label: 'Equipe comum' },
+                                                { value: 'SURPRESA', label: 'Equipe surpresa' },
+                                                { value: 'INDIVIDUAL', label: 'Individual' }
+                                            ]}
+                                        />
                                     </div>
                                 </div>
 

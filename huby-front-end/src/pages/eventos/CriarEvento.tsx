@@ -2,12 +2,21 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { Select } from '../../components/select/Select'
 import { criarEvento, type NovoEventoApi } from '../../services/eventos'
 import { enviarImagemParaCloudinary } from '../../services/uploads'
 import './CriarEvento.css'
 
 type TipoPremiacao = 'SEM_PREMIACAO' | 'DINHEIRO' | 'PREMIOS' | 'AMBOS'
 type CronoKey = 'inscricaoInicio' | 'inscricaoFim' | 'desenvolvimentoInicio' | 'desenvolvimentoFim' | 'analiseInicio' | 'analiseFim' | 'resultado'
+type TagEvento = 'GAME JAM' | 'ARTE' | 'TRILHA SONORA' | 'PUZZLES'
+
+const tagsEvento: Array<{ value: TagEvento; label: string }> = [
+    { value: 'GAME JAM', label: 'Game jam' },
+    { value: 'ARTE', label: 'Arte' },
+    { value: 'TRILHA SONORA', label: 'Trilha sonora' },
+    { value: 'PUZZLES', label: 'Puzzles' }
+]
 
 const horas = Array.from({ length: 72 }, (_, indice) => `${String(indice % 24).padStart(2, '0')}:00`)
 
@@ -57,7 +66,7 @@ function formatarContagem(restanteMs: number) {
     return `${horas}h ${minutos}m ${segundos}s`
 }
 
-const ALTURA_HORA = 20
+const ALTURA_HORA = 34
 const TAMANHO_CICLO_HORAS = 24 * ALTURA_HORA
 const ATRASO_IMA = 90
 
@@ -216,6 +225,7 @@ export function CriarEvento() {
     }, [])
 
     const [nome, setNome] = useState('')
+    const [tagEvento, setTagEvento] = useState<TagEvento>('GAME JAM')
     const [tema, setTema] = useState('')
     const [descricao, setDescricao] = useState('')
     const [capa, setCapa] = useState('')
@@ -367,7 +377,7 @@ export function CriarEvento() {
             inscricoesAte: isoData(crono.inscricaoFim),
             tamanhoEquipe: 4,
             modeloEquipe: modelo,
-            tags: [],
+            tags: [tagEvento],
             regras: regras.split('\n').map((item) => item.trim()).filter(Boolean),
             premios,
             tipoPremiacao,
@@ -473,12 +483,22 @@ export function CriarEvento() {
                     </button>
                 </div>
 
-                <input
-                    className="criar-jam-nome"
-                    value={nome}
-                    onChange={(event) => setNome(event.target.value)}
-                    placeholder="Coloque o nome aqui"
-                />
+                <div className="criar-jam-nome-linha">
+                    <input
+                        className="criar-jam-nome"
+                        value={nome}
+                        onChange={(event) => setNome(event.target.value)}
+                        placeholder="Coloque o nome aqui"
+                    />
+
+                    <Select
+                        className="criar-jam-tag"
+                        ariaLabel="Tag do evento"
+                        value={tagEvento}
+                        onChange={(valor) => setTagEvento(valor as TagEvento)}
+                        options={tagsEvento}
+                    />
+                </div>
 
                 <section className="criar-jam-organizador">
                     <strong>{perfil.nomeExibicao || 'Organizador'}</strong>
@@ -633,17 +653,19 @@ export function CriarEvento() {
                     <textarea value={regras} onChange={(event) => setRegras(event.target.value)} placeholder="Colocar regras aqui..." />
                 </label>
 
-                <label className="criar-jam-field">
+                <div className="criar-jam-field">
                     <span>Modo de participação</span>
-                    <select
+                    <Select
+                        ariaLabel="Modo de participação"
                         value={modelo}
-                        onChange={(event) => setModelo(event.target.value as 'COMUM' | 'SURPRESA' | 'INDIVIDUAL')}
-                    >
-                        <option value="COMUM">Equipe comum</option>
-                        <option value="SURPRESA">Equipe surpresa</option>
-                        <option value="INDIVIDUAL">Individual</option>
-                    </select>
-                </label>
+                        onChange={(valor) => setModelo(valor as 'COMUM' | 'SURPRESA' | 'INDIVIDUAL')}
+                        options={[
+                            { value: 'COMUM', label: 'Equipe comum' },
+                            { value: 'SURPRESA', label: 'Equipe surpresa' },
+                            { value: 'INDIVIDUAL', label: 'Individual' }
+                        ]}
+                    />
+                </div>
 
                 <section className="criar-jam-bloco criar-jam-contatos">
                     <h2>Contatos</h2>

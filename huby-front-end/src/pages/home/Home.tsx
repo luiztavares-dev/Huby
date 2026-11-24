@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
+import { Select } from '../../components/select/Select'
 import GameDetails, { type Game } from '../../components/gameDetails/GameDetails'
 import { PostarJogo } from '../../components/postarJogo/PostarJogo'
 import categoriesData from '../../data/DadosCategories.json'
@@ -599,33 +600,36 @@ function PainelFiltros({ isOpen, filtros, onAplicar, onCancelar }: {
                 <section className="home-filtros-secao" aria-labelledby="home-filtros-ordenar">
                     <h3 id="home-filtros-ordenar">Ordenar por</h3>
                     <div className="home-filtros-opcoes home-filtros-ordenar">
-                        <select
-                            aria-label="Ordenar por data"
+                        <Select
+                            ariaLabel="Ordenar por data"
                             value={['recentes', 'antigos'].includes(rascunho.ordenacao) ? rascunho.ordenacao : ''}
-                            onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
-                        >
-                            <option value="">Data</option>
-                            <option value="recentes">Recentes</option>
-                            <option value="antigos">Antigos</option>
-                        </select>
-                        <select
-                            aria-label="Ordenar por preço"
+                            onChange={(valor) => setRascunho((atual) => ({ ...atual, ordenacao: (valor || 'padrao') as Ordenacao }))}
+                            options={[
+                                { value: '', label: 'Data' },
+                                { value: 'recentes', label: 'Recentes' },
+                                { value: 'antigos', label: 'Antigos' }
+                            ]}
+                        />
+                        <Select
+                            ariaLabel="Ordenar por preço"
                             value={['menor-preco', 'maior-preco'].includes(rascunho.ordenacao) ? rascunho.ordenacao : ''}
-                            onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
-                        >
-                            <option value="">Preço</option>
-                            <option value="menor-preco">Menor</option>
-                            <option value="maior-preco">Maior</option>
-                        </select>
-                        <select
-                            aria-label="Ordenar por avaliação"
+                            onChange={(valor) => setRascunho((atual) => ({ ...atual, ordenacao: (valor || 'padrao') as Ordenacao }))}
+                            options={[
+                                { value: '', label: 'Preço' },
+                                { value: 'menor-preco', label: 'Menor' },
+                                { value: 'maior-preco', label: 'Maior' }
+                            ]}
+                        />
+                        <Select
+                            ariaLabel="Ordenar por avaliação"
                             value={['melhor-avaliacao', 'menor-avaliacao'].includes(rascunho.ordenacao) ? rascunho.ordenacao : ''}
-                            onChange={(event) => setRascunho((atual) => ({ ...atual, ordenacao: (event.target.value || 'padrao') as Ordenacao }))}
-                        >
-                            <option value="">Avaliação</option>
-                            <option value="melhor-avaliacao">Maior</option>
-                            <option value="menor-avaliacao">Menor</option>
-                        </select>
+                            onChange={(valor) => setRascunho((atual) => ({ ...atual, ordenacao: (valor || 'padrao') as Ordenacao }))}
+                            options={[
+                                { value: '', label: 'Avaliação' },
+                                { value: 'melhor-avaliacao', label: 'Maior' },
+                                { value: 'menor-avaliacao', label: 'Menor' }
+                            ]}
+                        />
                     </div>
                 </section>
 

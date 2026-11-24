@@ -22,6 +22,7 @@ export type ConteudoApi = {
     local?: string | null
     gameJamId?: string | null
     linkUrl?: string | null
+    criadorId?: string | null
     comentarios?: ComentarioApi[] | null
 }
 

@@ -8,8 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Optional;
 
@@ -23,6 +26,14 @@ public class AuthController {
 
     @Autowired
     private ConteudoRepository conteudoRepository;
+
+    @Autowired
+    private EquipeRepository equipeRepository;
+
+    public record AtividadesPerfilDTO(List<Conteudo> criados,
+                                      List<Conteudo> publicados,
+                                      List<Conteudo> participados) {
+    }
 
 
     @PostMapping("/registrar")
@@ -100,6 +111,64 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: Usuário não encontrado.");
         }
         return ResponseEntity.ok(opt.get());
+    }
+
+
+    @GetMapping("/perfil/{id}/atividades")
+    public ResponseEntity<?> buscarAtividades(@PathVariable String id) {
+        Optional<Usuario> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("mensagem", "Usuário não encontrado."));
+        }
+
+        Usuario usuario = opt.get();
+        List<Conteudo> criados = conteudoRepository.findByCriadorIdAndTipoInOrderByDataPublicacaoDesc(
+                id, List.of(TipoConteudo.EVENTO, TipoConteudo.GAME_JAM));
+        List<Conteudo> publicados = conteudoRepository.findByCriadorIdAndTipoOrderByDataPublicacaoDesc(
+                id, TipoConteudo.JOGO);
+
+        String username = usuario.getUsername() == null ? "" : usuario.getUsername().trim();
+        List<Equipe> equipes = new ArrayList<>(equipeRepository.findByLiderId(id));
+        if (!username.isEmpty()) {
+            equipes.addAll(equipeRepository.findByIntegrantesNomeUsuarioIgnoreCase(username));
+        }
+
+        Set<String> eventosIds = new LinkedHashSet<>();
+        for (Equipe equipe : equipes) {
+            if (equipe == null || !participacaoConfirmada(equipe, id, username)) continue;
+
+            String eventoId = equipe.getEventoId();
+            if (eventoId != null && !eventoId.isBlank()) {
+                eventosIds.add(eventoId);
+            }
+        }
+
+        List<Conteudo> participados = eventosIds.isEmpty()
+                ? List.of()
+                : conteudoRepository.findAllById(eventosIds).stream()
+                        .filter(conteudo -> conteudo.getTipo() == TipoConteudo.GAME_JAM)
+                        .sorted(Comparator.comparing(
+                                (Conteudo conteudo) -> conteudo.getDataInicio() != null
+                                        ? conteudo.getDataInicio() : conteudo.getDataPublicacao(),
+                                Comparator.nullsLast(Comparator.reverseOrder())))
+                        .toList();
+
+        return ResponseEntity.ok(new AtividadesPerfilDTO(criados, publicados, participados));
+    }
+
+    private boolean participacaoConfirmada(Equipe equipe, String usuarioId, String username) {
+        if (usuarioId.equals(equipe.getLiderId())) {
+            return true;
+        }
+        if (username.isEmpty() || equipe.getIntegrantes() == null) {
+            return false;
+        }
+
+        return equipe.getIntegrantes().stream().anyMatch(integrante -> integrante != null
+                && integrante.getNomeUsuario() != null
+                && integrante.getNomeUsuario().trim().equalsIgnoreCase(username)
+                && "CONFIRMADO".equals(integrante.getStatus()));
     }
 
 

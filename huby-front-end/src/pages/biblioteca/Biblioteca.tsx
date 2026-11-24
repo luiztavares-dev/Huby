@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import GameDetails, { type Game } from '../../components/gameDetails/GameDetails'
 import BarraDePesquisa from '../../components/searchBar/SearchBar'
+import { Select } from '../../components/select/Select'
 import { buscarJogos, linkJogoValido, type ConteudoApi } from '../../services/home'
 import { buscarBiblioteca, buscarCompras, comprarJogo, removerBiblioteca } from '../../services/usuarios'
 import { usuarioLogado } from '../../services/sessao'
@@ -250,14 +251,19 @@ export function Biblioteca() {
                             </button>
                         </div>
 
-                        <label className="biblioteca-ordenar">
+                        <div className="biblioteca-ordenar">
                             <span>Ordenar por</span>
-                            <select value={ordem} onChange={(event) => setOrdem(event.target.value as OrdemBiblioteca)}>
-                                <option value="recentes">Mais recentes</option>
-                                <option value="nome">Nome A–Z</option>
-                                <option value="nota">Melhor avaliação</option>
-                            </select>
-                        </label>
+                            <Select
+                                ariaLabel="Ordenar por"
+                                value={ordem}
+                                onChange={(valor) => setOrdem(valor as OrdemBiblioteca)}
+                                options={[
+                                    { value: 'recentes', label: 'Mais recentes' },
+                                    { value: 'nome', label: 'Nome A–Z' },
+                                    { value: 'nota', label: 'Melhor avaliação' }
+                                ]}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

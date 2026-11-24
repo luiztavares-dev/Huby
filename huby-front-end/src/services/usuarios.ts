@@ -1,4 +1,4 @@
-import { API_URL } from './home'
+import { API_URL, type ConteudoApi } from './home'
 
 export type UsuarioResumoApi = {
     id: string
@@ -30,6 +30,31 @@ export async function buscarUsuarios(signal?: AbortSignal): Promise<UsuarioResum
             avatarUrl: (usuario.avatarUrl ?? '').trim()
         }))
         .filter((usuario) => usuario.username.length > 0)
+}
+
+export type AtividadesPerfilApi = {
+    criados: ConteudoApi[]
+    publicados: ConteudoApi[]
+    participados: ConteudoApi[]
+}
+
+/** Relações derivadas diretamente dos conteúdos e equipes persistidos no MongoDB. */
+export async function buscarAtividadesPerfil(
+    usuarioId: string,
+    signal?: AbortSignal
+): Promise<AtividadesPerfilApi> {
+    const resposta = await fetch(`${API_URL}/api/perfil/${encodeURIComponent(usuarioId)}/atividades`, { signal })
+
+    if (!resposta.ok) {
+        throw new Error(`Não foi possível carregar as atividades do perfil (HTTP ${resposta.status}).`)
+    }
+
+    const dados = await resposta.json() as Partial<AtividadesPerfilApi> | null
+    return {
+        criados: dados?.criados ?? [],
+        publicados: dados?.publicados ?? [],
+        participados: dados?.participados ?? []
+    }
 }
 
 export async function buscarBiblioteca(usuarioId: string, signal?: AbortSignal): Promise<string[]> {

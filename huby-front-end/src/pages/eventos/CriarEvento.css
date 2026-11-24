@@ -112,7 +112,6 @@
 
 .criar-jam-field input,
 .criar-jam-field textarea,
-.criar-jam-field select,
 .criar-jam-premio-linha input,
 .criar-jam-contatos input {
     width: 100%;
@@ -124,8 +123,7 @@
     outline: none;
 }
 
-.criar-jam-field input,
-.criar-jam-field select {
+.criar-jam-field input {
     height: 38px;
     padding: 0 10px;
 }
@@ -478,6 +476,30 @@
     font-size: 1.05rem;
 }
 
+.criar-jam-nome-linha {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.criar-jam-nome-linha .criar-jam-nome {
+    flex: 1;
+    min-width: 0;
+    margin-top: 0;
+}
+
+.criar-jam-tag {
+    flex: 0 0 190px;
+    min-width: 0;
+}
+
+.criar-jam-tag .huby-dropdown__trigger {
+    height: 58px;
+    padding-left: 12px;
+    font-size: 0.8rem;
+}
+
 .criar-jam-organizador {
     height: 58px;
     justify-content: center;
@@ -509,7 +531,6 @@
 
 .criar-jam-field input,
 .criar-jam-field textarea,
-.criar-jam-field select,
 .criar-jam-premio-linha input,
 .criar-jam-contatos input {
     border: 1px solid var(--pink);
@@ -519,9 +540,12 @@
 }
 
 .criar-jam-field input,
-.criar-jam-field select,
 .criar-jam-premio-linha input,
 .criar-jam-contatos input {
+    height: 40px;
+}
+
+.criar-jam-field .huby-dropdown__trigger {
     height: 40px;
 }
 
@@ -531,7 +555,6 @@
 
 .criar-jam-field input:focus,
 .criar-jam-field textarea:focus,
-.criar-jam-field select:focus,
 .criar-jam-premio-linha input:focus,
 .criar-jam-contatos input:focus {
     border-color: var(--pink);
@@ -587,13 +610,14 @@
     height: 36px;
     border: none;
     border-radius: 3px;
-    background: #f3f3f3;
+    background: var(--pink);
     color: #171717;
     transition: background 0.2s ease;
 }
 
 .criar-jam-add:hover {
-    background: #ffffff;
+    background: var(--gray3);
+    cursor: pointer;
 }
 
 .criar-jam-crono-linha {
@@ -622,14 +646,15 @@
 }
 
 .criar-jam-datepicker {
-    border: 1px solid #555;
-    border-radius: 3px;
+    border: 1px solid var(--pink);
+    border-radius: 6px;
     background: #171717;
     box-shadow: none;
+    overflow: hidden;
 }
 
 .criar-jam-calendario {
-    border-right-color: #4a4a4a;
+    border-right-color: var(--pink);
 }
 
 .criar-jam-dias button.is-atual,
@@ -640,6 +665,8 @@
 .criar-jam-horas {
     scrollbar-width: none;
     -ms-overflow-style: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%);
 }
 
 .criar-jam-horas::-webkit-scrollbar {
@@ -675,6 +702,19 @@
 
 .criar-jam-acoes button:hover {
     filter: brightness(1.08);
+}
+
+@media (max-width: 520px) {
+    .criar-jam-nome-linha {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .criar-jam-tag {
+        flex-basis: 58px;
+        width: 100%;
+    }
 }
 
 @media (max-width: 600px) {

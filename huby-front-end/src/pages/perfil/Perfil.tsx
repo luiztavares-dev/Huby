@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { Navbar } from '../../components/navbar/Navbar';
+import type { ConteudoApi } from '../../services/home';
 import { enviarImagemParaCloudinary } from '../../services/uploads';
+import { buscarAtividadesPerfil, type AtividadesPerfilApi } from '../../services/usuarios';
 import './Perfil.css';
 
 interface UsuarioData {
@@ -21,6 +23,59 @@ interface UsuarioData {
   itchIo: string;
   seguindo?: string[];
   seguidores?: string[];
+}
+
+type AbaPerfil = 'publicados' | 'criados' | 'participados';
+
+type EstadoAtividades = {
+  perfilId: string;
+  tentativa: number;
+  status: 'carregando' | 'pronto' | 'erro';
+  dados: AtividadesPerfilApi | null;
+  mensagem: string;
+};
+
+const textosVazios: Record<AbaPerfil, { titulo: string; descricao: string }> = {
+  publicados: {
+    titulo: 'Nenhum jogo publicado',
+    descricao: 'Os jogos publicados por este usuário aparecerão aqui.'
+  },
+  criados: {
+    titulo: 'Nenhum evento criado',
+    descricao: 'Os eventos e game jams criados por este usuário aparecerão aqui.'
+  },
+  participados: {
+    titulo: 'Nenhuma game jam participada',
+    descricao: 'As game jams com participação confirmada aparecerão aqui.'
+  }
+};
+
+function formatarDataAtividade(iso?: string | null): string {
+  if (!iso) return '';
+  const data = new Date(`${iso.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(data.getTime())) return '';
+  return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function CartaoAtividade({ conteudo }: { conteudo: ConteudoApi }) {
+  const tipo = conteudo.tipo === 'GAME_JAM' ? 'Game jam' : conteudo.tipo === 'EVENTO' ? 'Evento' : 'Jogo';
+  const data = conteudo.tipo === 'JOGO' ? conteudo.dataPublicacao : conteudo.dataInicio;
+  const dataFormatada = formatarDataAtividade(data);
+  const prefixoData = conteudo.tipo === 'JOGO' ? 'Publicado em' : 'Início em';
+
+  return (
+    <article className="perfil-atividade-card">
+      <div className="perfil-atividade-media">
+        <img src={conteudo.imagem || '/imagem-polvojam.jpg'} alt="" loading="lazy" referrerPolicy="no-referrer" />
+        <span className="perfil-atividade-tipo">{tipo}</span>
+      </div>
+      <div className="perfil-atividade-conteudo">
+        <h3 title={conteudo.titulo}>{conteudo.titulo}</h3>
+        <p>{conteudo.descricao || 'Sem descrição.'}</p>
+        <small>{dataFormatada ? `${prefixoData} ${dataFormatada}` : tipo}</small>
+      </div>
+    </article>
+  );
 }
 
 const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -53,8 +108,16 @@ export function Perfil() {
   const [editandoRedes, setEditandoRedes] = useState(false);
   const [editandoMidia, setEditandoMidia] = useState(false);
   const [editandoIdentidade, setEditandoIdentidade] = useState(false);
-  const [abaAtiva, setAbaAtiva] = useState<'publicados' | 'criados' | 'participados'>('publicados');
+  const [abaAtiva, setAbaAtiva] = useState<AbaPerfil>('publicados');
   const [salvando, setSalvando] = useState(false);
+  const [tentativaAtividades, setTentativaAtividades] = useState(0);
+  const [estadoAtividades, setEstadoAtividades] = useState<EstadoAtividades>({
+    perfilId: '',
+    tentativa: -1,
+    status: 'carregando',
+    dados: null,
+    mensagem: ''
+  });
 
   const [gavetaAberta, setGavetaAberta] = useState<boolean | null>(null);
   const [todosUsuarios, setTodosUsuarios] = useState<UsuarioData[]>([]);
@@ -99,6 +162,32 @@ export function Perfil() {
         .catch(err => console.error("Erro ao buscar perfil de outro usuário", err));
     }
   }, [id, loggedUser, isOwner]);
+
+  useEffect(() => {
+    const perfilId = perfilData?.id;
+    if (!perfilId) return;
+
+    const controller = new AbortController();
+    const tentativa = tentativaAtividades;
+
+    buscarAtividadesPerfil(perfilId, controller.signal)
+      .then((dados) => {
+        if (controller.signal.aborted) return;
+        setEstadoAtividades({ perfilId, tentativa, status: 'pronto', dados, mensagem: '' });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setEstadoAtividades({
+          perfilId,
+          tentativa,
+          status: 'erro',
+          dados: null,
+          mensagem: error instanceof Error ? error.message : 'Não foi possível carregar as atividades.'
+        });
+      });
+
+    return () => controller.abort();
+  }, [perfilData?.id, tentativaAtividades]);
 
   useEffect(() => {
     if (gavetaAberta) {
@@ -184,6 +273,22 @@ export function Perfil() {
       await salvarNoBanco({ [tipoCrop]: url });
       setImagemParaCortar(null);
     } catch (error) { console.error(error); } finally { setSalvando(false); }
+  };
+
+  const carregandoAtividades = !perfilData
+    || estadoAtividades.perfilId !== perfilData.id
+    || estadoAtividades.tentativa !== tentativaAtividades
+    || estadoAtividades.status === 'carregando';
+  const atividades = !carregandoAtividades && estadoAtividades.status === 'pronto'
+    ? estadoAtividades.dados
+    : null;
+  const erroAtividades = !carregandoAtividades && estadoAtividades.status === 'erro'
+    ? estadoAtividades.mensagem
+    : null;
+  const listaAtual = atividades?.[abaAtiva] ?? [];
+  const contadorAtividades = (aba: AbaPerfil) => {
+    if (atividades) return atividades[aba].length;
+    return carregandoAtividades ? '…' : '—';
   };
 
   if (!loggedUser || !perfilData) return null;
@@ -511,15 +616,48 @@ export function Perfil() {
 
         <div className="perfil-col-direita">
           <div className="huby-card-wrapper full-height-card">
-            <div className="huby-tabs-header">
-              <button className={`huby-tab-btn ${abaAtiva === 'publicados' ? 'ativa' : ''}`} onClick={() => setAbaAtiva('publicados')}>Publicados <span>(0)</span></button>
-              <button className={`huby-tab-btn ${abaAtiva === 'criados' ? 'ativa' : ''}`} onClick={() => setAbaAtiva('criados')}>Criados <span>(0)</span></button>
-              <button className={`huby-tab-btn ${abaAtiva === 'participados' ? 'ativa' : ''}`} onClick={() => setAbaAtiva('participados')}>Participados <span>(0)</span></button>
+            <div className="huby-tabs-header" aria-label="Atividades do perfil">
+              {([
+                { valor: 'publicados', rotulo: 'Publicados' },
+                { valor: 'criados', rotulo: 'Criados' },
+                { valor: 'participados', rotulo: 'Participados' }
+              ] as const).map(({ valor, rotulo }) => (
+                <button
+                  key={valor}
+                  type="button"
+                  className={`huby-tab-btn ${abaAtiva === valor ? 'ativa' : ''}`}
+                  aria-pressed={abaAtiva === valor}
+                  onClick={() => setAbaAtiva(valor)}
+                >
+                  {rotulo} <span>({contadorAtividades(valor)})</span>
+                </button>
+              ))}
             </div>
-            <div className="huby-card-body galeria-jogos-body">
-              <div className="empty-publications">
-                <h3>Nenhum projeto em "{abaAtiva}"</h3>
-              </div>
+            <div className="huby-card-body galeria-jogos-body" aria-busy={carregandoAtividades} aria-live="polite">
+              {carregandoAtividades ? (
+                <div className="empty-publications" role="status">
+                  <h3>Carregando atividades...</h3>
+                </div>
+              ) : erroAtividades ? (
+                <div className="empty-publications">
+                  <h3>Não foi possível carregar as atividades</h3>
+                  <p>{erroAtividades}</p>
+                  <button type="button" className="btn-salvar" onClick={() => setTentativaAtividades((atual) => atual + 1)}>
+                    Tentar novamente
+                  </button>
+                </div>
+              ) : listaAtual.length === 0 ? (
+                <div className="empty-publications">
+                  <h3>{textosVazios[abaAtiva].titulo}</h3>
+                  <p>{textosVazios[abaAtiva].descricao}</p>
+                </div>
+              ) : (
+                <div className="perfil-atividades-lista">
+                  {listaAtual.map((conteudo) => (
+                    <CartaoAtividade key={conteudo.id} conteudo={conteudo} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

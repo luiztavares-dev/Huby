@@ -17,6 +17,12 @@ public interface ConteudoRepository extends MongoRepository<Conteudo, String> {
 
     List<Conteudo> findByGameJamIdOrderByRelevanciaDesc(String gameJamId);
 
+    List<Conteudo> findByCriadorIdAndTipoInOrderByDataPublicacaoDesc(
+            String criadorId, List<TipoConteudo> tipos);
+
+    List<Conteudo> findByCriadorIdAndTipoOrderByDataPublicacaoDesc(
+            String criadorId, TipoConteudo tipo);
+
     List<Conteudo> findByTipoOrderByRelevanciaDescNotaDesc(TipoConteudo tipo);
 
     List<Conteudo> findByDestaqueTrueOrderByDataPublicacaoDesc();
