@@ -81,8 +81,20 @@
     font-size: 0.95rem;
 }
 
+.comunidades-estado-com-criacao {
+    grid-column: 1;
+}
+
 .comunidades-estado-erro p {
     color: var(--pink);
+}
+
+.comunidades-estado > button {
+    justify-self: center;
+}
+
+.comunidades-estado > span {
+    font-size: 0.8rem;
 }
 
 .comunidades-vazio {
@@ -158,6 +170,7 @@
     flex-direction: column;
     gap: 30px;
     padding: 22px 0 30px;
+    padding-right: 10px;
     flex: 1;
 }
 
@@ -493,6 +506,21 @@
     height: 20px;
     pointer-events: none;
     color: var(--white);
+}
+
+.comunidades-criar-botao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.comunidades-criar-botao span {
+    font-size: 1.2rem;
+    font-weight: 400;
+    line-height: 1;
 }
 
 .comunidades-dash-bloco {
@@ -968,6 +996,56 @@
 }
 
 /* =========================
+   CRIAÇÃO DE COMUNIDADE
+========================= */
+
+.comunidades-dash-criacao {
+    margin-top: 34px;
+}
+
+.comunidades-criacao-erro {
+    margin: 0 0 18px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--pink);
+    background-color: rgba(250, 41, 95, 0.08);
+    border: 1px solid rgba(250, 41, 95, 0.35);
+    border-radius: 5px;
+}
+
+.comunidades-criacao-descricao {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 300;
+    line-height: 1.55;
+    color: var(--text1);
+    background-color: #1b1b1b;
+    border: 1px solid var(--gray3);
+    border-radius: 5px;
+    resize: vertical;
+}
+
+.comunidades-criacao-descricao:focus {
+    outline: none;
+    border-color: var(--pink);
+}
+
+.comunidades-criacao-descricao:disabled {
+    opacity: 0.6;
+}
+
+.comunidades-criacao-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 26px;
+}
+
+/* =========================
    RESPONSIVO
 ========================= */
 
@@ -996,6 +1074,7 @@
         overscroll-behavior: contain;
         scrollbar-width: thin;
         scrollbar-color: var(--pink) #1e1e1e;
+        padding-right: 10px;
     }
 }
 
@@ -1085,5 +1164,9 @@
 
     .comunidades-compositor button {
         width: 100%;
+    }
+
+    .comunidades-criacao-acoes button {
+        flex: 1;
     }
 }
