@@ -552,7 +552,7 @@ export function InscricaoEvento() {
                                 value={nomeEquipe}
                                 maxLength={NOME_MAX}
                                 onChange={(event) => setNomeEquipe(event.target.value)}
-                                placeholder="Ex: Guerreiros do Codigo:"
+                                placeholder="Nome da equipe..."
                             />
                             <small>{nomeEquipe.length}/{NOME_MAX}</small>
                         </span>

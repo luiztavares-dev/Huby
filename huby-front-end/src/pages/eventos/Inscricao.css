@@ -1,25 +1,38 @@
 /* =========================
    INSCRIÇÃO DE EQUIPE
+   Mesma linguagem visual de CriarEvento
 ========================= */
 
 .inscricao {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    --inscricao-linha: color-mix(in srgb, var(--gray3) 42%, var(--gray1));
+    --inscricao-campo: color-mix(in srgb, var(--gray1) 90%, var(--text1) 10%);
+    --inscricao-campo-foco: color-mix(in srgb, var(--gray1) 87%, var(--text1) 13%);
+    --inscricao-botao: color-mix(in srgb, var(--gray1) 85%, var(--text1) 15%);
+    --inscricao-placeholder: color-mix(in srgb, var(--gray2) 72%, var(--gray1));
+    --inscricao-erro: color-mix(in srgb, var(--pink) 75%, var(--text1));
+
     width: 100%;
     min-height: 100vh;
-    padding: 0 20px 80px;
-    background-color: #0b0b0b;
+    padding: 0 24px 72px;
+    background: var(--gray1);
     color: var(--text1);
 }
 
 .inscricao > * {
     width: 100%;
-    max-width: 460px;
+    max-width: 760px;
+    margin-right: auto;
+    margin-left: auto;
 }
 
-.inscricao button {
+.inscricao button,
+.inscricao input {
     font-family: inherit;
+}
+
+.inscricao button:focus-visible {
+    outline: 2px solid var(--text1);
+    outline-offset: 2px;
 }
 
 /* Topo */
@@ -27,133 +40,164 @@
 .inscricao-topo {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-top: 18px;
-    margin-bottom: 10px;
-    color: #9a9a9a;
-    font-size: 0.8rem;
+    gap: 10px;
+    max-width: none;
+    height: 64px;
+    border-bottom: 1px solid var(--inscricao-linha);
+    color: var(--text1);
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
 }
 
 .inscricao-voltar {
-    width: 22px;
-    height: 22px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
     padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--pink);
-    font-size: 1.2rem;
+    border: 1px solid color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--gray1) 92%, var(--text1) 8%);
+    color: var(--text1);
+    font-size: 1.35rem;
     line-height: 1;
     cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .inscricao-voltar:hover {
-    background-color: rgba(250, 41, 95, 0.12);
+    border-color: var(--pink);
+    background: var(--inscricao-botao);
 }
 
-/* Faixa rosa do evento */
+/* Título e tags do evento */
 
 .inscricao-faixa {
     display: flex;
-    flex-direction: column;
+    align-items: stretch;
     gap: 10px;
-    padding: 18px 18px 16px;
-    border-radius: 10px;
-    background-color: var(--pink);
+    margin-top: 12px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .inscricao-faixa h1 {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    min-height: 58px;
     margin: 0;
+    padding: 10px 16px;
+    border-radius: 3px;
+    background: var(--pink);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--pink) 10%, transparent);
     color: var(--white);
-    font-size: 1.45rem;
-    font-weight: 800;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    line-height: 1.12;
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
 .inscricao-tags {
     display: flex;
+    flex: 0 0 190px;
     flex-wrap: wrap;
+    align-content: center;
+    align-items: center;
     gap: 6px;
+    min-width: 0;
+    min-height: 58px;
+    padding: 8px 10px;
+    border: 1px solid color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--gray1) 92%, var(--text1) 8%);
 }
 
 .inscricao-tags span {
-    padding: 4px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border: 1px solid var(--gray3);
     border-radius: 999px;
-    color: var(--white);
-    font-size: 0.55rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    color: var(--text1);
+    font-size: 0.56rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
     text-transform: uppercase;
 }
 
-/* Painel do formulário */
+/* Formulário aberto */
 
 .inscricao-painel {
     display: flex;
     flex-direction: column;
-    margin-top: 14px;
-    padding: 16px;
-    border: 1px solid #2a2a2a;
-    border-radius: 10px;
-    background-color: #0f0f0f;
+    margin-top: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.inscricao-modelo {
+    margin-top: 16px;
 }
 
 .inscricao-modelo strong {
     display: block;
     color: var(--text1);
-    font-size: 0.8rem;
+    font-size: 0.86rem;
     font-weight: 800;
 }
 
 .inscricao-modelo p {
-    margin: 8px 0 0;
+    margin: 6px 0 0;
     color: var(--text2);
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     line-height: 1.55;
 }
 
 .inscricao-encontrar {
     width: 100%;
-    height: 34px;
-    margin-top: 14px;
+    height: 40px;
+    margin-top: 18px;
     padding: 0 18px;
     border: 1px solid var(--pink);
     border-radius: 999px;
-    background-color: transparent;
+    background: transparent;
     color: var(--text1);
     font-size: 0.68rem;
     font-weight: 800;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.2px;
     text-transform: uppercase;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .inscricao-encontrar:hover {
-    background-color: rgba(250, 41, 95, 0.14);
+    background: color-mix(in srgb, var(--pink) 14%, transparent);
 }
 
 .inscricao-encontrar.is-ativo {
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
 }
 
 .inscricao-nota {
-    margin: 10px 0 0;
-    color: #8a8a8a;
-    font-size: 0.6rem;
-    line-height: 1.5;
+    margin: 8px 0 0;
+    color: var(--text2);
+    font-size: 0.72rem;
+    line-height: 1.55;
 }
 
-/* Upload da imagem da equipe */
+/* Banner e avatar da equipe */
 
 .inscricao-midia {
     position: relative;
-    height: 116px;
-    margin: 18px 0 28px;
+    height: 190px;
+    margin: 18px 0 34px;
 }
 
 .inscricao-midia-area {
@@ -163,16 +207,23 @@
     width: 100%;
     height: 100%;
     padding: 0;
-    border: none;
-    border-radius: 10px;
-    background-color: #3f3f3f;
+    border: 1px solid color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 3px;
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--pink) 5%, transparent), transparent 45%),
+        var(--inscricao-campo);
     overflow: hidden;
     cursor: pointer;
-    transition: filter 0.2s ease;
+    transition: border-color 0.2s ease, filter 0.2s ease;
 }
 
 .inscricao-midia-area:hover {
+    border-color: var(--pink);
     filter: brightness(1.08);
+}
+
+.inscricao-midia-area:disabled {
+    cursor: wait;
 }
 
 .inscricao-midia-area img {
@@ -183,7 +234,7 @@
 }
 
 .inscricao-midia-mais {
-    color: #eaeaea;
+    color: var(--text3);
     font-size: 2rem;
     font-weight: 300;
     line-height: 1;
@@ -194,11 +245,11 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    padding: 5px 10px;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.65);
+    padding: 6px 10px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--gray1) 78%, transparent);
     color: var(--text1);
-    font-size: 0.62rem;
+    font-size: 0.68rem;
     white-space: nowrap;
 }
 
@@ -208,24 +259,20 @@
     bottom: -26px;
     display: grid;
     place-items: center;
-    width: 60px;
-    height: 60px;
+    width: 62px;
+    height: 62px;
     padding: 0;
-    border: 2px solid rgba(250, 41, 95, 0.55);
+    border: 3px solid var(--pink);
     border-radius: 50%;
-    background-color: #101010;
-    box-shadow: 0 0 18px rgba(250, 41, 95, 0.35);
+    background: var(--gray1);
     color: var(--pink);
-    font-size: 1.7rem;
-    font-weight: 300;
-    line-height: 1;
     cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .inscricao-midia-botao:hover:not(:disabled) {
-    border-color: var(--pink);
-    background-color: #1a0a0e;
+    border-color: var(--text1);
+    background: var(--inscricao-campo-foco);
 }
 
 .inscricao-midia-botao:disabled {
@@ -244,7 +291,7 @@
 .inscricao-midia-botao .inscricao-avatar-neutro {
     width: 34px;
     height: 34px;
-    color: #6f6f6f;
+    color: var(--text3);
 }
 
 .inscricao-midia-botao-mais {
@@ -255,9 +302,9 @@
     place-items: center;
     width: 20px;
     height: 20px;
-    border: 2px solid #101010;
+    border: 2px solid var(--gray1);
     border-radius: 50%;
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
     font-size: 0.8rem;
     font-weight: 800;
@@ -267,7 +314,7 @@
 .inscricao-midia-girando {
     width: 20px;
     height: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.25);
+    border: 2px solid color-mix(in srgb, var(--text1) 25%, transparent);
     border-top-color: var(--pink);
     border-radius: 50%;
     animation: inscricao-girar 0.8s linear infinite;
@@ -278,9 +325,10 @@
 }
 
 .inscricao-erro-imagem {
-    margin: -16px 0 14px;
-    color: #ffb3c7;
-    font-size: 0.66rem;
+    margin: -20px 0 14px;
+    color: var(--inscricao-erro);
+    font-size: 0.72rem;
+    line-height: 1.5;
 }
 
 /* Nome da equipe */
@@ -288,13 +336,15 @@
 .inscricao-bloco-nome {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
+    margin-top: 18px;
 }
 
 .inscricao-bloco-nome > span:first-child,
 .inscricao-subtitulo {
+    display: block;
     color: var(--text1);
-    font-size: 0.84rem;
+    font-size: 0.82rem;
     font-weight: 800;
 }
 
@@ -305,32 +355,36 @@
 
 .inscricao-input input {
     width: 100%;
-    height: 34px;
-    padding: 0 54px 0 10px;
-    border: 1px solid #3a3a3a;
-    border-radius: 4px;
-    background-color: #0a0a0a;
-    color: var(--text1);
-    font-family: inherit;
-    font-size: 0.75rem;
+    height: 58px;
+    padding: 0 64px 0 16px;
+    border: 1px solid var(--pink);
+    border-radius: 3px;
+    background: var(--pink);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--pink) 10%, transparent);
+    color: var(--white);
+    font-size: 1.05rem;
+    font-weight: 900;
 }
 
 .inscricao-input input::placeholder {
-    color: #6f6f6f;
+    color: color-mix(in srgb, var(--white) 80%, transparent);
+    opacity: 1;
 }
 
 .inscricao-input input:focus {
-    outline: none;
-    border-color: var(--pink);
+    outline: 2px solid var(--text1);
+    outline-offset: 2px;
+    background: var(--pink);
 }
 
 .inscricao-input small {
     position: absolute;
-    right: 10px;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
-    color: #8a8a8a;
-    font-size: 0.66rem;
+    color: color-mix(in srgb, var(--white) 80%, transparent);
+    font-size: 0.68rem;
+    font-weight: 700;
 }
 
 /* Integrantes */
@@ -342,34 +396,39 @@
 }
 
 .inscricao-subtitulo {
-    margin-bottom: 12px;
+    margin-bottom: 7px;
 }
 
 .inscricao-integrante {
     display: grid;
-    grid-template-columns: 30px minmax(0, 1fr) 158px;
+    grid-template-columns: 36px minmax(0, 1fr) 180px;
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
 }
 
 .inscricao-integrante.tem-remover {
-    grid-template-columns: 30px minmax(0, 1fr) 158px 18px;
+    grid-template-columns: 36px minmax(0, 1fr) 180px 24px;
 }
 
 .inscricao-avatar {
-    width: 30px;
-    height: 30px;
+    display: block;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    background-color: #3d3d3d;
+    background: var(--gray3);
+}
+
+.inscricao-avatar.is-neutro {
+    background: var(--inscricao-campo);
 }
 
 .inscricao-avatar-neutro {
     display: block;
     width: 100%;
     height: 100%;
-    color: #6b6b6b;
+    color: var(--text3);
 }
 
 .inscricao-campo-bloco {
@@ -380,15 +439,16 @@
 .inscricao-campo {
     display: flex;
     align-items: center;
-    height: 30px;
-    border: 1px solid #f1f1f1;
-    border-radius: 6px;
-    background-color: #0a0a0a;
+    height: 40px;
+    border: 1px solid var(--pink);
+    border-radius: 3px;
+    background: var(--inscricao-campo);
     overflow: hidden;
+    transition: background-color 0.2s ease;
 }
 
-.inscricao-campo.is-preenchido {
-    border-color: var(--pink);
+.inscricao-campo:focus-within {
+    background: var(--inscricao-campo-foco);
 }
 
 .inscricao-campo input {
@@ -396,24 +456,19 @@
     min-width: 0;
     width: 100%;
     height: 100%;
-    padding: 0 9px;
-    border: none;
+    padding: 0 10px;
+    border: 0;
     background: transparent;
     color: var(--text1);
-    font-family: inherit;
     font-size: 0.74rem;
 }
 
 .inscricao-campo input::placeholder {
-    color: #8c8c8c;
+    color: var(--inscricao-placeholder);
 }
 
 .inscricao-campo input:focus {
     outline: none;
-}
-
-.inscricao-campo:focus-within {
-    border-color: var(--pink);
 }
 
 /* Sugestões de @usuário */
@@ -423,22 +478,21 @@
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    z-index: 40;
+    z-index: 320;
     max-height: 190px;
     margin: 0;
     padding: 0;
     list-style: none;
     border: 1px solid var(--pink);
-    border-radius: 6px;
-    background-color: #0e0e0e;
-    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.6);
+    border-radius: 3px;
+    background: var(--gray1);
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: var(--pink) #1e1e1e;
+    scrollbar-color: var(--pink) var(--gray1);
 }
 
 .inscricao-sugestoes li + li {
-    border-top: 1px solid #241017;
+    border-top: 1px solid var(--inscricao-linha);
 }
 
 .inscricao-sugestoes button {
@@ -446,135 +500,144 @@
     align-items: center;
     gap: 8px;
     width: 100%;
-    padding: 6px 9px;
-    border: none;
+    padding: 7px 10px;
+    border: 0;
     background: transparent;
     color: var(--text1);
-    font-family: inherit;
     text-align: left;
     cursor: pointer;
 }
 
 .inscricao-sugestoes button:hover {
-    background-color: rgba(250, 41, 95, 0.18);
+    background: color-mix(in srgb, var(--pink) 14%, var(--gray1));
 }
 
 .inscricao-sugestao-avatar {
     flex-shrink: 0;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     object-fit: cover;
-    background-color: #242424;
+    background: var(--gray3);
 }
 
 .inscricao-sugestao-avatar.is-neutro {
     display: grid;
     place-items: center;
     padding: 2px;
-    color: #6b6b6b;
+    color: var(--text3);
 }
 
 .inscricao-sugestao-id {
     flex-shrink: 0;
     color: var(--text1);
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .inscricao-sugestao-nome {
+    min-width: 0;
     overflow: hidden;
     color: var(--text2);
-    font-size: 0.64rem;
+    font-size: 0.68rem;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
 .inscricao-remover {
-    width: 18px;
-    height: 18px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 40px;
     padding: 0;
-    border: none;
-    border-radius: 50%;
+    border: 0;
+    border-radius: 3px;
     background: transparent;
-    color: #777;
-    font-size: 0.95rem;
+    color: var(--text2);
+    font-size: 1.25rem;
     line-height: 1;
     cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .inscricao-remover:hover {
+    background: color-mix(in srgb, var(--pink) 12%, transparent);
     color: var(--pink);
-    background-color: rgba(250, 41, 95, 0.12);
 }
 
 .inscricao-adicionar {
     width: 100%;
-    height: 30px;
+    height: 36px;
     margin-top: 2px;
     padding: 0;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--pink);
-    color: var(--white);
+    border: 0;
+    border-radius: 3px;
+    background: var(--pink);
+    color: var(--gray1);
     font-size: 1.15rem;
-    font-weight: 400;
     line-height: 1;
     cursor: pointer;
-    transition: filter 0.2s ease;
+    transition: background-color 0.2s ease;
 }
 
 .inscricao-adicionar:hover {
-    filter: brightness(1.08);
+    background: var(--gray3);
 }
 
 /* Select de função */
 
 .inscricao-select .huby-dropdown__trigger {
-    height: 30px;
+    height: 40px;
     padding-left: 11px;
-    font-size: 0.74rem;
+    border-radius: 3px;
+    background: var(--inscricao-campo);
+    font-size: 0.72rem;
+}
+
+.inscricao-select .huby-dropdown__trigger:hover {
+    background: var(--inscricao-campo-foco);
 }
 
 .inscricao-select .huby-dropdown__menu {
     max-height: 220px;
+    border-radius: 3px;
 }
 
 /* Experiência */
 
 .inscricao-experiencia {
-    margin-top: 18px;
     display: flex;
     flex-direction: column;
+    margin-top: 18px;
 }
 
 .inscricao-experiencia-opcoes {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
 .inscricao-experiencia-opcoes button {
     flex: 1;
-    height: 30px;
-    padding: 0 6px;
+    height: 40px;
+    padding: 0 8px;
     border: 1px solid var(--pink);
     border-radius: 999px;
-    background-color: transparent;
+    background: transparent;
     color: var(--text1);
-    font-size: 0.58rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
     text-transform: uppercase;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .inscricao-experiencia-opcoes button:hover {
-    background-color: rgba(250, 41, 95, 0.14);
+    background: color-mix(in srgb, var(--pink) 14%, transparent);
 }
 
 .inscricao-experiencia-opcoes button.is-ativo {
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
 }
 
@@ -582,28 +645,26 @@
 
 .inscricao-erro {
     margin: 14px 0 0;
-    padding: 8px 12px;
-    border-left: 3px solid var(--pink);
-    border-radius: 4px;
-    background-color: rgba(250, 41, 95, 0.08);
-    color: #ffb3c7;
+    color: var(--inscricao-erro);
     font-size: 0.72rem;
+    line-height: 1.5;
 }
 
 .inscricao-enviar {
-    width: 100%;
+    align-self: flex-end;
+    width: auto;
+    min-width: 190px;
     height: 38px;
-    margin-top: 18px;
-    border: none;
+    margin-top: 22px;
+    padding: 0 24px;
+    border: 1px solid var(--pink);
     border-radius: 999px;
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
     font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
     cursor: pointer;
-    transition: filter 0.2s ease;
+    transition: filter 0.2s ease, border-color 0.2s ease;
 }
 
 .inscricao-enviar:hover:not(:disabled) {
@@ -615,85 +676,90 @@
     cursor: wait;
 }
 
-/* Cards de modelo */
+/* Modelos de equipe */
 
 .inscricao-modelos {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 16px;
+    gap: 0;
+    margin-top: 24px;
 }
 
 .inscricao-modelos-nota {
     margin: 0 0 2px;
-    color: #8a8a8a;
-    font-size: 0.62rem;
-    line-height: 1.5;
+    color: var(--text2);
+    font-size: 0.72rem;
+    line-height: 1.55;
 }
 
 .inscricao-modelo-card {
     position: relative;
     display: block;
-    padding: 14px;
-    border: 1px solid #262626;
-    border-radius: 10px;
-    background-color: #141414;
+    padding: 14px 10px;
+    border: 0;
+    border-bottom: 1px solid var(--inscricao-linha);
+    border-radius: 0;
+    background: transparent;
     color: inherit;
     text-align: left;
 }
 
 .inscricao-modelo-card.is-ativo {
-    border-color: rgba(250, 41, 95, 0.75);
-    background-color: rgba(250, 41, 95, 0.06);
+    background: color-mix(in srgb, var(--pink) 6%, transparent);
 }
 
 .inscricao-modelo-selo {
-    position: absolute;
-    top: -8px;
-    right: 12px;
-    padding: 2px 8px;
+    display: inline-flex;
+    margin-bottom: 6px;
+    padding: 3px 8px;
     border-radius: 999px;
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
-    font-size: 0.5rem;
+    font-size: 0.54rem;
     font-weight: 800;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
     text-transform: uppercase;
 }
 
 .inscricao-modelo-card strong {
     display: block;
     color: var(--text1);
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 800;
 }
 
 .inscricao-modelo-card p {
     margin: 6px 0 0;
     color: var(--text2);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     line-height: 1.55;
 }
 
-/* Estados */
+/* Carregamento e erro */
 
 .inscricao-carregando {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding-top: 40px;
+    gap: 12px;
+    padding-top: 18px;
 }
 
 .inscricao-esqueleto-faixa,
 .inscricao-esqueleto-painel {
-    border-radius: 10px;
-    background: linear-gradient(100deg, #1a1a1a 30%, #242424 50%, #1a1a1a 70%);
+    border-radius: 3px;
+    background: linear-gradient(
+        100deg,
+        var(--inscricao-campo) 30%,
+        var(--inscricao-campo-foco) 50%,
+        var(--inscricao-campo) 70%
+    );
     background-size: 220% 100%;
     animation: inscricao-pulso 1.4s ease-in-out infinite;
 }
 
 .inscricao-esqueleto-faixa {
-    height: 92px;
+    height: 58px;
 }
 
 .inscricao-esqueleto-painel {
@@ -707,61 +773,70 @@
 
 .inscricao-estado {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    gap: 10px;
     margin-top: 48px;
-    padding: 36px 24px;
+    padding: 28px 20px;
     border: 1px dashed var(--gray3);
-    border-radius: 8px;
+    border-radius: 3px;
     color: var(--text2);
     text-align: center;
 }
 
 .inscricao-estado p {
+    flex-basis: 100%;
     margin: 0;
     font-size: 0.82rem;
 }
 
 .inscricao-estado button {
-    height: 32px;
-    padding: 0 16px;
-    border: none;
+    min-width: 120px;
+    height: 38px;
+    padding: 0 18px;
+    border: 1px solid var(--pink);
     border-radius: 999px;
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
     cursor: pointer;
+    transition: filter 0.2s ease, border-color 0.2s ease;
 }
 
 .inscricao-estado button.is-secundaria {
-    background-color: transparent;
-    border: 1px solid var(--pink);
-    color: var(--pink);
+    border-color: var(--gray3);
+    background: var(--inscricao-botao);
+    color: var(--text1);
+}
+
+.inscricao-estado button:hover {
+    border-color: var(--pink);
+    filter: brightness(1.08);
 }
 
 /* Sucesso */
 
 .inscricao-sucesso {
-    padding: 24px 20px;
-    border: 1px solid #2a2a2a;
-    border-radius: 10px;
-    background-color: #131313;
+    margin-top: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .inscricao-sucesso-midia {
     position: relative;
-    margin: 0 0 28px;
+    margin: 0 0 34px;
 }
 
 .inscricao-sucesso-imagem {
-    height: 150px;
-    border-radius: 8px;
+    height: 190px;
+    border: 1px solid color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 3px;
+    background: var(--inscricao-campo);
     overflow: hidden;
-    background-color: #1b1b1b;
 }
 
 .inscricao-sucesso-imagem img {
@@ -773,15 +848,15 @@
 
 .inscricao-sucesso-avatar {
     position: absolute;
-    left: 10px;
-    bottom: -22px;
+    left: 12px;
+    bottom: -26px;
     display: grid;
     place-items: center;
     width: 62px;
     height: 62px;
-    border: 3px solid #131313;
+    border: 3px solid var(--pink);
     border-radius: 50%;
-    background-color: #242424;
+    background: var(--gray1);
     overflow: hidden;
 }
 
@@ -795,39 +870,39 @@
 .inscricao-sucesso-avatar .inscricao-avatar-neutro {
     width: 70%;
     height: 70%;
-    color: #6f6f6f;
+    color: var(--text3);
 }
 
 .inscricao-sucesso h1 {
     margin: 0 0 8px;
     color: var(--text1);
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 1.05rem;
+    font-weight: 900;
 }
 
 .inscricao-sucesso > p {
     margin: 0;
     color: var(--text2);
     font-size: 0.8rem;
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
 .inscricao-sucesso > p strong {
     color: var(--text1);
 }
 
-.inscricao-sucesso-modelo {
-    margin-top: 6px !important;
+.inscricao-sucesso .inscricao-sucesso-modelo {
+    margin-top: 6px;
     font-weight: 700;
 }
 
 .inscricao-sucesso ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     margin: 16px 0 0;
     padding: 0;
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
 }
 
 .inscricao-sucesso li {
@@ -835,9 +910,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 8px 10px;
-    border: 1px solid #262626;
-    border-radius: 4px;
+    padding: 10px;
+    border-bottom: 1px solid var(--inscricao-linha);
     color: var(--text1);
     font-size: 0.76rem;
 }
@@ -845,6 +919,7 @@
 .inscricao-sucesso li small {
     color: var(--text2);
     font-size: 0.68rem;
+    text-align: right;
 }
 
 .inscricao-sucesso-integrante {
@@ -861,42 +936,48 @@
     height: 24px;
     border-radius: 50%;
     object-fit: cover;
-    background-color: #242424;
+    background: var(--gray3);
 }
 
 .inscricao-sucesso-integrante-neutro {
     display: grid;
     place-items: center;
     padding: 2px;
-    color: #6b6b6b;
+    color: var(--text3);
+}
+
+.inscricao-sucesso .inscricao-sucesso-convites,
+.inscricao-sucesso .inscricao-sucesso-aberta {
+    margin-top: 14px;
+    font-size: 0.72rem;
+    line-height: 1.55;
 }
 
 .inscricao-sucesso .inscricao-sucesso-convites {
-    margin-top: 14px;
     color: var(--text2);
-    font-size: 0.72rem;
-    line-height: 1.5;
 }
 
 .inscricao-sucesso .inscricao-sucesso-aberta {
-    margin-top: 14px;
     color: var(--pink);
-    font-size: 0.72rem;
 }
 
 .inscricao-sucesso button {
-    height: 36px;
-    margin-top: 20px;
+    min-width: 170px;
+    height: 38px;
+    margin-top: 22px;
     padding: 0 22px;
-    border: none;
+    border: 1px solid var(--pink);
     border-radius: 999px;
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
     cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.inscricao-sucesso button:hover {
+    filter: brightness(1.08);
 }
 
 /* Responsividade */
@@ -906,27 +987,79 @@
         padding: 0 14px 64px;
     }
 
+    .inscricao-midia,
+    .inscricao-sucesso-imagem {
+        height: 150px;
+    }
+
+    .inscricao-integrante,
+    .inscricao-integrante.tem-remover {
+        grid-template-columns: 36px minmax(0, 1fr) 24px;
+        grid-template-areas:
+            "avatar usuario remover"
+            ". funcao funcao";
+        gap: 8px 10px;
+        margin-bottom: 14px;
+    }
+
+    .inscricao-avatar {
+        grid-area: avatar;
+    }
+
+    .inscricao-campo-bloco {
+        grid-area: usuario;
+    }
+
+    .inscricao-select {
+        grid-area: funcao;
+    }
+
+    .inscricao-remover {
+        grid-area: remover;
+    }
+
+    .inscricao-select .huby-dropdown__trigger {
+        padding-left: 14px;
+    }
+
+    .inscricao-experiencia-opcoes {
+        gap: 6px;
+    }
+
+    .inscricao-experiencia-opcoes button {
+        padding: 0 5px;
+        font-size: 0.62rem;
+    }
+
+    .inscricao-enviar {
+        min-width: 180px;
+    }
+}
+
+@media (max-width: 520px) {
     .inscricao-faixa {
-        padding: 15px 14px 13px;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .inscricao-tags {
+        flex-basis: auto;
+        width: 100%;
+        min-height: 58px;
     }
 
     .inscricao-faixa h1 {
-        font-size: 1.25rem;
+        min-height: 58px;
+        padding-right: 14px;
+        padding-left: 14px;
     }
+}
 
-    .inscricao-painel {
-        padding: 14px;
-    }
-
-    .inscricao-midia {
-        height: 102px;
-    }
-
-    .inscricao-integrante {
-        grid-template-columns: 30px minmax(0, 1fr) 140px;
-    }
-
-    .inscricao-integrante.tem-remover {
-        grid-template-columns: 30px minmax(0, 1fr) 140px 16px;
+@media (prefers-reduced-motion: reduce) {
+    .inscricao *,
+    .inscricao *::before,
+    .inscricao *::after {
+        animation: none;
+        transition: none;
     }
 }
