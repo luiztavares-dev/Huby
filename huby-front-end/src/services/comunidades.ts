@@ -34,14 +34,22 @@ export type ConfigComunidadeApi = {
     abertaParaSolicitacoes?: boolean
 }
 
+export type NovaComunidadeApi = {
+    usuarioId: string
+    titulo: string
+    descricao: string
+    imagem?: string
+    abertaParaSolicitacoes: boolean
+}
+
 const base = (id: string) => `${API_URL}/api/comunidades/${encodeURIComponent(id)}`
 
 async function lerMensagem(resposta: Response, padrao: string) {
     let mensagem = `${padrao} (HTTP ${resposta.status}).`
 
     try {
-        const corpo = await resposta.json() as { mensagem?: string }
-        if (corpo?.mensagem) mensagem = corpo.mensagem
+        const corpo = await resposta.json() as { mensagem?: string; message?: string }
+        if (corpo?.mensagem || corpo?.message) mensagem = corpo.mensagem ?? corpo.message ?? mensagem
     } catch {
         // mantém a mensagem padrão quando a resposta não tem JSON
     }
@@ -95,6 +103,19 @@ export async function buscarComunidadesDoUsuario(
     }
 
     return resposta.json() as Promise<ComunidadeApi[]>
+}
+
+export async function criarComunidade(
+    dados: NovaComunidadeApi,
+    signal?: AbortSignal
+): Promise<ComunidadeApi> {
+    return enviar(
+        `${API_URL}/api/comunidades`,
+        'POST',
+        dados,
+        'Não foi possível criar a comunidade',
+        signal
+    )
 }
 
 export async function solicitarEntrada(

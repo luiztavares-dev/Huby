@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, FormEvent, RefObject } from 'react'
 
 import {
     aceitarPedido,
@@ -9,6 +9,7 @@ import {
     buscarComunidades,
     buscarComunidadesDoUsuario,
     cancelarPedido,
+    criarComunidade,
     editarPublicacao,
     excluirComunidade,
     publicar,
@@ -29,14 +30,37 @@ import './Comunidades.css'
 const LIMITE_LISTA = 3
 const NOME_MIN = 3
 const NOME_MAX = 50
+const DESCRICAO_MIN = 10
 const TEXTO_MAX = 800
 
-type Painel = 'busca' | 'dados'
+type Painel = 'busca' | 'dados' | 'criacao'
 type ConfirmacaoTipo = 'excluir' | 'sair' | 'banir' | 'publicacao'
 
 type Confirmacao = {
     tipo: ConfirmacaoTipo
     alvoId?: string
+}
+
+type NovaComunidadeFormulario = {
+    titulo: string
+    descricao: string
+    imagem: string
+    aberta: boolean
+}
+
+type DestinoImagem = 'criacao' | 'config'
+
+function imagemComunidadeValida(imagem: string) {
+    const valor = imagem.trim()
+    if (!valor) return true
+    if (valor.startsWith('/')) return !valor.startsWith('//')
+
+    try {
+        const url = new URL(valor)
+        return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+        return false
+    }
 }
 
 const ROTULO_CARGO: Record<CargoApi, string> = {
@@ -442,9 +466,188 @@ function PedidoLinha({
     )
 }
 
+function CampoImagemComunidade({
+    valor,
+    nome,
+    desabilitado,
+    enviando,
+    entradaRef,
+    onEscolher,
+    onArquivo,
+    onAlterar
+}: {
+    valor: string
+    nome: string
+    desabilitado: boolean
+    enviando: boolean
+    entradaRef: RefObject<HTMLInputElement | null>
+    onEscolher: () => void
+    onArquivo: (event: ChangeEvent<HTMLInputElement>) => void
+    onAlterar: (valor: string) => void
+}) {
+    const imagemInvalida = !imagemComunidadeValida(valor)
+
+    return (
+        <div className="comunidades-config-campo">
+            <span>Imagem da comunidade</span>
+            <div className="comunidades-config-imagem">
+                <Avatar classe="comunidades-config-avatar" src={imagemInvalida ? undefined : valor} nome={nome || 'Nova comunidade'} />
+                <div className="comunidades-config-url">
+                    <input
+                        type="text"
+                        inputMode="url"
+                        maxLength={500}
+                        value={valor}
+                        placeholder="Ou link da imagem (https://...)"
+                        disabled={desabilitado}
+                        onChange={(event) => onAlterar(event.target.value)}
+                    />
+                    <button
+                        type="button"
+                        onClick={onEscolher}
+                        disabled={desabilitado || enviando || !cloudinaryConfigurado()}
+                    >
+                        {enviando ? 'Enviando...' : 'Fazer upload'}
+                    </button>
+                </div>
+            </div>
+            <input
+                ref={entradaRef}
+                type="file"
+                accept="image/*"
+                hidden
+                disabled={desabilitado || enviando}
+                onChange={onArquivo}
+            />
+            {imagemInvalida && <em>Use uma URL http(s) válida ou uma imagem local.</em>}
+            {!cloudinaryConfigurado() && <em>O upload está indisponível; você pode usar um link de imagem.</em>}
+        </div>
+    )
+}
+
+function FormularioCriacaoComunidade({
+    dados,
+    erro,
+    ocupado,
+    enviandoImagem,
+    imagemRef,
+    onAlterar,
+    onEscolherImagem,
+    onEnviarImagem,
+    onFechar,
+    onSalvar
+}: {
+    dados: NovaComunidadeFormulario
+    erro: string | null
+    ocupado: boolean
+    enviandoImagem: boolean
+    imagemRef: RefObject<HTMLInputElement | null>
+    onAlterar: (dados: NovaComunidadeFormulario) => void
+    onEscolherImagem: () => void
+    onEnviarImagem: (event: ChangeEvent<HTMLInputElement>) => void
+    onFechar: () => void
+    onSalvar: (event: FormEvent<HTMLFormElement>) => void
+}) {
+    const nomeInvalido = dados.titulo.trim().length < NOME_MIN || dados.titulo.trim().length > NOME_MAX
+    const descricaoInvalida = dados.descricao.trim().length < DESCRICAO_MIN
+    const imagemInvalida = !imagemComunidadeValida(dados.imagem)
+    const bloqueado = ocupado || enviandoImagem
+
+    return (
+        <form
+            className="comunidades-dash-criacao"
+            aria-labelledby="comunidades-criacao-titulo"
+            onSubmit={onSalvar}
+            onKeyDown={(event) => {
+                if (event.key === 'Escape') onFechar()
+            }}
+        >
+            <header className="comunidades-dash-dados-cabeca">
+                <button type="button" onClick={onFechar} disabled={bloqueado}>
+                    <IconeVoltar />
+                    <span>Pesquisa de comunidades</span>
+                </button>
+                <h2 id="comunidades-criacao-titulo">Criar comunidade</h2>
+                <p>Reúna pessoas com interesses em comum e comece uma nova conversa.</p>
+            </header>
+
+            {erro && <p className="comunidades-criacao-erro" role="alert">{erro}</p>}
+
+            <label className="comunidades-config-campo">
+                <span>Nome da comunidade</span>
+                <input
+                    type="text"
+                    value={dados.titulo}
+                    minLength={NOME_MIN}
+                    maxLength={NOME_MAX}
+                    placeholder="Ex.: Criadores de jogos indie"
+                    autoFocus
+                    required
+                    disabled={bloqueado}
+                    onChange={(event) => onAlterar({ ...dados, titulo: event.target.value })}
+                />
+                {dados.titulo && nomeInvalido && (
+                    <em>O nome deve ter entre {NOME_MIN} e {NOME_MAX} caracteres.</em>
+                )}
+            </label>
+
+            <label className="comunidades-config-campo">
+                <span>Descrição</span>
+                <textarea
+                    className="comunidades-criacao-descricao"
+                    value={dados.descricao}
+                    minLength={DESCRICAO_MIN}
+                    maxLength={TEXTO_MAX}
+                    rows={4}
+                    placeholder="Conte sobre o propósito da sua comunidade."
+                    required
+                    disabled={bloqueado}
+                    onChange={(event) => onAlterar({ ...dados, descricao: event.target.value })}
+                />
+                {dados.descricao && descricaoInvalida && (
+                    <em>A descrição deve ter pelo menos {DESCRICAO_MIN} caracteres.</em>
+                )}
+            </label>
+
+            <CampoImagemComunidade
+                valor={dados.imagem}
+                nome={dados.titulo}
+                desabilitado={bloqueado}
+                enviando={enviandoImagem}
+                entradaRef={imagemRef}
+                onEscolher={onEscolherImagem}
+                onArquivo={onEnviarImagem}
+                onAlterar={(imagem) => onAlterar({ ...dados, imagem })}
+            />
+
+            <label className="comunidades-config-toggle">
+                <input
+                    type="checkbox"
+                    checked={dados.aberta}
+                    disabled={bloqueado}
+                    onChange={(event) => onAlterar({ ...dados, aberta: event.target.checked })}
+                />
+                <span>Aceitar pedidos de entrada</span>
+            </label>
+
+            <div className="comunidades-criacao-acoes">
+                <button type="button" onClick={onFechar} disabled={bloqueado}>Cancelar</button>
+                <button
+                    type="submit"
+                    className="is-primario"
+                    disabled={bloqueado || nomeInvalido || descricaoInvalida || imagemInvalida}
+                >
+                    {ocupado ? 'Criando...' : 'Criar comunidade'}
+                </button>
+            </div>
+        </form>
+    )
+}
+
 export function Comunidades() {
     const eu = useMemo(() => usuarioLogado(), [])
     const entradaRef = useRef<HTMLInputElement>(null)
+    const criarImagemRef = useRef<HTMLInputElement>(null)
 
     const [comunidades, setComunidades] = useState<ComunidadeApi[]>([])
     const [participa, setParticipa] = useState<ComunidadeApi[]>([])
@@ -457,10 +660,13 @@ export function Comunidades() {
     const [aviso, setAviso] = useState<string | null>(null)
     const [ocupado, setOcupado] = useState(false)
     const [enviandoImagem, setEnviandoImagem] = useState(false)
+    const [enviandoImagemCriacao, setEnviandoImagemCriacao] = useState(false)
     const [rascunho, setRascunho] = useState('')
     const [respondendoA, setRespondendoA] = useState<string | null>(null)
     const [confirmacao, setConfirmacao] = useState<Confirmacao | null>(null)
     const [config, setConfig] = useState({ titulo: '', imagem: '', aberta: true })
+    const [novaComunidade, setNovaComunidade] = useState({ titulo: '', descricao: '', imagem: '', aberta: true })
+    const [erroCriacao, setErroCriacao] = useState<string | null>(null)
     const [tentativa, setTentativa] = useState(0)
 
     useEffect(() => {
@@ -619,27 +825,112 @@ export function Comunidades() {
 
     const pedirApagar = (post: ComentarioApi) => setConfirmacao({ tipo: 'publicacao', alvoId: post.id })
 
-    const enviarArquivo = async (event: ChangeEvent<HTMLInputElement>) => {
+    const abrirFormularioCriacao = () => {
+        if (!eu.id) {
+            setAviso('Entre na sua conta para criar uma comunidade.')
+            return
+        }
+
+        setNovaComunidade({ titulo: '', descricao: '', imagem: '', aberta: true })
+        setErroCriacao(null)
+        setAviso(null)
+        setPainel('criacao')
+    }
+
+    const fecharFormularioCriacao = () => {
+        if (ocupado || enviandoImagemCriacao) return
+        setPainel('busca')
+        setErroCriacao(null)
+    }
+
+    const salvarNovaComunidade = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        if (ocupado || enviandoImagemCriacao) return
+
+        const titulo = novaComunidade.titulo.trim()
+        const descricao = novaComunidade.descricao.trim()
+        const imagem = novaComunidade.imagem.trim()
+
+        if (titulo.length < NOME_MIN || titulo.length > NOME_MAX) {
+            setErroCriacao(`O nome deve ter entre ${NOME_MIN} e ${NOME_MAX} caracteres.`)
+            return
+        }
+        if (descricao.length < DESCRICAO_MIN) {
+            setErroCriacao(`A descrição deve ter pelo menos ${DESCRICAO_MIN} caracteres.`)
+            return
+        }
+        if (!imagemComunidadeValida(imagem)) {
+            setErroCriacao('Use uma URL http(s) válida ou uma imagem local.')
+            return
+        }
+        if (!eu.id) {
+            setErroCriacao('Entre na sua conta para criar uma comunidade.')
+            return
+        }
+
+        setOcupado(true)
+        setErroCriacao(null)
+
+        try {
+            const comunidadeCriada = await criarComunidade({
+                usuarioId: eu.id,
+                titulo,
+                descricao,
+                imagem,
+                abertaParaSolicitacoes: novaComunidade.aberta
+            })
+
+            setComunidades((atuais) => [
+                comunidadeCriada,
+                ...atuais.filter((item) => item.id !== comunidadeCriada.id)
+            ])
+            setParticipa((atuais) => [
+                comunidadeCriada,
+                ...atuais.filter((item) => item.id !== comunidadeCriada.id)
+            ])
+            setSelecionadaId(comunidadeCriada.id)
+            setPainel('busca')
+            setBusca('')
+            setNovaComunidade({ titulo: '', descricao: '', imagem: '', aberta: true })
+        } catch (error: unknown) {
+            setErroCriacao(error instanceof Error ? error.message : 'Não foi possível criar a comunidade.')
+        } finally {
+            setOcupado(false)
+        }
+    }
+
+    const enviarArquivo = async (event: ChangeEvent<HTMLInputElement>, destino: DestinoImagem) => {
         const arquivo = event.target.files?.[0]
         event.target.value = ''
 
         if (!arquivo) return
 
         if (!arquivo.type.startsWith('image/')) {
-            setAviso('Escolha um arquivo de imagem (JPG, PNG ou WebP).')
+            const mensagem = 'Escolha um arquivo de imagem (JPG, PNG ou WebP).'
+            if (destino === 'criacao') setErroCriacao(mensagem)
+            else setAviso(mensagem)
             return
         }
 
-        setEnviandoImagem(true)
+        if (destino === 'criacao') setEnviandoImagemCriacao(true)
+        else setEnviandoImagem(true)
 
         try {
             const url = await enviarImagemParaCloudinary(arquivo, 'huby/comunidades')
-            setConfig((atual) => ({ ...atual, imagem: url }))
-            setAviso('Imagem carregada. Salve as configurações para aplicar.')
+            if (destino === 'criacao') {
+                setNovaComunidade((atual) => ({ ...atual, imagem: url }))
+                setErroCriacao(null)
+            } else {
+                setConfig((atual) => ({ ...atual, imagem: url }))
+                setAviso('Imagem carregada. Salve as configurações para aplicar.')
+            }
         } catch (error: unknown) {
-            setAviso(error instanceof Error ? error.message : 'Não foi possível enviar a imagem.')
+            const mensagem = error instanceof Error ? error.message : 'Não foi possível enviar a imagem.'
+            if (destino === 'criacao') setErroCriacao(mensagem)
+            else setAviso(mensagem)
         } finally {
-            setEnviandoImagem(false)
+            if (destino === 'criacao') setEnviandoImagemCriacao(false)
+            else setEnviandoImagem(false)
         }
     }
 
@@ -703,9 +994,37 @@ export function Comunidades() {
     if (!selecionada) {
         return (
             <main className="comunidades">
-                <div className="comunidades-estado">
+                <div className={`comunidades-estado${painel === 'criacao' ? ' comunidades-estado-com-criacao' : ''}`}>
                     <p>Nenhuma comunidade publicada ainda.</p>
+                    <button type="button" className="is-primario" onClick={abrirFormularioCriacao} disabled={ocupado}>
+                        Criar comunidade
+                    </button>
+                    {!eu.id && <span>Entre na sua conta para criar a primeira comunidade.</span>}
                 </div>
+
+                {painel === 'criacao' && (
+                    <aside className="comunidades-dash">
+                        <div className="comunidades-dash-canal">
+                            <IconeForum />
+                            <span>NOVA COMUNIDADE</span>
+                            <button type="button" onClick={fecharFormularioCriacao} disabled={ocupado || enviandoImagemCriacao}>
+                                Voltar
+                            </button>
+                        </div>
+                        <FormularioCriacaoComunidade
+                            dados={novaComunidade}
+                            erro={erroCriacao}
+                            ocupado={ocupado}
+                            enviandoImagem={enviandoImagemCriacao}
+                            imagemRef={criarImagemRef}
+                            onAlterar={setNovaComunidade}
+                            onEscolherImagem={() => criarImagemRef.current?.click()}
+                            onEnviarImagem={(event) => void enviarArquivo(event, 'criacao')}
+                            onFechar={fecharFormularioCriacao}
+                            onSalvar={salvarNovaComunidade}
+                        />
+                    </aside>
+                )}
             </main>
         )
     }
@@ -721,6 +1040,7 @@ export function Comunidades() {
         .find((post) => post.id === confirmacao?.alvoId) ?? null
 
     const nomeInvalido = config.titulo.trim().length < NOME_MIN || config.titulo.trim().length > NOME_MAX
+    const imagemConfigInvalida = !imagemComunidadeValida(config.imagem)
 
     return (
         <main className="comunidades">
@@ -839,14 +1159,15 @@ export function Comunidades() {
             <aside className="comunidades-dash">
                 <div className="comunidades-dash-canal">
                     <IconeForum />
-                    <span>{selecionada.titulo.toUpperCase()}</span>
+                    <span>{painel === 'criacao' ? 'NOVA COMUNIDADE' : selecionada.titulo.toUpperCase()}</span>
                     <button
                         type="button"
-                        className={painel === 'dados' ? 'is-ativo' : ''}
-                        onClick={() => setPainel(painel === 'dados' ? 'busca' : 'dados')}
-                        aria-pressed={painel === 'dados'}
+                        className={painel !== 'busca' ? 'is-ativo' : ''}
+                        onClick={() => painel === 'criacao' ? fecharFormularioCriacao() : setPainel(painel === 'busca' ? 'dados' : 'busca')}
+                        disabled={painel === 'criacao' && (ocupado || enviandoImagemCriacao)}
+                        aria-pressed={painel !== 'busca'}
                     >
-                        {painel === 'dados' ? 'Voltar à pesquisa' : 'Ver dados'}
+                        {painel === 'criacao' ? 'Voltar' : painel === 'dados' ? 'Voltar à pesquisa' : 'Ver dados'}
                     </button>
                 </div>
 
@@ -856,7 +1177,20 @@ export function Comunidades() {
                     </p>
                 )}
 
-                {painel === 'busca' ? (
+                {painel === 'criacao' ? (
+                        <FormularioCriacaoComunidade
+                            dados={novaComunidade}
+                            erro={erroCriacao}
+                            ocupado={ocupado}
+                            enviandoImagem={enviandoImagemCriacao}
+                            imagemRef={criarImagemRef}
+                            onAlterar={setNovaComunidade}
+                            onEscolherImagem={() => criarImagemRef.current?.click()}
+                            onEnviarImagem={(event) => void enviarArquivo(event, 'criacao')}
+                            onFechar={fecharFormularioCriacao}
+                            onSalvar={salvarNovaComunidade}
+                        />
+                ) : painel === 'busca' ? (
                     <div className="comunidades-dash-busca">
                         <label className="comunidades-campo-busca">
                             <input
@@ -867,6 +1201,15 @@ export function Comunidades() {
                             />
                             <IconeBusca />
                         </label>
+
+                        <button
+                            type="button"
+                            className="comunidades-criar-botao is-primario"
+                            onClick={abrirFormularioCriacao}
+                            disabled={ocupado}
+                        >
+                            <span aria-hidden="true">+</span> Criar comunidade
+                        </button>
 
                         {busca.trim() ? (
                             <section className="comunidades-dash-bloco">
@@ -1039,34 +1382,16 @@ export function Comunidades() {
                                     )}
                                 </label>
 
-                                <div className="comunidades-config-campo">
-                                    <span>Imagem da comunidade</span>
-                                    <div className="comunidades-config-imagem">
-                                        <Avatar classe="comunidades-config-avatar" src={config.imagem} nome={config.titulo} />
-                                        <div className="comunidades-config-url">
-                                            <input
-                                                type="text"
-                                                value={config.imagem}
-                                                placeholder="https://res.cloudinary.com/..."
-                                                onChange={(event) => setConfig((atual) => ({ ...atual, imagem: event.target.value }))}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => entradaRef.current?.click()}
-                                                disabled={enviandoImagem || !cloudinaryConfigurado()}
-                                            >
-                                                {enviandoImagem ? 'Enviando...' : 'Carregar'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <input
-                                        ref={entradaRef}
-                                        type="file"
-                                        accept="image/*"
-                                        hidden
-                                        onChange={(event) => void enviarArquivo(event)}
-                                    />
-                                </div>
+                                <CampoImagemComunidade
+                                    valor={config.imagem}
+                                    nome={config.titulo}
+                                    desabilitado={ocupado || enviandoImagem}
+                                    enviando={enviandoImagem}
+                                    entradaRef={entradaRef}
+                                    onEscolher={() => entradaRef.current?.click()}
+                                    onArquivo={(event) => void enviarArquivo(event, 'config')}
+                                    onAlterar={(imagem) => setConfig((atual) => ({ ...atual, imagem }))}
+                                />
 
                                 <label className="comunidades-config-toggle">
                                     <input
@@ -1080,7 +1405,7 @@ export function Comunidades() {
                                 <button
                                     type="button"
                                     className="is-primario"
-                                    disabled={ocupado || nomeInvalido}
+                                    disabled={ocupado || enviandoImagem || nomeInvalido || imagemConfigInvalida}
                                     onClick={() =>
                                         void executar(() =>
                                             salvarConfiguracoes(selecionada.id, {

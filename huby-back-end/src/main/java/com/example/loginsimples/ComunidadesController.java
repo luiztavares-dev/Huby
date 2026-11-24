@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -26,7 +27,6 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class ComunidadesController {
 
-    private static final String CLOUDINARY_PREFIXO = "https://res.cloudinary.com/";
     private static final int NOME_MIN = 3;
     private static final int NOME_MAX = 50;
     private static final int TEXTO_MAX = 800;
@@ -56,6 +56,10 @@ public class ComunidadesController {
     public record ConfigDTO(String usuarioId, String titulo, String imagem, Boolean abertaParaSolicitacoes) {
     }
 
+    public record CriarDTO(String usuarioId, String titulo, String descricao,
+                           String imagem, Boolean abertaParaSolicitacoes) {
+    }
+
     public record PublicarDTO(String usuarioId, String texto, String respondendoA) {
     }
 
@@ -70,6 +74,54 @@ public class ComunidadesController {
     @GetMapping("/minhas/{usuarioId}")
     public List<Conteudo> minhas(@PathVariable String usuarioId) {
         return conteudoRepository.findComunidadesDoMembro(usuarioId);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Conteudo criar(@RequestBody CriarDTO dto) {
+        Usuario usuario = exigirUsuario(dto == null ? null : dto.usuarioId());
+
+        String titulo = dto.titulo() == null ? "" : dto.titulo().trim();
+        if (titulo.length() < NOME_MIN || titulo.length() > NOME_MAX) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O nome da comunidade deve ter entre " + NOME_MIN + " e " + NOME_MAX + " caracteres.");
+        }
+        if (nomeEmUso(null, titulo)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Já existe uma comunidade com esse nome.");
+        }
+
+        String descricao = limite(dto.descricao(), TEXTO_MAX);
+        if (descricao.length() < 10) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A descrição deve ter pelo menos 10 caracteres.");
+        }
+
+        String username = usuario.getUsername() == null || usuario.getUsername().isBlank()
+                ? nomeExibicao(usuario) : usuario.getUsername().trim();
+        IntegranteComunidade dono = new IntegranteComunidade(
+                usuario.getId(), username, avatarDe(usuario), DONO);
+        dono.setEntrouEm(LocalDate.now());
+
+        Conteudo comunidade = new Conteudo();
+        comunidade.setId("comunidade-" + UUID.randomUUID());
+        comunidade.setTipo(TipoConteudo.COMUNIDADE);
+        comunidade.setTitulo(titulo);
+        comunidade.setDescricao(descricao);
+        comunidade.setDescricaoLonga(descricao);
+        comunidade.setDesenvolvedor(username);
+        comunidade.setImagem(imagemDaComunidade(dto.imagem()));
+        comunidade.setDataPublicacao(LocalDate.now());
+        comunidade.setDonoId(usuario.getId());
+        comunidade.setMembros(new ArrayList<>(List.of(dono)));
+        comunidade.setSolicitacoes(new ArrayList<>());
+        comunidade.setAbertaParaSolicitacoes(dto.abertaParaSolicitacoes() == null || dto.abertaParaSolicitacoes());
+        comunidade.setParticipantes(1);
+        comunidade.setRelevancia(0);
+        comunidade.setNota(0.0);
+        comunidade.setAvaliacoes(0);
+
+        return conteudoRepository.save(comunidade);
     }
 
     @GetMapping("/{id}")
@@ -276,13 +328,7 @@ public class ComunidadesController {
         }
 
         if (dto.imagem() != null && !dto.imagem().isBlank()) {
-            String imagem = dto.imagem().trim();
-            boolean hospedada = imagem.startsWith(CLOUDINARY_PREFIXO) || imagem.startsWith("/");
-            if (!hospedada || imagem.length() > 500) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "A imagem da comunidade precisa estar hospedada no Cloudinary.");
-            }
-            comunidade.setImagem(imagem);
+            comunidade.setImagem(imagemDaComunidade(dto.imagem()));
         }
 
         if (dto.abertaParaSolicitacoes() != null) {
@@ -386,6 +432,32 @@ public class ComunidadesController {
 
         removerPublicacao(comunidade, publicacao);
         return conteudoRepository.save(comunidade);
+    }
+
+    private String imagemDaComunidade(String valor) {
+        String imagem = valor == null ? "" : valor.trim();
+        if (imagem.isEmpty()) {
+            return "/icon-perfil.png";
+        }
+        if (imagem.length() > 500 || !imagemValida(imagem)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Use uma URL http(s) válida ou uma imagem local para a comunidade.");
+        }
+        return imagem;
+    }
+
+    private boolean imagemValida(String imagem) {
+        if (imagem.startsWith("/")) {
+            return !imagem.startsWith("//");
+        }
+
+        try {
+            URI uri = URI.create(imagem);
+            return ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
+                    && uri.getHost() != null;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     private Conteudo exigirComunidade(String id) {
