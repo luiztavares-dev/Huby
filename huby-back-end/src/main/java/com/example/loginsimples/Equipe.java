@@ -23,6 +23,8 @@ public class Equipe {
     private String imagem = "";
     private String avatar = "";
     private Boolean abertaParaSolicitacoes = false;
+    /** Inscrição individual aguardando o sorteio de uma equipe surpresa. */
+    private Boolean aguardandoSorteio = false;
     private List<IntegranteEquipe> integrantes = new ArrayList<>();
     private String entregaTitulo = "";
     private String entregaDescricao = "";
@@ -66,6 +68,11 @@ public class Equipe {
     public Boolean getAbertaParaSolicitacoes() { return abertaParaSolicitacoes; }
     public void setAbertaParaSolicitacoes(Boolean abertaParaSolicitacoes) {
         this.abertaParaSolicitacoes = abertaParaSolicitacoes;
+    }
+
+    public Boolean getAguardandoSorteio() { return aguardandoSorteio; }
+    public void setAguardandoSorteio(Boolean aguardandoSorteio) {
+        this.aguardandoSorteio = aguardandoSorteio;
     }
 
     public List<IntegranteEquipe> getIntegrantes() { return integrantes; }

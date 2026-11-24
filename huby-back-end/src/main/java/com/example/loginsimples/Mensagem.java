@@ -14,8 +14,11 @@ public class Mensagem {
     private String texto;
     private LocalDateTime dataHora;
 
-    /** "TEXTO" para mensagens normais ou "CONVITE_EQUIPE" para pedidos de entrada em equipe. */
+    /** "TEXTO", "PEDIDO_EQUIPE" ou "CONVITE_EQUIPE". */
     private String tipo = "TEXTO";
+
+    /** "EQUIPE" para o fluxo normal ou "PERFIL_BUSCA" quando o líder chama quem procura equipe. */
+    private String origem = "EQUIPE";
 
     private String equipeId = "";
     private String eventoId = "";
@@ -46,6 +49,9 @@ public class Mensagem {
 
     public String getTipo() { return tipo; }
     public void setTipo(String tipo) { this.tipo = tipo; }
+
+    public String getOrigem() { return origem; }
+    public void setOrigem(String origem) { this.origem = origem; }
 
     public String getEquipeId() { return equipeId; }
     public void setEquipeId(String equipeId) { this.equipeId = equipeId; }

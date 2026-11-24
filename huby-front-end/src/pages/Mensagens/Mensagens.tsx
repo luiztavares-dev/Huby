@@ -3,7 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components/navbar/Navbar';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { API_URL } from '../../services/home';
 import './Mensagens.css';
+
+const WS_URL = API_URL.replace(/^http/, 'ws');
 
 interface UsuarioData {
   id: string;
@@ -18,6 +21,7 @@ interface Mensagem {
   minha: boolean;
   hora: string;
   tipo?: string;
+  origem?: string;
   destinatarioId?: string;
   equipeId?: string;
   eventoId?: string;
@@ -34,6 +38,7 @@ function formatarMensagem(m: any, meuId: string): Mensagem {
     minha: m.remetenteId === meuId,
     hora: new Date(m.dataHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     tipo: m.tipo || 'TEXTO',
+    origem: m.origem || 'EQUIPE',
     destinatarioId: m.destinatarioId || '',
     equipeId: m.equipeId || '',
     eventoId: m.eventoId || '',
@@ -74,14 +79,14 @@ export function Mensagens() {
 
     const carregarDadosDoChat = async () => {
       try {
-        const resContatos = await fetch(`http://localhost:8080/api/mensagens/contatos/${loggedUser.id}`);
+        const resContatos = await fetch(`${API_URL}/api/mensagens/contatos/${loggedUser.id}`);
         let listaContatos: UsuarioData[] = resContatos.ok ? await resContatos.json() : [];
 
         if (id) {
           const jaTemHistorico = listaContatos.find(c => c.id === id);
           
           if (!jaTemHistorico) {
-            const resPerfil = await fetch(`http://localhost:8080/api/perfil/${id}`);
+            const resPerfil = await fetch(`${API_URL}/api/perfil/${id}`);
             if (resPerfil.ok) {
               const novoContato = await resPerfil.json();
               listaContatos = [novoContato, ...listaContatos]; 
@@ -92,7 +97,7 @@ export function Mensagens() {
           setChatAtivo(alvoAtivo || null);
 
 
-          const resHistorico = await fetch(`http://localhost:8080/api/mensagens/${loggedUser.id}/${id}`);
+          const resHistorico = await fetch(`${API_URL}/api/mensagens/${loggedUser.id}/${id}`);
           if (resHistorico.ok) {
             const histDB = await resHistorico.json();
             
@@ -122,7 +127,7 @@ export function Mensagens() {
     if (!loggedUser) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS(`${WS_URL}/ws`),
       onConnect: () => {
         client.subscribe(`/topic/mensagens/${loggedUser.id}`, (mensagemRecebida) => {
           const novaMsgDoBanco = JSON.parse(mensagemRecebida.body);
@@ -172,7 +177,7 @@ export function Mensagens() {
     };
 
     try {
-      const resposta = await fetch('http://localhost:8080/api/mensagens', {
+      const resposta = await fetch(`${API_URL}/api/mensagens`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payloadMensagem)
@@ -191,7 +196,7 @@ export function Mensagens() {
 
   const handleDeletarMensagem = async (msgId: string) => {
     try {
-      const resposta = await fetch(`http://localhost:8080/api/mensagens/${msgId}`, {
+      const resposta = await fetch(`${API_URL}/api/mensagens/${msgId}`, {
         method: 'DELETE'
       });
       if (resposta.ok) {
@@ -211,7 +216,7 @@ export function Mensagens() {
     setErroConvite(null);
 
     try {
-      const resposta = await fetch(`http://localhost:8080/api/mensagens/${msg.id}/${acao}/${aceitar ? 'aceitar' : 'recusar'}`, {
+      const resposta = await fetch(`${API_URL}/api/mensagens/${msg.id}/${acao}/${aceitar ? 'aceitar' : 'recusar'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuarioId: loggedUser.id })
@@ -330,14 +335,16 @@ export function Mensagens() {
                     {(msg.tipo === 'CONVITE_EQUIPE' || msg.tipo === 'PEDIDO_EQUIPE') ? (
                       <div className="msg-balao convite">
                         <span className="convite-titulo">
-                          {msg.tipo === 'PEDIDO_EQUIPE' ? 'Pedido de entrada' : 'Convite de equipe'}
+                          {msg.tipo === 'PEDIDO_EQUIPE'
+                            ? (msg.origem === 'PERFIL_BUSCA' ? 'Pedido para entrar na equipe' : 'Pedido de entrada')
+                            : 'Convite de equipe'}
                         </span>
                         <p className="convite-texto">{msg.texto}</p>
 
                         <div className="convite-dados">
                           {msg.equipeNome && <span><strong>Equipe</strong>{msg.equipeNome}</span>}
                           {msg.eventoTitulo && <span><strong>Evento</strong>{msg.eventoTitulo}</span>}
-                          {msg.tipo === 'CONVITE_EQUIPE' && msg.funcao && (
+                          {(msg.tipo === 'CONVITE_EQUIPE' || msg.origem === 'PERFIL_BUSCA') && msg.funcao && (
                             <span><strong>Função</strong>{msg.funcao}</span>
                           )}
                         </div>
@@ -356,9 +363,13 @@ export function Mensagens() {
                         {msg.conviteStatus === 'ACEITO' && (
                           <span className="convite-status aceito">
                             {msg.tipo === 'PEDIDO_EQUIPE'
-                              ? (msg.minha
-                                ? 'Pedido aceito — você entrou na equipe!'
-                                : 'Pedido aceito — o integrante entrou na equipe.')
+                              ? (msg.origem === 'PERFIL_BUSCA'
+                                ? (msg.minha
+                                  ? 'Pedido aceito — o integrante entrou na equipe.'
+                                  : 'Pedido aceito — você entrou na equipe!')
+                                : (msg.minha
+                                  ? 'Pedido aceito — você entrou na equipe!'
+                                  : 'Pedido aceito — o integrante entrou na equipe.'))
                               : (msg.minha
                                 ? 'Convite aceito pelo integrante.'
                                 : 'Convite aceito — você entrou na equipe!')}
@@ -368,9 +379,13 @@ export function Mensagens() {
                         {msg.conviteStatus === 'RECUSADO' && (
                           <span className="convite-status recusado">
                             {msg.tipo === 'PEDIDO_EQUIPE'
-                              ? (msg.minha
-                                ? 'Pedido recusado — você não entrou na equipe.'
-                                : 'Pedido recusado pela equipe.')
+                              ? (msg.origem === 'PERFIL_BUSCA'
+                                ? (msg.minha
+                                  ? 'Pedido recusado pelo integrante.'
+                                  : 'Pedido recusado — você não entrou na equipe.')
+                                : (msg.minha
+                                  ? 'Pedido recusado — você não entrou na equipe.'
+                                  : 'Pedido recusado pela equipe.'))
                               : (msg.minha
                                 ? 'Convite recusado pelo integrante.'
                                 : 'Convite recusado — você não entrou na equipe.')}
@@ -380,7 +395,9 @@ export function Mensagens() {
                         {msg.minha && msg.conviteStatus === 'PENDENTE' && (
                           <span className="convite-status pendente">
                             {msg.tipo === 'PEDIDO_EQUIPE'
-                              ? 'Aguardando resposta da equipe.'
+                              ? (msg.origem === 'PERFIL_BUSCA'
+                                ? 'Aguardando resposta do integrante.'
+                                : 'Aguardando resposta da equipe.')
                               : 'Aguardando resposta do integrante.'}
                           </span>
                         )}

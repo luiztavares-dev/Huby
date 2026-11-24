@@ -4,6 +4,7 @@ import { Home } from './pages/home/Home'
 import { Eventos } from './pages/eventos/Eventos'
 import { InscricaoEvento } from './pages/eventos/Inscricao'
 import { EquipesInscritas } from './pages/eventos/EquipesInscritas'
+import { ProcurandoEquipe } from './pages/eventos/ProcurandoEquipe'
 import { Pagina404 } from "./pages/404/404"
 import { Standart } from './layouts/standart/Standart';
 import { Comunidades } from './pages/comunidades/Comunidades';
@@ -28,6 +29,7 @@ function App() {
         <Route path="/eventos/criar" element={<Standart page={<CriarEvento />} activeLink="eventos" />} />
         <Route path="/eventos/:id/inscricao" element={<Standart page={<InscricaoEvento />} activeLink="eventos" />} />
         <Route path="/eventos/:id/equipes" element={<Standart page={<EquipesInscritas />} activeLink="eventos" />} />
+        <Route path="/eventos/:id/procurando-equipe" element={<Standart page={<ProcurandoEquipe />} activeLink="eventos" />} />
         <Route path="/comunidades" element={<Standart page={<Comunidades />} activeLink="comunidades" />} />
         <Route path="/*" element={<Standart page={<Pagina404 />} activeLink="404" />} />
         <Route path="/biblioteca" element={<Standart page={<Biblioteca />} activeLink="biblioteca" />} />

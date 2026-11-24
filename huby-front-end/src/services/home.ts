@@ -18,6 +18,16 @@ export type ConteudoApi = {
     dataPublicacao?: string | null
     dataInicio?: string | null
     dataFim?: string | null
+    tema?: string | null
+    inscricoesInicio?: string | null
+    inscricoesFim?: string | null
+    inscricoesAte?: string | null
+    desenvolvimentoInicio?: string | null
+    desenvolvimentoFim?: string | null
+    analiseInicio?: string | null
+    analiseFim?: string | null
+    dataPremiacao?: string | null
+    cronograma?: Array<{ titulo: string; periodo: string }> | null
     participantes?: number | null
     local?: string | null
     gameJamId?: string | null

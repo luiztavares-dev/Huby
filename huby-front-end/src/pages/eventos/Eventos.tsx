@@ -15,6 +15,7 @@ import {
 import type { ConteudoApi } from '../../services/home'
 import { adicionarBiblioteca, buscarBiblioteca } from '../../services/usuarios'
 import type { ComentarioApi } from '../../types/conteudo'
+import { formatarDataHoraEvento, formatarMoeda, inscricoesAbertas, temaRevelado } from '../../utils/fasesEvento'
 import './Eventos.css'
 
 type FiltroTipo = 'TODOS' | 'EVENTO' | 'GAME_JAM'
@@ -41,7 +42,7 @@ const categoriaDoEvento = (evento: EventoApi) => {
 const dataNumerica = (iso?: string | null) => {
     if (!iso) return ''
 
-    const data = new Date(`${iso}T00:00:00`)
+    const data = new Date(iso.includes('T') ? iso : `${iso}T00:00:00`)
     if (Number.isNaN(data.getTime())) return ''
 
     return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
@@ -50,18 +51,19 @@ const dataNumerica = (iso?: string | null) => {
 const dataCompleta = (iso?: string | null) => {
     if (!iso) return ''
 
-    const data = new Date(`${iso}T00:00:00`)
+    const data = new Date(iso.includes('T') ? iso : `${iso}T00:00:00`)
     if (Number.isNaN(data.getTime())) return ''
 
     return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const formatarDataHoraEvento = (iso: string) => {
-    if (!iso) return ''
-    const [data, hora] = iso.split('T')
-    const [ano, mes, dia] = (data || '').split('-')
-    if (!ano || !mes || !dia) return iso
-    return `${dia}/${mes}/${ano.slice(-2)}${hora ? ` ${hora.slice(0, 5)}` : ''}`
+const dataHoraEventoMs = (valor?: string, fimDoDia = false) => {
+    if (!valor) return Number.NaN
+    const somenteData = /^\d{4}-\d{2}-\d{2}$/.test(valor)
+    const data = somenteData
+        ? new Date(`${valor}T${fimDoDia ? '23:59:59' : '00:00:00'}`)
+        : new Date(valor)
+    return data.getTime()
 }
 
 const partesPeriodoEvento = (periodo: string) => {
@@ -72,8 +74,8 @@ const partesPeriodoEvento = (periodo: string) => {
 
 const statusPeriodoEvento = (inicio?: string, fim?: string, agora = Date.now()) => {
     if (!inicio || !fim) return '-'
-    const inicioMs = new Date(inicio).getTime()
-    const fimMs = new Date(fim).getTime()
+    const inicioMs = dataHoraEventoMs(inicio)
+    const fimMs = dataHoraEventoMs(fim, true)
     if (!Number.isFinite(inicioMs) || !Number.isFinite(fimMs)) return '-'
     if (agora < inicioMs) return '-'
     if (agora > fimMs) return 'Encerrado'
@@ -85,6 +87,12 @@ const statusPeriodoEvento = (inicio?: string, fim?: string, agora = Date.now()) 
     const segundos = restante % 60
     if (dias > 0) return `${dias}d ${horas}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`
     return `${horas}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`
+}
+
+const statusResultadoEvento = (valor?: string, agora = Date.now()) => {
+    const momento = dataHoraEventoMs(valor, true)
+    if (!Number.isFinite(momento)) return '-'
+    return agora > momento ? 'Encerrado' : '-'
 }
 
 const clonarComentarios = (lista?: ComentarioApi[] | null): ComentarioApi[] =>
@@ -169,6 +177,8 @@ function IconeResponder() {
 
 function CartaoEvento({ evento, onAbrir }: { evento: EventoApi; onAbrir: (evento: EventoApi) => void }) {
     const premio = evento.premios?.[0]
+    const valorPremio = formatarMoeda(premio?.valor)
+    const inscricoesAte = evento.inscricoesFim ?? evento.inscricoesAte
 
     return (
         <article
@@ -199,7 +209,7 @@ function CartaoEvento({ evento, onAbrir }: { evento: EventoApi; onAbrir: (evento
                     <strong>{evento.participantes?.toLocaleString('pt-BR') ?? '0'}</strong>
                 </div>
                 <div className="evento-card-inscricao-base">
-                    <small>{evento.inscricoesAte ? `Até ${dataNumerica(evento.inscricoesAte)}` : 'Abertas'}</small>
+                    <small>{inscricoesAte ? `Até ${dataNumerica(inscricoesAte)}` : 'Abertas'}</small>
                     <span className="evento-card-inscritos">inscritos</span>
                 </div>
             </div>
@@ -208,7 +218,7 @@ function CartaoEvento({ evento, onAbrir }: { evento: EventoApi; onAbrir: (evento
                 {premio ? (
                     <span className="evento-card-premio">
                         <IconeTrofeu />
-                        {premio.posicao}º | {premio.valor}
+                        {premio.posicao}º | {valorPremio || premio.descricao || 'Premiação'}
                     </span>
                 ) : (
                     <span>Sem premiação</span>
@@ -460,7 +470,6 @@ export function Eventos() {
     const [respostas, setRespostas] = useState<Record<string, string>>({})
     const [novoComentario, setNovoComentario] = useState('')
     const [editorAberto, setEditorAberto] = useState(false)
-    const [procurandoEquipe, setProcurandoEquipe] = useState<Set<string>>(() => new Set())
     const [agora, setAgora] = useState(() => Date.now())
 
     const [jogos, setJogos] = useState<Record<string, ConteudoApi[]>>({})
@@ -614,6 +623,11 @@ export function Eventos() {
 
     const atual = selecionado ?? ultimoEvento
     const atualId = atual?.id
+    const inscricoesDoEventoAbertas = !!atual && inscricoesAbertas(atual)
+    const cronogramaAtual = [...(atual?.cronograma ?? [])]
+    if (atual?.dataPremiacao && !cronogramaAtual.some((etapa) => normalizarTexto(etapa.titulo).includes('resultado'))) {
+        cronogramaAtual.push({ titulo: 'Data do resultado', periodo: atual.dataPremiacao })
+    }
 
     useEffect(() => {
         if (!selecionado) return
@@ -744,21 +758,6 @@ export function Eventos() {
         setEditorAberto(true)
         comentariosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         window.setTimeout(() => editorRef.current?.focus(), 250)
-    }
-
-    const alternarProcurando = (evento: EventoApi) => {
-        const ativo = procurandoEquipe.has(evento.id)
-
-        setProcurandoEquipe((anterior) => {
-            const proximo = new Set(anterior)
-            if (ativo) proximo.delete(evento.id)
-            else proximo.add(evento.id)
-            return proximo
-        })
-
-        setAviso(ativo
-            ? `Perfil de "procurando equipe" desativado em ${evento.titulo}.`
-            : `Perfil de "procurando equipe" ativado em ${evento.titulo}.`)
     }
 
     const limparFiltros = () => {
@@ -997,9 +996,12 @@ export function Eventos() {
                                             placeholder="Descrição da premiação"
                                         />
                                         <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
                                             value={novoEvento.premioValor}
                                             onChange={(event) => setNovoEvento((atual) => ({ ...atual, premioValor: event.target.value }))}
-                                            placeholder="Valor ou prêmio"
+                                            placeholder="Valor em reais"
                                         />
                                     </div>
                                 </div>
@@ -1159,7 +1161,11 @@ export function Eventos() {
                             <strong className="evento-detalhe-dev">{atual.desenvolvedor}</strong>
                             <span className="evento-detalhe-handle">{handleDe(atual.desenvolvedor)}</span>
 
-                            {atual.tema && <p className="evento-tema">{atual.tema}</p>}
+                            {!temaRevelado(atual) ? (
+                                <p className="evento-tema">O tema será revelado ao final do período de inscrições.</p>
+                            ) : atual.tema ? (
+                                <p className="evento-tema">Tema: {atual.tema}</p>
+                            ) : null}
 
                             <section className="evento-detalhe-secao">
                                 <h3>Descrição</h3>
@@ -1177,7 +1183,7 @@ export function Eventos() {
                                             >
                                                 <span className="evento-premio-posicao">{premio.posicao}</span>
                                                 {premio.dinheiro && (
-                                                    <span className="evento-premio-info">R$ {premio.dinheiro}</span>
+                                                    <span className="evento-premio-info">{formatarMoeda(premio.dinheiro)}</span>
                                                 )}
                                                 {premio.premio && (
                                                     <span className="evento-premio-info" title={premio.premio}>
@@ -1190,16 +1196,17 @@ export function Eventos() {
                                 </section>
                             )}
 
-                            {atual.cronograma && atual.cronograma.length > 0 && (
+                            {cronogramaAtual.length > 0 && (
                                 <section className="evento-detalhe-secao">
                                     <h3>Cronograma</h3>
 
                                     <div className="evento-cronograma">
-                                        {atual.cronograma.map((etapa) => {
+                                        {cronogramaAtual.map((etapa) => {
                                             const [inicio, fim] = partesPeriodoEvento(etapa.periodo)
-                                            const isResultado = etapa.titulo === 'Data do resultado'
+                                            const isResultado = normalizarTexto(etapa.titulo).includes('resultado')
+                                            const inicioExibido = isResultado && atual.dataPremiacao ? atual.dataPremiacao : inicio
                                             const status = isResultado
-                                                ? (agora > new Date(`${inicio}T23:59:59`).getTime() ? 'Encerrado' : '-')
+                                                ? statusResultadoEvento(inicioExibido, agora)
                                                 : statusPeriodoEvento(inicio, fim, agora)
 
                                             return (
@@ -1212,7 +1219,7 @@ export function Eventos() {
                                                     <div className="evento-campo">
                                                         <span>{etapa.titulo}:</span>
                                                         <div className={`evento-campo-duplo ${isResultado ? 'is-unico' : ''}`}>
-                                                            <div className="evento-campo-box">{formatarDataHoraEvento(inicio)}</div>
+                                                            <div className="evento-campo-box">{formatarDataHoraEvento(inicioExibido)}</div>
                                                             {!isResultado && <div className="evento-campo-box">{formatarDataHoraEvento(fim)}</div>}
                                                         </div>
                                                     </div>
@@ -1238,12 +1245,13 @@ export function Eventos() {
                                 <button
                                     type="button"
                                     className="evento-acao is-primaria"
+                                    disabled={!inscricoesDoEventoAbertas}
                                     onClick={() => {
                                         setSelecionado(null)
                                         navigate(`/eventos/${atual.id}/inscricao`)
                                     }}
                                 >
-                                    Inscrever equipe
+                                    {inscricoesDoEventoAbertas ? 'Inscrever equipe' : 'Inscrições encerradas'}
                                 </button>
 
                                 <button
@@ -1259,11 +1267,10 @@ export function Eventos() {
 
                                 <button
                                     type="button"
-                                    className={`evento-acao is-secundaria ${procurandoEquipe.has(atual.id) ? 'is-ativo' : ''}`}
-                                    onClick={() => alternarProcurando(atual)}
-                                    aria-pressed={procurandoEquipe.has(atual.id)}
+                                    className="evento-acao is-secundaria"
+                                    onClick={() => navigate(`/eventos/${atual.id}/procurando-equipe`)}
                                 >
-                                    {procurandoEquipe.has(atual.id) ? 'Procurando equipe ✓' : 'Procurando equipe'}
+                                    Procurando equipe
                                 </button>
                             </div>
 

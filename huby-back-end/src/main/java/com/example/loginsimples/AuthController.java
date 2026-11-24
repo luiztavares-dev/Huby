@@ -30,6 +30,9 @@ public class AuthController {
     @Autowired
     private EquipeRepository equipeRepository;
 
+    @Autowired
+    private EventoService eventoService;
+
     public record AtividadesPerfilDTO(List<Conteudo> criados,
                                       List<Conteudo> publicados,
                                       List<Conteudo> participados) {
@@ -154,7 +157,8 @@ public class AuthController {
                                 Comparator.nullsLast(Comparator.reverseOrder())))
                         .toList();
 
-        return ResponseEntity.ok(new AtividadesPerfilDTO(criados, publicados, participados));
+        return ResponseEntity.ok(new AtividadesPerfilDTO(
+                eventoService.apresentar(criados), publicados, eventoService.apresentar(participados)));
     }
 
     private boolean participacaoConfirmada(Equipe equipe, String usuarioId, String username) {

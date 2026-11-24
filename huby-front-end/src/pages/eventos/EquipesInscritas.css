@@ -1,25 +1,41 @@
 /* =========================
    EQUIPES INSCRITAS
+   Mesma linguagem visual de CriarEvento
 ========================= */
 
 .equipes-inscritas {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    --equipes-linha: color-mix(in srgb, var(--gray3) 42%, var(--gray1));
+    --equipes-campo: color-mix(in srgb, var(--gray1) 90%, var(--text1) 10%);
+    --equipes-campo-foco: color-mix(in srgb, var(--gray1) 87%, var(--text1) 13%);
+    --equipes-botao: color-mix(in srgb, var(--gray1) 85%, var(--text1) 15%);
+    --equipes-placeholder: color-mix(in srgb, var(--gray2) 72%, var(--gray1));
+    --equipes-erro: color-mix(in srgb, var(--pink) 75%, var(--text1));
+    --equipes-modal-padding: 24px;
+
+    box-sizing: border-box;
     width: 100%;
     min-height: 100vh;
-    padding: 0 20px 80px;
-    background-color: var(--gray1);
+    padding: 0 24px 72px;
+    background: var(--gray1);
     color: var(--text1);
 }
 
 .equipes-inscritas > * {
     width: 100%;
-    max-width: 460px;
+    max-width: 760px;
+    margin-right: auto;
+    margin-left: auto;
 }
 
-.equipes-inscritas button {
+.equipes-inscritas button,
+.equipes-inscritas input,
+.equipes-inscritas textarea {
     font-family: inherit;
+}
+
+.equipes-inscritas button:focus-visible {
+    outline: 2px solid var(--text1);
+    outline-offset: 2px;
 }
 
 /* Topo */
@@ -27,65 +43,92 @@
 .equipes-topo {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-top: 18px;
-    margin-bottom: 12px;
-    color: #9a9a9a;
-    font-size: 0.8rem;
+    gap: 10px;
+    max-width: none;
+    height: 64px;
+    border-bottom: 1px solid var(--equipes-linha);
+    color: var(--text1);
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
 }
 
 .equipes-voltar {
-    width: 22px;
-    height: 22px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
     padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--pink);
-    font-size: 1.2rem;
+    border: 1px solid color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--gray1) 92%, var(--text1) 8%);
+    color: var(--text1);
+    font-size: 1.35rem;
     line-height: 1;
     cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .equipes-voltar:hover {
-    background-color: rgba(250, 41, 95, 0.12);
+    border-color: var(--pink);
+    background: var(--equipes-botao);
 }
 
-/* Faixa rosa do evento */
+/* Título e tags do evento */
 
 .equipes-faixa {
     display: flex;
-    flex-direction: column;
+    align-items: stretch;
     gap: 10px;
-    padding: 16px 18px;
-    background-color: var(--pink);
+    margin-top: 12px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .equipes-faixa h1 {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    min-height: 58px;
     margin: 0;
-    max-width: 300px;
+    padding: 10px 16px;
+    border-radius: 3px;
+    background: var(--pink);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--pink) 10%, transparent);
     color: var(--white);
     font-size: 1.05rem;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
 .equipes-tags {
     display: flex;
+    flex: 0 0 190px;
     flex-wrap: wrap;
-    gap: 8px;
+    align-content: center;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 58px;
+    padding: 8px 10px;
+    border: 1px solid color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--gray1) 92%, var(--text1) 8%);
 }
 
 .equipes-tags span {
-    padding: 3px 11px;
+    padding: 4px 8px;
+    border: 1px solid var(--gray3);
     border-radius: 999px;
-    background-color: var(--white);
-    color: var(--pink);
-    font-size: 0.55rem;
+    color: var(--text1);
+    font-size: 0.56rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
     text-transform: uppercase;
 }
 
@@ -94,19 +137,19 @@
 .equipes-aviso,
 .equipes-erro-acao {
     margin-top: 14px;
-    padding: 9px 12px;
+    padding: 10px 12px;
     border-left: 3px solid var(--pink);
-    border-radius: 4px;
-    background-color: rgba(250, 41, 95, 0.1);
-    color: #ffd2de;
-    font-size: 0.72rem;
-    line-height: 1.45;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--pink) 12%, var(--gray1));
+    color: var(--text1);
+    font-size: 0.74rem;
+    line-height: 1.5;
 }
 
 .equipes-erro-acao {
-    border-left-color: #ff5b86;
-    background-color: rgba(250, 41, 95, 0.16);
-    color: #ffb3c7;
+    border-left-color: var(--equipes-erro);
+    background: color-mix(in srgb, var(--pink) 16%, var(--gray1));
+    color: var(--equipes-erro);
 }
 
 /* Lista de equipes */
@@ -115,35 +158,49 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    width: 82% !important;
-    max-width: 378px !important;
-    margin-top: 32px;
+    width: 100%;
+    max-width: 760px;
+    margin-top: 24px;
 }
 
 .equipe-card {
-    border: 1px solid #2f2f2f;
-    border-radius: 8px;
-    background-color: var(--gray1);
+    border: 1px solid var(--equipes-linha);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--gray1) 97%, var(--text1) 3%);
     overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.equipe-card:hover,
+.equipe-card.is-expandida {
+    border-color: var(--pink);
 }
 
 .equipe-card-topo {
     display: block;
     width: 100%;
     padding: 0;
-    border: none;
+    border: 0;
     background: transparent;
     color: inherit;
     text-align: left;
     cursor: pointer;
 }
 
+.equipe-card-topo:focus-visible {
+    outline: 2px solid var(--text1);
+    outline-offset: -3px;
+}
+
 .equipe-card-capa {
     position: relative;
     display: block;
     width: 100%;
-    aspect-ratio: 3.3 / 1;
-    background-color: #1b1b1b;
+    height: 190px;
+    border-bottom: 1px solid var(--equipes-linha);
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--pink) 5%, transparent), transparent 45%),
+        var(--equipes-campo);
 }
 
 .equipe-card-capa > img {
@@ -157,20 +214,23 @@
     display: block;
     width: 100%;
     height: 100%;
-    background: linear-gradient(100deg, #191919 30%, #242424 50%, #191919 70%);
+    background:
+        linear-gradient(110deg, var(--equipes-campo) 30%, var(--equipes-campo-foco) 50%, var(--equipes-campo) 70%);
+    background-size: 220% 100%;
 }
 
 .equipe-card-avatar {
     position: absolute;
     left: 16px;
-    bottom: -38px;
+    bottom: -26px;
     display: grid;
     place-items: center;
-    width: 64px;
-    height: 64px;
-    border: 3px solid var(--gray1);
+    width: 62px;
+    height: 62px;
+    border: 3px solid var(--pink);
     border-radius: 50%;
-    background-color: #242424;
+    background: var(--gray1);
+    color: var(--text3);
     overflow: hidden;
 }
 
@@ -185,7 +245,7 @@
     display: block;
     width: 70%;
     height: 70%;
-    color: #6b6b6b;
+    color: var(--text3);
 }
 
 .equipe-card-faixa {
@@ -193,8 +253,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    min-height: 46px;
-    padding: 11px 14px 11px 92px;
+    min-height: 58px;
+    padding: 11px 14px 11px 94px;
 }
 
 .equipe-card-info {
@@ -207,16 +267,18 @@
 .equipe-card-info strong {
     overflow: hidden;
     color: var(--text1);
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     font-weight: 800;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
 .equipe-card-info > span {
-    color: #9a9a9a;
-    font-size: 0.6rem;
+    overflow: hidden;
+    color: var(--text2);
+    font-size: 0.64rem;
     white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .equipe-card-info > span.is-procurando {
@@ -238,12 +300,13 @@
 .equipes-mini {
     display: grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     margin-left: -8px;
     border: 2px solid var(--gray1);
     border-radius: 50%;
-    background-color: #242424;
+    background: var(--equipes-campo);
+    color: var(--text3);
     overflow: hidden;
 }
 
@@ -261,17 +324,17 @@
 .equipes-mini .equipes-avatar-neutro {
     width: 68%;
     height: 68%;
-    color: #6b6b6b;
+    color: var(--text3);
 }
 
 .equipe-card-seta {
     display: flex;
-    color: #c4c4c4;
+    color: var(--text2);
 }
 
 .equipe-card-seta svg {
-    width: 13px;
-    height: 13px;
+    width: 16px;
+    height: 16px;
     transition: transform 0.2s ease;
 }
 
@@ -285,49 +348,44 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 10px 16px 4px 18px;
+    padding: 10px 16px 8px;
+    border-top: 1px solid var(--equipes-linha);
 }
 
 .equipe-integrante {
     display: grid;
-    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
     align-items: center;
     gap: 10px;
     width: 100%;
-    min-height: 34px;
-    padding: 0;
-    border: none;
-    border-radius: 4px;
+    min-height: 40px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 3px;
     background: transparent;
     color: inherit;
-    font-family: inherit;
     text-align: left;
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
 
 .equipe-integrante:hover:not(:disabled) {
-    background-color: rgba(255, 255, 255, 0.05);
-    width: 100%;
-    padding: 0 4px;
+    background: color-mix(in srgb, var(--pink) 10%, transparent);
 }
 
 .equipe-integrante:disabled {
     cursor: default;
-}
-
-.equipe-integrante:focus-visible {
-    outline: 1px solid var(--pink);
-    outline-offset: 1px;
+    opacity: 0.72;
 }
 
 .equipe-integrante-avatar {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background-color: #242424;
+    background: var(--equipes-campo);
+    color: var(--text3);
     overflow: hidden;
 }
 
@@ -341,13 +399,13 @@
 .equipe-integrante-avatar .equipes-avatar-neutro {
     width: 70%;
     height: 70%;
-    color: #6b6b6b;
+    color: var(--text3);
 }
 
 .equipe-integrante-id {
     overflow: hidden;
     color: var(--pink);
-    font-size: 0.66rem;
+    font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.2px;
     white-space: nowrap;
@@ -355,35 +413,40 @@
 }
 
 .equipe-integrante-funcao {
-    color: #e8e8e8;
-    font-size: 0.6rem;
+    color: var(--text2);
+    font-size: 0.66rem;
     text-align: right;
 }
 
 .equipe-integrantes-vazio {
     margin: 4px 0;
     color: var(--text2);
-    font-size: 0.62rem;
+    font-size: 0.72rem;
+    line-height: 1.5;
 }
 
-/* Botão de pedido */
+/* Botões de pedido e entrega */
 
 .equipe-card-pedido {
     display: block;
     width: calc(100% - 28px);
-    height: 32px;
+    height: 38px;
     margin: 12px 14px 14px;
-    padding: 0;
-    border: none;
-    border-radius: 4px;
-    background-color: var(--pink);
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--pink);
     color: var(--white);
-    font-size: 0.62rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.2px;
     text-transform: uppercase;
     cursor: pointer;
     transition: filter 0.2s ease;
+}
+
+.equipe-card-pedido + .equipe-card-pedido {
+    margin-top: 0;
 }
 
 .equipe-card-pedido:hover:not(:disabled) {
@@ -396,7 +459,8 @@
 }
 
 .equipe-card-pedido.is-enviado {
-    background-color: var(--gray3);
+    background: var(--equipes-botao);
+    color: var(--text1);
     cursor: default;
     opacity: 1;
 }
@@ -412,19 +476,23 @@
 
 .equipes-esqueleto-faixa,
 .equipes-esqueleto-card {
-    border-radius: 6px;
-    background: linear-gradient(100deg, #1a1a1a 30%, #242424 50%, #1a1a1a 70%);
+    border-radius: 3px;
+    background: linear-gradient(
+        100deg,
+        var(--equipes-campo) 30%,
+        var(--equipes-campo-foco) 50%,
+        var(--equipes-campo) 70%
+    );
     background-size: 220% 100%;
     animation: equipes-pulso 1.4s ease-in-out infinite;
 }
 
 .equipes-esqueleto-faixa {
-    height: 78px;
+    height: 58px;
 }
 
 .equipes-esqueleto-card {
-    height: 190px;
-    border-radius: 8px;
+    height: 250px;
 }
 
 @keyframes equipes-pulso {
@@ -439,8 +507,8 @@
     gap: 12px;
     margin-top: 44px;
     padding: 36px 24px;
-    border: 1px dashed var(--gray3);
-    border-radius: 8px;
+    border: 1px dashed color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 3px;
     color: var(--text2);
     text-align: center;
 }
@@ -448,25 +516,30 @@
 .equipes-estado p {
     margin: 0;
     font-size: 0.82rem;
+    line-height: 1.5;
 }
 
 .equipes-estado button {
-    height: 32px;
-    padding: 0 16px;
-    border: none;
+    height: 38px;
+    padding: 0 18px;
+    border: 1px solid var(--pink);
     border-radius: 999px;
-    background-color: var(--pink);
+    background: var(--pink);
     color: var(--white);
-    font-size: 0.66rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.2px;
     text-transform: uppercase;
     cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.equipes-estado button:hover {
+    filter: brightness(1.08);
 }
 
 .equipes-estado button.is-secundaria {
-    border: 1px solid var(--pink);
-    background-color: transparent;
+    background: transparent;
     color: var(--pink);
 }
 
@@ -474,22 +547,120 @@
 
 @media (max-width: 600px) {
     .equipes-inscritas {
-        padding: 0 14px 64px;
+        padding: 0 14px 56px;
     }
 
+    .equipe-card-capa {
+        height: 150px;
+    }
+
+    .equipes-esqueleto-card {
+        height: 210px;
+    }
+}
+
+@media (max-width: 520px) {
     .equipes-faixa {
-        padding: 14px;
+        flex-direction: column;
+        gap: 8px;
     }
 
-    .equipes-faixa h1 {
-        font-size: 0.95rem;
+    .equipes-tags {
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: 58px;
     }
 
     .equipes-lista {
-        width: 84% !important;
-        max-width: none !important;
+        margin-top: 20px;
     }
 }
+
+@media (max-width: 420px) {
+    .equipes-inscritas {
+        --equipes-modal-padding: 18px;
+        padding: 0 14px 48px;
+    }
+
+    .equipe-card-avatar {
+        left: 12px;
+        bottom: -24px;
+        width: 56px;
+        height: 56px;
+    }
+
+    .equipe-card-faixa {
+        gap: 8px;
+        padding-right: 10px;
+        padding-left: 82px;
+    }
+
+    .equipe-card-info strong {
+        font-size: 0.82rem;
+    }
+
+    .equipe-card-info > span {
+        font-size: 0.58rem;
+    }
+
+    .equipe-card-lado {
+        gap: 6px;
+    }
+
+    .equipes-mini {
+        width: 20px;
+        height: 20px;
+        margin-left: -7px;
+    }
+
+    .equipe-card-seta svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .equipe-card-integrantes {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .equipe-integrante {
+        grid-template-columns: 26px minmax(0, 1fr) auto;
+        gap: 8px;
+        padding: 0 6px;
+    }
+
+    .equipe-integrante-avatar {
+        width: 26px;
+        height: 26px;
+    }
+
+    .equipe-integrante-id {
+        font-size: 0.66rem;
+    }
+
+    .equipe-integrante-funcao {
+        font-size: 0.6rem;
+    }
+
+    .equipe-card-pedido {
+        width: calc(100% - 24px);
+        margin: 10px 12px 12px;
+    }
+
+    .equipes-estado {
+        padding: 28px 18px;
+    }
+
+    .equipe-entrega-acoes {
+        flex-direction: column-reverse;
+    }
+
+    .equipe-entrega-acoes button {
+        width: 100%;
+    }
+}
+
+/* Modal de entrega */
 
 .equipe-entrega-fundo {
     position: fixed;
@@ -497,29 +668,36 @@
     z-index: 1000;
     display: grid;
     place-items: center;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 16px;
-    background: rgba(0, 0, 0, 0.72);
+    background: color-mix(in srgb, var(--gray1) 28%, transparent);
 }
 
 .equipe-entrega {
-    width: min(520px, 100%);
+    width: min(620px, 100%);
+    max-height: calc(100vh - 32px);
     box-sizing: border-box;
-    padding: 20px;
-    border: 1px solid #4a4a4a;
-    border-radius: 4px;
-    background: #171717;
+    padding: var(--equipes-modal-padding);
+    border: 1px solid var(--pink);
+    border-radius: 6px;
+    background: var(--gray1);
     color: var(--text1);
+    overflow-y: auto;
 }
 
 .equipe-entrega h2 {
-    margin: 0 0 14px;
+    margin: 0 0 18px;
     color: var(--pink);
+    font-size: 1.05rem;
+    font-weight: 900;
 }
 
 .equipe-entrega label {
     display: block;
-    margin-top: 10px;
-    font-size: 0.72rem;
+    margin-top: 14px;
+    font-size: 0.78rem;
     font-weight: 800;
 }
 
@@ -527,42 +705,87 @@
 .equipe-entrega textarea {
     width: 100%;
     box-sizing: border-box;
-    margin-top: 5px;
-    border: 1px solid #555;
+    margin-top: 6px;
+    border: 1px solid var(--pink);
     border-radius: 3px;
-    background: #262626;
+    background: var(--equipes-campo);
     color: var(--text1);
-    padding: 10px;
+    outline: none;
+    transition: background-color 0.2s ease;
+}
+
+.equipe-entrega input {
+    height: 40px;
+    padding: 0 10px;
 }
 
 .equipe-entrega textarea {
-    min-height: 90px;
+    min-height: 82px;
+    padding: 9px 10px;
     resize: vertical;
 }
 
+.equipe-entrega input::placeholder,
+.equipe-entrega textarea::placeholder {
+    color: var(--equipes-placeholder);
+    opacity: 1;
+}
+
+.equipe-entrega input:focus,
+.equipe-entrega textarea:focus {
+    background: var(--equipes-campo-foco);
+}
+
 .equipe-entrega-erro {
-    color: #ff8096;
+    margin: 12px 0 0;
+    color: var(--equipes-erro);
     font-size: 0.72rem;
+    line-height: 1.5;
 }
 
 .equipe-entrega-acoes {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: 14px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--equipes-linha);
 }
 
 .equipe-entrega-acoes button {
-    height: 36px;
-    min-width: 90px;
-    border: 1px solid #555;
-    border-radius: 3px;
-    background: #2b2b2b;
-    color: white;
+    height: 38px;
+    min-width: 96px;
+    padding: 0 18px;
+    border: 1px solid color-mix(in srgb, var(--gray3) 82%, var(--gray1));
+    border-radius: 999px;
+    background: var(--equipes-botao);
+    color: var(--text1);
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: filter 0.2s ease, border-color 0.2s ease;
 }
 
 .equipe-entrega-acoes button[type="submit"] {
     border-color: var(--pink);
     background: var(--pink);
-    font-weight: 800;
+    color: var(--white);
+}
+
+.equipe-entrega-acoes button:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+.equipe-entrega-acoes button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .equipes-inscritas *,
+    .equipes-inscritas *::before,
+    .equipes-inscritas *::after {
+        animation: none;
+        transition: none;
+    }
 }

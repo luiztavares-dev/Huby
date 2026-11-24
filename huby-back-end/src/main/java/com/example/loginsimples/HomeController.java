@@ -18,9 +18,11 @@ public class HomeController {
     private static final int LIMITE_POR_CARROSSEL = 10;
 
     private final ConteudoRepository conteudoRepository;
+    private final EventoService eventoService;
 
-    public HomeController(ConteudoRepository conteudoRepository) {
+    public HomeController(ConteudoRepository conteudoRepository, EventoService eventoService) {
         this.conteudoRepository = conteudoRepository;
+        this.eventoService = eventoService;
     }
 
     public record CarrosselDTO(String id, String titulo, String subtitulo, List<Conteudo> itens) {
@@ -31,6 +33,17 @@ public class HomeController {
         List<CarrosselDTO> carrosseis = new ArrayList<>();
         List<Conteudo> jogos = conteudoRepository
                 .findByTipoOrderByRelevanciaDescNotaDesc(TipoConteudo.JOGO);
+        List<Conteudo> gameJams = limitar(conteudoRepository
+                .findByTipoOrderByDataInicioDesc(TipoConteudo.GAME_JAM));
+
+        if (!gameJams.isEmpty()) {
+            carrosseis.add(new CarrosselDTO(
+                    "game-jams",
+                    "Game Jams",
+                    "Inscreva-se, forme sua equipe e crie um jogo",
+                    eventoService.apresentar(gameJams)
+            ));
+        }
 
         Optional<Conteudo> ultimaJam = conteudoRepository.findFirstByTipoOrderByDataFimDesc(TipoConteudo.GAME_JAM);
 

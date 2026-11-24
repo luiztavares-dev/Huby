@@ -8,6 +8,10 @@ public interface EquipeRepository extends MongoRepository<Equipe, String> {
 
     List<Equipe> findByEventoIdOrderByCriadoEmDesc(String eventoId);
 
+    List<Equipe> findByEventoIdAndAguardandoSorteioFalseOrderByCriadoEmDesc(String eventoId);
+
+    List<Equipe> findByEventoIdAndAguardandoSorteioTrueOrderByCriadoEmAsc(String eventoId);
+
     List<Equipe> findByLiderId(String liderId);
 
     List<Equipe> findByIntegrantesNomeUsuarioIgnoreCase(String nomeUsuario);

@@ -10,8 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,10 +34,14 @@ public class EventosController {
 
     private final ConteudoRepository conteudoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EventoService eventoService;
 
-    public EventosController(ConteudoRepository conteudoRepository, UsuarioRepository usuarioRepository) {
+    public EventosController(ConteudoRepository conteudoRepository,
+                             UsuarioRepository usuarioRepository,
+                             EventoService eventoService) {
         this.conteudoRepository = conteudoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.eventoService = eventoService;
     }
 
     public record CriarEventoDTO(
@@ -51,6 +59,13 @@ public class EventosController {
             LocalDate dataInicio,
             LocalDate dataFim,
             LocalDate inscricoesAte,
+            LocalDateTime inscricoesInicio,
+            LocalDateTime inscricoesFim,
+            LocalDateTime desenvolvimentoInicio,
+            LocalDateTime desenvolvimentoFim,
+            LocalDateTime analiseInicio,
+            LocalDateTime analiseFim,
+            LocalDateTime dataPremiacao,
             Integer tamanhoEquipe,
             String modeloEquipe,
             List<String> tags,
@@ -70,15 +85,21 @@ public class EventosController {
 
         List<Conteudo> todos = conteudoRepository.findByTipoInOrderByDataInicioAsc(TIPOS_EVENTO);
 
-        List<Conteudo> comPrazo = conteudoRepository
-                .findByTipoInAndInscricoesAteGreaterThanEqualOrderByInscricoesAteAsc(TIPOS_EVENTO, hoje);
+        List<Conteudo> comPrazo = todos.stream()
+                .filter(PeriodoEvento::inscricoesAbertas)
+                .sorted(Comparator.comparing(PeriodoEvento::fimInscricoes,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
 
         List<Conteudo> inscricoes = completar(comPrazo, todos, LIMITE_INSCRICOES);
         List<Conteudo> destaques = montarDestaques(todos, hoje);
         List<Conteudo> gameJams = limitar(
                 conteudoRepository.findByTipoOrderByDataInicioDesc(TipoConteudo.GAME_JAM), LIMITE_JAMS);
 
-        return new EventosDTO(destaques, inscricoes, gameJams);
+        return new EventosDTO(
+                eventoService.apresentar(destaques),
+                eventoService.apresentar(inscricoes),
+                eventoService.apresentar(gameJams));
     }
 
     @GetMapping("/{id}/jogos")
@@ -103,14 +124,6 @@ public class EventosController {
         if (usuarioRepository.findById(dto.criadorId()).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário criador não encontrado.");
         }
-        if (dto.dataInicio() == null || dto.dataFim() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe as datas de início e término.");
-        }
-        if (dto.dataFim().isBefore(dto.dataInicio())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "A data de término não pode ser anterior à data de início.");
-        }
-
         TipoConteudo tipo;
         try {
             tipo = TipoConteudo.valueOf(dto.tipo() == null ? "GAME_JAM" : dto.tipo().trim().toUpperCase());
@@ -123,7 +136,48 @@ public class EventosController {
         }
 
         String modelo = dto.modeloEquipe() == null ? "COMUM" : dto.modeloEquipe().trim().toUpperCase();
-        if (!List.of("COMUM", "SURPRESA", "INDIVIDUAL").contains(modelo)) modelo = "COMUM";
+        if (!List.of("COMUM", "SURPRESA", "INDIVIDUAL").contains(modelo)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Modelo de equipe inválido. Use COMUM, SURPRESA ou INDIVIDUAL.");
+        }
+
+        int tamanhoEquipe = dto.tamanhoEquipe() == null ? 4 : dto.tamanhoEquipe();
+        if (tamanhoEquipe < 2 || tamanhoEquipe > 30) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O tamanho da equipe deve estar entre 2 e 30 integrantes.");
+        }
+
+        LocalDateTime inscricoesInicio = dto.inscricoesInicio();
+        LocalDateTime inscricoesFim = dto.inscricoesFim() != null
+                ? dto.inscricoesFim()
+                : dto.inscricoesAte() == null ? null : dto.inscricoesAte().atTime(LocalTime.MAX);
+        LocalDateTime desenvolvimentoInicio = dto.desenvolvimentoInicio() != null
+                ? dto.desenvolvimentoInicio()
+                : dto.dataInicio() == null ? null : dto.dataInicio().atStartOfDay();
+        LocalDateTime desenvolvimentoFim = dto.desenvolvimentoFim() != null
+                ? dto.desenvolvimentoFim()
+                : dto.dataFim() == null ? null : dto.dataFim().atTime(LocalTime.MAX);
+        if (inscricoesFim == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe a data e o horário de término das inscrições.");
+        }
+        if (desenvolvimentoInicio == null || desenvolvimentoFim == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe as datas e os horários de início e término do desenvolvimento.");
+        }
+        validarPeriodo(inscricoesInicio, inscricoesFim, "inscrição");
+        validarPeriodo(desenvolvimentoInicio, desenvolvimentoFim, "desenvolvimento");
+        validarPeriodo(dto.analiseInicio(), dto.analiseFim(), "análise");
+        if (dto.inscricoesFim() != null || dto.desenvolvimentoInicio() != null) {
+            validarOrdem(inscricoesFim, desenvolvimentoInicio,
+                    "O desenvolvimento deve começar após as inscrições.");
+        }
+        if (dto.desenvolvimentoFim() != null || dto.analiseInicio() != null) {
+            validarOrdem(desenvolvimentoFim, dto.analiseInicio(),
+                    "A análise deve começar após o desenvolvimento.");
+        }
+        LocalDateTime fimAnalise = dto.analiseFim() != null ? dto.analiseFim() : dto.analiseInicio();
+        validarOrdem(fimAnalise, dto.dataPremiacao(), "A premiação deve ocorrer após a análise.");
 
         Conteudo evento = new Conteudo();
         evento.setTipo(tipo);
@@ -139,18 +193,64 @@ public class EventosController {
         evento.setTipoPremiacao(dto.tipoPremiacao() == null ? "SEM_PREMIACAO" : dto.tipoPremiacao().trim());
         evento.setContatos(dto.contatos() == null ? new ArrayList<>() : dto.contatos());
         evento.setDataPublicacao(LocalDate.now());
-        evento.setDataInicio(dto.dataInicio());
-        evento.setDataFim(dto.dataFim());
-        evento.setInscricoesAte(dto.inscricoesAte());
-        evento.setTamanhoEquipe(dto.tamanhoEquipe() == null ? 4 : dto.tamanhoEquipe());
+        evento.setDataInicio(PeriodoEvento.dataLegacy(desenvolvimentoInicio));
+        evento.setDataFim(PeriodoEvento.dataLegacy(desenvolvimentoFim));
+        evento.setInscricoesAte(PeriodoEvento.dataLegacy(inscricoesFim));
+        evento.setInscricoesInicio(inscricoesInicio);
+        evento.setInscricoesFim(inscricoesFim);
+        evento.setDesenvolvimentoInicio(desenvolvimentoInicio);
+        evento.setDesenvolvimentoFim(desenvolvimentoFim);
+        evento.setAnaliseInicio(dto.analiseInicio());
+        evento.setAnaliseFim(dto.analiseFim());
+        evento.setDataPremiacao(dto.dataPremiacao());
+        evento.setTamanhoEquipe(tamanhoEquipe);
         evento.setModeloEquipe(modelo);
         evento.setTags(dto.tags() == null ? new ArrayList<>() : dto.tags());
         evento.setRegras(dto.regras() == null ? new ArrayList<>() : dto.regras());
-        evento.setPremios(dto.premios() == null ? new ArrayList<>() : dto.premios());
+        evento.setPremios(normalizarPremios(dto.premios()));
         evento.setCronograma(dto.cronograma() == null ? new ArrayList<>() : dto.cronograma());
         evento.setParticipantes(0);
         evento.setEquipesInscritas(0);
-        return conteudoRepository.save(evento);
+        evento.setSorteioRealizado(false);
+        return eventoService.apresentar(conteudoRepository.save(evento));
+    }
+
+    private void validarPeriodo(LocalDateTime inicio, LocalDateTime fim, String nome) {
+        if (inicio != null && fim != null && fim.isBefore(inicio)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O término do período de " + nome + " não pode ser anterior ao início.");
+        }
+    }
+
+    private void validarOrdem(LocalDateTime anterior, LocalDateTime proximo, String mensagem) {
+        if (anterior != null && proximo != null && proximo.isBefore(anterior)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, mensagem);
+        }
+    }
+
+    private List<Premio> normalizarPremios(List<Premio> premios) {
+        if (premios == null) return new ArrayList<>();
+
+        List<Premio> normalizados = new ArrayList<>();
+        for (Premio premio : premios) {
+            if (premio == null) continue;
+
+            String valor = premio.getValor() == null ? "" : premio.getValor().trim();
+            if (!valor.isEmpty()) {
+                if (!valor.matches("\\d+(?:\\.\\d{1,2})?")) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Os valores em dinheiro devem conter somente números e até duas casas decimais.");
+                }
+                try {
+                    premio.setValor(new BigDecimal(valor).toPlainString());
+                } catch (NumberFormatException ex) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Informe um valor numérico válido para o prêmio.");
+                }
+            }
+            normalizados.add(premio);
+        }
+        return normalizados;
     }
 
     /**

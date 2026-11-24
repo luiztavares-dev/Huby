@@ -2,6 +2,9 @@ package com.example.loginsimples;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,20 +47,26 @@ public class EquipesController {
     private final FuncaoEquipeRepository funcaoRepository;
     private final UsuarioRepository usuarioRepository;
     private final MensagemRepository mensagemRepository;
+    private final ProcurandoEquipeRepository procurandoEquipeRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final EventoService eventoService;
 
     public EquipesController(ConteudoRepository conteudoRepository,
                              EquipeRepository equipeRepository,
                              FuncaoEquipeRepository funcaoRepository,
                              UsuarioRepository usuarioRepository,
                              MensagemRepository mensagemRepository,
-                             SimpMessagingTemplate messagingTemplate) {
+                             ProcurandoEquipeRepository procurandoEquipeRepository,
+                             SimpMessagingTemplate messagingTemplate,
+                             EventoService eventoService) {
         this.conteudoRepository = conteudoRepository;
         this.equipeRepository = equipeRepository;
         this.funcaoRepository = funcaoRepository;
         this.usuarioRepository = usuarioRepository;
         this.mensagemRepository = mensagemRepository;
+        this.procurandoEquipeRepository = procurandoEquipeRepository;
         this.messagingTemplate = messagingTemplate;
+        this.eventoService = eventoService;
     }
 
     public record IntegranteDTO(String nomeUsuario, String funcao) {
@@ -82,17 +91,21 @@ public class EquipesController {
 
     @GetMapping("/{id}")
     public Conteudo evento(@PathVariable String id) {
-        return conteudoRepository.findById(id)
+        Conteudo evento = conteudoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado."));
+        return eventoService.apresentar(evento);
     }
 
     @GetMapping("/{id}/equipes")
     public List<Equipe> equipes(@PathVariable String id) {
-        return equipeRepository.findByEventoIdOrderByCriadoEmDesc(id);
+        return equipeRepository.findByEventoIdOrderByCriadoEmDesc(id).stream()
+                .filter(equipe -> !Boolean.TRUE.equals(equipe.getAguardandoSorteio()))
+                .toList();
     }
 
     @PostMapping("/{id}/equipes")
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public Equipe inscrever(@PathVariable String id, @RequestBody NovaEquipeDTO dto) {
         Conteudo evento = conteudoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado."));
@@ -102,14 +115,7 @@ public class EquipesController {
                     "Só é possível inscrever equipes em eventos e game jams.");
         }
 
-        LocalDate hoje = LocalDate.now();
-        if (evento.getInscricoesAte() != null && hoje.isAfter(evento.getInscricoesAte())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O prazo de inscrição deste evento terminou.");
-        }
-        if (evento.getDataInicio() != null && hoje.isAfter(evento.getDataInicio())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "As inscrições encerram antes do início da game jam.");
-        }
+        PeriodoEvento.validarInscricoes(evento);
 
         String experiencia = normalizar(dto.experiencia());
         if (!EXPERIENCIAS.contains(experiencia)) {
@@ -129,6 +135,11 @@ public class EquipesController {
                 evento.getTamanhoEquipe() != null ? evento.getTamanhoEquipe() : TAMANHO_PADRAO);
 
         List<IntegranteDTO> integrantesDto = dto.integrantes() == null ? List.of() : dto.integrantes();
+
+        if ("SURPRESA".equals(modelo) && integrantesDto.size() != 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Na equipe surpresa, cada pessoa faz uma inscrição individual.");
+        }
 
         if (integrantesDto.size() < minimo || integrantesDto.size() > maximo) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -169,13 +180,8 @@ public class EquipesController {
         }
 
         for (IntegranteEquipe candidato : integrantes) {
-            boolean jaInscrito = equipeRepository.findByEventoIdOrderByCriadoEmDesc(id).stream()
-                    .anyMatch(equipeExistente -> equipeExistente.getIntegrantes() != null
-                            && equipeExistente.getIntegrantes().stream()
-                            .anyMatch(item -> item != null
-                                    && item.getNomeUsuario() != null
-                                    && item.getNomeUsuario().equalsIgnoreCase(candidato.getNomeUsuario())));
-            if (jaInscrito) {
+            Usuario usuarioCandidato = usuarioRepository.findByUsernameIgnoreCase(candidato.getNomeUsuario());
+            if (usuarioCandidato != null && participaDeOutraEquipe(id, usuarioCandidato, null)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "O usuário @" + candidato.getNomeUsuario() + " já está inscrito neste evento.");
             }
@@ -195,22 +201,29 @@ public class EquipesController {
             }
         } else {
             nome = "SURPRESA".equals(modelo)
-                    ? "Equipe Surpresa - " + integrantes.get(0).getNomeUsuario()
+                    ? "Inscrição Surpresa - " + integrantes.get(0).getNomeUsuario()
                     : integrantes.get(0).getNomeUsuario();
         }
 
-        Usuario lider = null;
+        Usuario liderSelecionado = null;
         if (dto.criadorId() != null && !dto.criadorId().isBlank()) {
-            lider = usuarioRepository.findById(dto.criadorId().trim()).orElse(null);
+            liderSelecionado = usuarioRepository.findById(dto.criadorId().trim()).orElse(null);
         }
-        if (lider == null) {
+        if (liderSelecionado == null) {
             for (IntegranteEquipe integrante : integrantes) {
                 Usuario candidato = usuarioRepository.findByUsernameIgnoreCase(integrante.getNomeUsuario());
                 if (candidato != null) {
-                    lider = candidato;
+                    liderSelecionado = candidato;
                     break;
                 }
             }
+        }
+        Usuario lider = liderSelecionado;
+        if (lider == null || lider.getUsername() == null
+                || integrantes.stream().noneMatch(integrante ->
+                        integrante.getNomeUsuario().equalsIgnoreCase(lider.getUsername()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O líder da equipe precisa estar entre os integrantes.");
         }
 
         if (comum) {
@@ -244,28 +257,33 @@ public class EquipesController {
         equipe.setModelo(modelo);
         equipe.setImagem(imagem);
         equipe.setAvatar(avatar);
-        equipe.setAbertaParaSolicitacoes("SURPRESA".equals(modelo)
-                || Boolean.TRUE.equals(dto.abertaParaSolicitacoes()));
+        equipe.setAbertaParaSolicitacoes("COMUM".equals(modelo)
+                && Boolean.TRUE.equals(dto.abertaParaSolicitacoes()));
+        equipe.setAguardandoSorteio("SURPRESA".equals(modelo));
         equipe.setIntegrantes(integrantes);
         equipe.setCriadoEm(LocalDate.now());
 
         Equipe salva = equipeRepository.save(equipe);
+        removerPerfisDeBuscaDosIntegrantes(id, integrantes);
 
         if (comum) {
             enviarConvitesEquipe(salva, evento, lider, integrantes);
         }
 
-        List<String> equipesDoEvento = evento.getEquipes() == null
-                ? new ArrayList<>() : new ArrayList<>(evento.getEquipes());
-        equipesDoEvento.add(nome);
-        evento.setEquipes(equipesDoEvento);
-        evento.setEquipesInscritas((evento.getEquipesInscritas() == null ? 0 : evento.getEquipesInscritas()) + 1);
-        conteudoRepository.save(evento);
+        if (!Boolean.TRUE.equals(salva.getAguardandoSorteio())) {
+            List<String> equipesDoEvento = evento.getEquipes() == null
+                    ? new ArrayList<>() : new ArrayList<>(evento.getEquipes());
+            equipesDoEvento.add(nome);
+            evento.setEquipes(equipesDoEvento);
+            evento.setEquipesInscritas((evento.getEquipesInscritas() == null ? 0 : evento.getEquipesInscritas()) + 1);
+            conteudoRepository.save(evento);
+        }
 
         return salva;
     }
 
     @PostMapping("/{id}/equipes/{equipeId}/entrega")
+    @Transactional
     public Equipe enviarEntrega(@PathVariable String id, @PathVariable String equipeId,
                                 @RequestBody EntregaDTO dto) {
         Conteudo evento = conteudoRepository.findById(id)
@@ -276,25 +294,20 @@ public class EquipesController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipe não encontrada neste evento.");
         }
 
-        LocalDate hoje = LocalDate.now();
-        if (evento.getDataInicio() != null && hoje.isBefore(evento.getDataInicio())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "O envio só pode ser feito após o início da game jam.");
-        }
-        if (evento.getDataFim() != null && hoje.isAfter(evento.getDataFim())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "O prazo de envio desta game jam terminou.");
+        PeriodoEvento.validarEntrega(evento);
+        if (Boolean.TRUE.equals(equipe.getAguardandoSorteio())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Aguarde o sorteio das equipes surpresa antes de enviar o jogo.");
         }
 
+        LocalDate hoje = LocalDate.now();
         String usuarioId = dto == null || dto.usuarioId() == null ? "" : dto.usuarioId().trim();
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                         "Entre na conta que participa da equipe."));
 
         boolean participa = usuario.getUsername() != null
-                && equipe.getIntegrantes() != null
-                && equipe.getIntegrantes().stream().anyMatch(item -> item != null
-                        && item.getNomeUsuario() != null
+                && integrantesAtivos(equipe).stream().anyMatch(item -> item.getNomeUsuario() != null
                         && item.getNomeUsuario().equalsIgnoreCase(usuario.getUsername()));
         if (!participa) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -359,10 +372,12 @@ public class EquipesController {
 
     @PostMapping("/{id}/equipes/{equipeId}/solicitacoes")
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public Mensagem solicitarEntrada(@PathVariable String id, @PathVariable String equipeId,
                                      @RequestBody SolicitacaoEquipeDTO dto) {
         Conteudo evento = conteudoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado."));
+        PeriodoEvento.validarInscricoes(evento);
 
         Equipe equipe = equipeRepository.findById(equipeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipe não encontrada."));
@@ -373,6 +388,10 @@ public class EquipesController {
 
         String modelo = equipe.getModelo() == null || equipe.getModelo().isBlank()
                 ? "COMUM" : equipe.getModelo();
+        if (Boolean.TRUE.equals(equipe.getAguardandoSorteio())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Esta inscrição ainda será sorteada em uma equipe surpresa.");
+        }
         if (!"COMUM".equals(modelo) || !Boolean.TRUE.equals(equipe.getAbertaParaSolicitacoes())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Esta equipe não está aceitando pedidos de entrada.");
@@ -389,17 +408,21 @@ public class EquipesController {
 
         int maximo = Math.max(INTEGRANTES_MIN,
                 evento.getTamanhoEquipe() != null ? evento.getTamanhoEquipe() : TAMANHO_PADRAO);
-        int total = equipe.getIntegrantes() == null ? 0 : equipe.getIntegrantes().size();
+        int total = integrantesAtivos(equipe).size();
         if (total >= maximo) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "A equipe já está completa.");
         }
 
         String username = solicitante.getUsername() == null ? "" : solicitante.getUsername();
-        boolean jaParticipa = equipe.getIntegrantes() != null && equipe.getIntegrantes().stream()
-                .anyMatch(item -> item != null && item.getNomeUsuario() != null
+        boolean jaParticipa = integrantesAtivos(equipe).stream()
+                .anyMatch(item -> item.getNomeUsuario() != null
                         && item.getNomeUsuario().equalsIgnoreCase(username));
         if (jaParticipa) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já faz parte desta equipe.");
+        }
+        if (participaDeOutraEquipe(id, solicitante, equipeId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Você já está inscrito em outra equipe deste evento.");
         }
 
         boolean pendente = mensagemRepository.existsByEquipeIdAndRemetenteIdAndTipoAndConviteStatus(
@@ -432,10 +455,63 @@ public class EquipesController {
         pedido.setDataHora(LocalDateTime.now());
 
         Mensagem salva = mensagemRepository.save(pedido);
-        messagingTemplate.convertAndSend("/topic/mensagens/" + lider.getId(), salva);
-        messagingTemplate.convertAndSend("/topic/mensagens/" + solicitante.getId(), salva);
+        notificarMensagem(salva, lider.getId(), solicitante.getId());
 
         return salva;
+    }
+
+    private void removerPerfisDeBuscaDosIntegrantes(String eventoId, List<IntegranteEquipe> integrantes) {
+        for (IntegranteEquipe integrante : integrantes) {
+            if (integrante == null || integrante.getNomeUsuario() == null) continue;
+            Usuario usuario = usuarioRepository.findByUsernameIgnoreCase(integrante.getNomeUsuario());
+            if (usuario == null || usuario.getId() == null) continue;
+
+            procurandoEquipeRepository.deleteByEventoIdAndUsuarioId(eventoId, usuario.getId());
+            List<Mensagem> pedidos = mensagemRepository
+                    .findByDestinatarioIdAndEventoIdAndTipoAndOrigemAndConviteStatus(
+                            usuario.getId(), eventoId, "PEDIDO_EQUIPE", "PERFIL_BUSCA", "PENDENTE");
+            for (Mensagem pedido : pedidos) {
+                pedido.setConviteStatus("RECUSADO");
+                Mensagem salva = mensagemRepository.save(pedido);
+                notificarMensagem(salva, salva.getDestinatarioId(), salva.getRemetenteId());
+            }
+        }
+    }
+
+    private boolean participaDeOutraEquipe(String eventoId, Usuario usuario, String equipeId) {
+        String username = usuario.getUsername() == null ? "" : usuario.getUsername();
+        return equipeRepository.findByEventoIdOrderByCriadoEmDesc(eventoId).stream()
+                .anyMatch(equipe -> (equipeId == null || !equipeId.equals(equipe.getId()))
+                        && (usuario.getId().equals(equipe.getLiderId())
+                                || integrantesAtivos(equipe).stream().anyMatch(item ->
+                                        item.getNomeUsuario() != null
+                                                && item.getNomeUsuario().equalsIgnoreCase(username))));
+    }
+
+    private List<IntegranteEquipe> integrantesAtivos(Equipe equipe) {
+        if (equipe.getIntegrantes() == null) return List.of();
+        return equipe.getIntegrantes().stream()
+                .filter(integrante -> integrante != null && !"RECUSADO".equals(integrante.getStatus()))
+                .toList();
+    }
+
+    private void notificarMensagem(Mensagem mensagem, String... usuariosIds) {
+        Runnable envio = () -> {
+            for (String usuarioId : usuariosIds) {
+                messagingTemplate.convertAndSend("/topic/mensagens/" + usuarioId, mensagem);
+            }
+        };
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    envio.run();
+                }
+            });
+        } else {
+            envio.run();
+        }
     }
 
     private Usuario resolverLider(Equipe equipe) {
@@ -454,8 +530,8 @@ public class EquipesController {
             if (candidato != null) return candidato;
         }
 
-        for (IntegranteEquipe integrante : equipe.getIntegrantes()) {
-            if (integrante == null || integrante.getNomeUsuario() == null) continue;
+        for (IntegranteEquipe integrante : integrantesAtivos(equipe)) {
+            if (integrante.getNomeUsuario() == null) continue;
             return usuarioRepository.findByUsernameIgnoreCase(integrante.getNomeUsuario());
         }
 
@@ -491,7 +567,7 @@ public class EquipesController {
             convite.setDataHora(LocalDateTime.now());
 
             Mensagem salva = mensagemRepository.save(convite);
-            messagingTemplate.convertAndSend("/topic/mensagens/" + convidado.getId(), salva);
+            notificarMensagem(salva, convidado.getId());
         }
     }
 

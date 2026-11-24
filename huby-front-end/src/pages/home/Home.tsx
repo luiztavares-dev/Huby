@@ -128,6 +128,16 @@ function paraGame(item: ConteudoApi): HomeGame {
         dataPublicacao: item.dataPublicacao,
         dataInicio: item.dataInicio,
         dataFim: item.dataFim,
+        tema: item.tema,
+        inscricoesInicio: item.inscricoesInicio,
+        inscricoesFim: item.inscricoesFim,
+        inscricoesAte: item.inscricoesAte,
+        desenvolvimentoInicio: item.desenvolvimentoInicio,
+        desenvolvimentoFim: item.desenvolvimentoFim,
+        analiseInicio: item.analiseInicio,
+        analiseFim: item.analiseFim,
+        dataPremiacao: item.dataPremiacao,
+        cronograma: item.cronograma,
         participantes: item.participantes,
         local: item.local,
         comentarios: item.comentarios ?? []
@@ -135,7 +145,9 @@ function paraGame(item: ConteudoApi): HomeGame {
 }
 
 function paraSecao(carrossel: CarrosselApi): Secao | null {
-    const jogos = carrossel.itens.filter((item) => item.tipo === 'JOGO')
+    const jogos = carrossel.itens.filter((item) => (
+        item.tipo === 'JOGO' || item.tipo === 'GAME_JAM' || item.tipo === 'EVENTO'
+    ))
 
     if (jogos.length === 0) return null
 

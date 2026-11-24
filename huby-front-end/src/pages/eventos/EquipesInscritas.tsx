@@ -6,6 +6,7 @@ import {
     buscarEquipes,
     buscarEvento,
     buscarMeusPedidos,
+    chavePedidoEquipe,
     enviarEntrega,
     solicitarEntrada,
     type EquipeApi,
@@ -13,6 +14,8 @@ import {
     type ModeloEquipeApi
 } from '../../services/eventos'
 import { buscarUsuarios, type UsuarioResumoApi } from '../../services/usuarios'
+import { inscricoesAbertas, podeEnviarEntrega } from '../../utils/fasesEvento'
+import { useStatusPedidos } from './useStatusPedidos'
 import './EquipesInscritas.css'
 
 const TAMANHO_PADRAO = 4
@@ -43,6 +46,10 @@ function rotuloModelo(modelo?: ModeloEquipeApi | null) {
     if (modelo === 'SURPRESA') return 'Equipe surpresa'
     if (modelo === 'INDIVIDUAL') return 'Individual'
     return 'Equipe comum'
+}
+
+function integrantesAtivos(equipe: EquipeApi) {
+    return (equipe.integrantes ?? []).filter((integrante) => integrante.status !== 'RECUSADO')
 }
 
 function AvatarNeutro({ className = '' }: { className?: string }) {
@@ -77,7 +84,6 @@ export function EquipesInscritas() {
     const [equipes, setEquipes] = useState<EquipeApi[]>([])
     const [usuarios, setUsuarios] = useState<UsuarioResumoApi[]>([])
     const [usuario, setUsuario] = useState<UsuarioLocal>(() => usuarioLogado())
-    const [pedidos, setPedidos] = useState<Set<string>>(() => new Set())
     const [carregando, setCarregando] = useState(true)
     const [erroCarga, setErroCarga] = useState<string | null>(null)
     const [tentativa, setTentativa] = useState(0)
@@ -92,6 +98,7 @@ export function EquipesInscritas() {
     const [entregaLink, setEntregaLink] = useState('')
     const [entregaImagem, setEntregaImagem] = useState('')
     const [erroEntrega, setErroEntrega] = useState<string | null>(null)
+    const { statusPedidos, carregarPedidos, atualizarStatus } = useStatusPedidos(usuario.id, id)
 
     useEffect(() => {
         const controller = new AbortController()
@@ -113,14 +120,9 @@ export function EquipesInscritas() {
                 if (controller.signal.aborted) return
 
                 setEvento(eventoApi)
-                setEquipes(equipesApi)
+                setEquipes(equipesApi.filter((equipe) => equipe.aguardandoSorteio !== true))
                 setUsuarios(usuariosApi)
-                setPedidos(new Set(
-                    pedidosApi
-                        .filter((pedido) => (pedido.conviteStatus ?? 'PENDENTE') === 'PENDENTE')
-                        .map((pedido) => pedido.equipeId ?? '')
-                        .filter(Boolean)
-                ))
+                carregarPedidos(pedidosApi.filter((pedido) => pedido.eventoId === id))
             })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return
@@ -131,7 +133,7 @@ export function EquipesInscritas() {
             })
 
         return () => controller.abort()
-    }, [id, tentativa])
+    }, [id, tentativa, carregarPedidos])
 
     useEffect(() => {
         if (!aviso) return
@@ -159,20 +161,24 @@ export function EquipesInscritas() {
             navigate('/login')
             return
         }
+        if (!evento || !inscricoesAbertas(evento)) {
+            setErroAcao('O prazo para pedir entrada em equipes terminou.')
+            return
+        }
 
         setEnviando(equipe.id)
         setErroAcao(null)
 
         try {
-            await solicitarEntrada(id ?? '', equipe.id, eu.id)
-            setPedidos((atual) => new Set(atual).add(equipe.id))
+            const pedido = await solicitarEntrada(id ?? '', equipe.id, eu.id)
+            atualizarStatus(pedido.equipeId, pedido.destinatarioId, pedido.conviteStatus || 'PENDENTE')
             setAviso(`Pedido enviado para a equipe ${equipe.nome}. Acompanhe a resposta em Mensagens.`)
         } catch (error) {
             const mensagem = error instanceof Error ? error.message : 'Não foi possível enviar o pedido.'
             setErroAcao(mensagem)
 
             if (mensagem.toLowerCase().includes('já enviou')) {
-                setPedidos((atual) => new Set(atual).add(equipe.id))
+                atualizarStatus(equipe.id, equipe.liderId, 'PENDENTE')
             }
         } finally {
             setEnviando(null)
@@ -181,6 +187,7 @@ export function EquipesInscritas() {
 
     const categoria = evento?.tipo === 'GAME_JAM' ? 'Game jam' : 'Evento'
     const modeloEvento = evento?.modeloEquipe ?? 'COMUM'
+    const sorteioPendente = modeloEvento === 'SURPRESA' && evento?.sorteioRealizado !== true
     const capacidade = Math.max(INTEGRANTES_MIN, evento?.tamanhoEquipe ?? TAMANHO_PADRAO)
 
     const idDoUsuario = (username?: string | null) => {
@@ -190,6 +197,10 @@ export function EquipesInscritas() {
     }
 
     const abrirEntrega = (equipe: EquipeApi) => {
+        if (!podeEnviarEntregas(equipe)) {
+            setErroAcao('O envio de jogos só é permitido durante o período de desenvolvimento.')
+            return
+        }
         setEntregaEquipeId(equipe.id)
         setEntregaTitulo(equipe.entregaTitulo || '')
         setEntregaDescricao(equipe.entregaDescricao || '')
@@ -199,22 +210,22 @@ export function EquipesInscritas() {
     }
 
     const podeEnviarEntregas = (equipe: EquipeApi) => {
-        if (!usuario.id) return false
-        const participa = equipe.integrantes.some((item) =>
+        if (!evento || !usuario.id || equipe.aguardandoSorteio) return false
+        const participa = integrantesAtivos(equipe).some((item) =>
             item.nomeUsuario.toLowerCase() === usuario.username.toLowerCase())
         if (!participa) return false
-        const hoje = new Date()
-        const inicio = evento?.dataInicio ? new Date(`${evento.dataInicio}T00:00:00`) : null
-        const fim = evento?.dataFim ? new Date(`${evento.dataFim}T23:59:59`) : null
-        if (inicio && hoje < inicio) return false
-        if (fim && hoje > fim) return false
-        return true
+        return podeEnviarEntrega(evento)
     }
 
     const enviarEntregadEquipa = async (event: FormEvent) => {
         event.preventDefault()
         if (!entregaEquipeId || !usuario.id) {
             setErroEntrega('Entre na sua conta para enviar o jogo.')
+            return
+        }
+        const equipe = equipes.find((item) => item.id === entregaEquipeId)
+        if (!equipe || !podeEnviarEntregas(equipe)) {
+            setErroEntrega('O envio de jogos só é permitido durante o período de desenvolvimento.')
             return
         }
         if (!entregaTitulo.trim() || !entregaLink.trim()) {
@@ -269,6 +280,8 @@ export function EquipesInscritas() {
         )
     }
 
+    const inscricoesEventoAbertas = inscricoesAbertas(evento)
+
     return (
         <main className="equipes-inscritas">
             <header className="equipes-topo">
@@ -302,18 +315,24 @@ export function EquipesInscritas() {
 
             {equipes.length === 0 ? (
                 <div className="equipes-estado">
-                    <p>Nenhuma equipe inscrita neste evento ainda.</p>
-                    <button type="button" onClick={() => navigate(`/eventos/${evento.id}/inscricao`)}>
-                        Inscrever equipe
+                    <p>
+                        {sorteioPendente
+                            ? 'As equipes surpresa serão formadas após o sorteio, ao final do período de inscrições.'
+                            : 'Nenhuma equipe inscrita neste evento ainda.'}
+                    </p>
+                    <button
+                        type="button"
+                        disabled={!inscricoesEventoAbertas}
+                        onClick={() => navigate(`/eventos/${evento.id}/inscricao`)}
+                    >
+                        {inscricoesEventoAbertas ? 'Inscrever equipe' : 'Inscrições encerradas'}
                     </button>
                 </div>
             ) : (
                 <div className="equipes-lista">
                     {equipes.map((equipe) => {
-                        const integrantes = (equipe.integrantes ?? []).filter(
-                            (integrante) => integrante.status !== 'RECUSADO'
-                        )
-                        const total = equipe.integrantes?.length ?? 0
+                        const integrantes = integrantesAtivos(equipe)
+                        const total = integrantes.length
                         const modelo = equipe.modelo ?? 'COMUM'
 
                         const souMembro = !!usuario.username && integrantes.some(
@@ -321,15 +340,23 @@ export function EquipesInscritas() {
                         )
                         const souLider = !!usuario.id && equipe.liderId === usuario.id
 
+                        const temEspaco = total < capacidade
                         const procurando = modelo === 'COMUM'
                             && equipe.abertaParaSolicitacoes
-                            && total < capacidade
-                        const fechada = modelo === 'COMUM' && !equipe.abertaParaSolicitacoes && total < capacidade
+                            && temEspaco
+                            && inscricoesEventoAbertas
+                        const fechada = modelo === 'COMUM'
+                            && temEspaco
+                            && (!equipe.abertaParaSolicitacoes || !inscricoesEventoAbertas)
                         const statusTexto = procurando
                             ? 'Procurando integrante'
                             : fechada ? 'Inscrições encerradas' : 'Equipe completa'
 
-                        const enviado = pedidos.has(equipe.id)
+                        const chavePedido = chavePedidoEquipe(equipe.id, equipe.liderId)
+                        const statusPedido = chavePedido ? statusPedidos.get(chavePedido) : undefined
+                        const enviado = statusPedido === 'PENDENTE'
+                        const aceito = statusPedido === 'ACEITO'
+                        const recusado = statusPedido === 'RECUSADO'
                         const podeEnviar = procurando && !souMembro && !souLider
                         const aberta = expandida === equipe.id
                         const minis = integrantes.slice(0, 3)
@@ -422,20 +449,22 @@ export function EquipesInscritas() {
                                     </div>
                                 )}
 
-                                {enviado && (
+                                {(enviado || aceito) && (
                                     <button type="button" className="equipe-card-pedido is-enviado" disabled>
-                                        Pedido enviado
+                                        {enviado ? 'Pedido enviado' : 'Pedido aceito'}
                                     </button>
                                 )}
 
-                                {!enviado && podeEnviar && (
+                                {!enviado && !aceito && podeEnviar && (
                                     <button
                                         type="button"
                                         className="equipe-card-pedido"
                                         onClick={() => enviarPedido(equipe)}
                                         disabled={enviando === equipe.id}
                                     >
-                                        {enviando === equipe.id ? 'Enviando...' : 'Enviar pedido'}
+                                        {enviando === equipe.id
+                                            ? 'Enviando...'
+                                            : recusado ? 'Enviar novamente' : 'Enviar pedido'}
                                     </button>
                                 )}
 

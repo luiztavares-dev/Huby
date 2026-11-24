@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import type { ComentarioApi, TipoConteudo } from '../../types/conteudo'
+import { formatarDataHoraEvento, temaRevelado } from '../../utils/fasesEvento'
 import { formatarParticipantes, formatarPeriodo } from '../../utils/formato'
 import './GameDetails.css'
 
@@ -22,6 +23,16 @@ export type Game = {
     comentarios: ComentarioApi[]
     dataInicio?: string | null
     dataFim?: string | null
+    tema?: string | null
+    inscricoesInicio?: string | null
+    inscricoesFim?: string | null
+    inscricoesAte?: string | null
+    desenvolvimentoInicio?: string | null
+    desenvolvimentoFim?: string | null
+    analiseInicio?: string | null
+    analiseFim?: string | null
+    dataPremiacao?: string | null
+    cronograma?: Array<{ titulo: string; periodo: string }> | null
     participantes?: number | null
     local?: string | null
 }
@@ -446,6 +457,8 @@ export default function GameDetails({ game, isOpen, onClose, isSaved = false, is
     if (!current) return null
 
     const isJogo = current.tipo === 'JOGO'
+    const ehEvento = current.tipo === 'GAME_JAM' || current.tipo === 'EVENTO'
+    const temaLiberado = ehEvento && temaRevelado(current)
     const preco = Math.max(0, current.preco ?? 0)
     const participantes = formatarParticipantes(current.participantes)
 
@@ -693,6 +706,18 @@ export default function GameDetails({ game, isOpen, onClose, isSaved = false, is
                                     <div>
                                         <dt>Participantes</dt>
                                         <dd>{participantes}</dd>
+                                    </div>
+                                )}
+                                {ehEvento && (current.tema || !temaLiberado) && (
+                                    <div>
+                                        <dt>Tema</dt>
+                                        <dd>{temaLiberado ? current.tema : 'Será revelado após as inscrições'}</dd>
+                                    </div>
+                                )}
+                                {ehEvento && current.dataPremiacao && (
+                                    <div>
+                                        <dt>Premiação</dt>
+                                        <dd>{formatarDataHoraEvento(current.dataPremiacao)}</dd>
                                     </div>
                                 )}
                             </dl>

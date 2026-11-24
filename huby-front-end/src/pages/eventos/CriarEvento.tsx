@@ -43,6 +43,13 @@ function formatarDataHora(valor: string) {
     return hora ? `${data} ${hora}` : data
 }
 
+function normalizarValorMonetario(valor: string): string | null {
+    const texto = valor.trim().replace(',', '.')
+    if (!texto) return ''
+    if (!/^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$/.test(texto)) return null
+    return texto.startsWith('.') ? `0${texto}` : texto
+}
+
 function toIsoComHora(data: Date, hora = '09:00') {
     const ano = data.getFullYear()
     const mes = String(data.getMonth() + 1).padStart(2, '0')
@@ -250,6 +257,7 @@ export function CriarEvento() {
     const [mesPicker, setMesPicker] = useState(() => new Date(2026, 3, 1))
     const [regras, setRegras] = useState('')
     const [modelo, setModelo] = useState<'COMUM' | 'SURPRESA' | 'INDIVIDUAL'>('COMUM')
+    const [tamanhoEquipe, setTamanhoEquipe] = useState(4)
     const [contatos, setContatos] = useState([''])
     const [enviando, setEnviando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
@@ -331,7 +339,7 @@ export function CriarEvento() {
     }
 
     const statusResultado = (dataValor: string) => {
-        const resultado = new Date(`${isoData(dataValor)}T${isoHora(dataValor) || '23:59:59'}`).getTime()
+        const resultado = new Date(dataValor).getTime()
         if (!Number.isFinite(resultado)) return '-'
         return agora > resultado ? 'Encerrado' : '-'
     }
@@ -346,12 +354,48 @@ export function CriarEvento() {
             setErro('Informe o nome da jam.')
             return
         }
+        if (!Number.isInteger(tamanhoEquipe) || tamanhoEquipe < 2 || tamanhoEquipe > 12) {
+            setErro('O tamanho da equipe deve ser um número inteiro entre 2 e 12.')
+            return
+        }
+
+        const periodos = [
+            { nome: 'inscrições', inicio: crono.inscricaoInicio, fim: crono.inscricaoFim },
+            { nome: 'desenvolvimento', inicio: crono.desenvolvimentoInicio, fim: crono.desenvolvimentoFim },
+            { nome: 'análise', inicio: crono.analiseInicio, fim: crono.analiseFim }
+        ]
+        for (const periodo of periodos) {
+            const inicioMs = new Date(periodo.inicio).getTime()
+            const fimMs = new Date(periodo.fim).getTime()
+            if (!Number.isFinite(inicioMs) || !Number.isFinite(fimMs) || inicioMs > fimMs) {
+                setErro(`O período de ${periodo.nome} precisa ter uma data e horário válidos, com início antes do fim.`)
+                return
+            }
+        }
+        for (let indice = 1; indice < periodos.length; indice += 1) {
+            if (new Date(periodos[indice - 1].fim).getTime() > new Date(periodos[indice].inicio).getTime()) {
+                setErro(`O período de ${periodos[indice].nome} não pode começar antes do fim do período anterior.`)
+                return
+            }
+        }
+        const resultadoMs = new Date(crono.resultado).getTime()
+        if (!Number.isFinite(resultadoMs) || resultadoMs < new Date(crono.analiseFim).getTime()) {
+            setErro('A data e o horário do resultado devem ser posteriores ao fim da análise.')
+            return
+        }
+
+        const usaPremioEmDinheiro = tipoPremiacao === 'DINHEIRO' || tipoPremiacao === 'AMBOS'
+        const valoresDinheiro = usaPremioEmDinheiro ? premiosDinheiro.map(normalizarValorMonetario) : []
+        if (valoresDinheiro.some((valor) => valor === null)) {
+            setErro('Informe os prêmios em dinheiro com valores decimais válidos, como 100 ou 100,50.')
+            return
+        }
 
         const premios: Array<{ posicao: number; valor: string; descricao: string }> = []
-        if (tipoPremiacao === 'DINHEIRO' || tipoPremiacao === 'AMBOS') {
-            premiosDinheiro.forEach((valor, indice) => {
-                if (valor.trim()) {
-                    premios.push({ posicao: indice + 1, valor: valor.trim(), descricao: '' })
+        if (usaPremioEmDinheiro) {
+            valoresDinheiro.forEach((valor, indice) => {
+                if (valor) {
+                    premios.push({ posicao: indice + 1, valor, descricao: '' })
                 }
             })
         }
@@ -375,7 +419,14 @@ export function CriarEvento() {
             dataInicio: isoData(crono.desenvolvimentoInicio),
             dataFim: isoData(crono.desenvolvimentoFim),
             inscricoesAte: isoData(crono.inscricaoFim),
-            tamanhoEquipe: 4,
+            inscricoesInicio: crono.inscricaoInicio,
+            inscricoesFim: crono.inscricaoFim,
+            desenvolvimentoInicio: crono.desenvolvimentoInicio,
+            desenvolvimentoFim: crono.desenvolvimentoFim,
+            analiseInicio: crono.analiseInicio,
+            analiseFim: crono.analiseFim,
+            dataPremiacao: crono.resultado,
+            tamanhoEquipe,
             modeloEquipe: modelo,
             tags: [tagEvento],
             regras: regras.split('\n').map((item) => item.trim()).filter(Boolean),
@@ -403,7 +454,6 @@ export function CriarEvento() {
     }
 
     const renderPicker = (chave: CronoKey) => {
-        const somenteData = chave === 'resultado'
         return (
             <div className="criar-jam-datepicker">
                 <div className="criar-jam-calendario">
@@ -433,18 +483,16 @@ export function CriarEvento() {
                         })}
                     </div>
                 </div>
-                {!somenteData && (
-                    <HorasInfinitas
-                        key={chave}
-                        valor={crono[chave]}
-                        aoSelecionar={(hora) => selecionarHora(chave, hora)}
-                    />
-                )}
+                <HorasInfinitas
+                    key={chave}
+                    valor={crono[chave]}
+                    aoSelecionar={(hora) => selecionarHora(chave, hora)}
+                />
             </div>
         )
     }
 
-    const campoCrono = (chave: CronoKey, data: boolean = false) => (
+    const campoCrono = (chave: CronoKey) => (
         <div className="criar-jam-crono-campo-wrap">
             <button
                 type="button"
@@ -458,7 +506,7 @@ export function CriarEvento() {
                     setPicker(picker === chave ? null : chave)
                 }}
             >
-                {data ? formatarData(crono[chave]) : formatarDataHora(crono[chave])}
+                {formatarDataHora(crono[chave])}
             </button>
         </div>
     )
@@ -540,10 +588,13 @@ export function CriarEvento() {
                             <div className={`criar-jam-premio-linha ${tipoPremiacao === 'AMBOS' ? 'is-ambos' : 'is-dinheiro'}`} key={`dinheiro-${indice}`}>
                                 <strong>{indice + 1}</strong>
                                 <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
                                     value={valor}
                                     onChange={(event) => setPremiosDinheiro((lista) => lista.map((item, posicao) =>
                                         posicao === indice ? event.target.value : item))}
-                                    placeholder={tipoPremiacao === 'AMBOS' ? 'R$ 0,00' : 'R$ 0,00'}
+                                    placeholder="R$ 0,00"
                                 />
                                 {tipoPremiacao === 'AMBOS' && (
                                     <input
@@ -641,8 +692,8 @@ export function CriarEvento() {
                             </span>
                         </div>
                         <div>
-                            <strong>Data do resultado:</strong>
-                            {campoCrono('resultado', true)}
+                            <strong>Data e horário do resultado:</strong>
+                            {campoCrono('resultado')}
                         </div>
                     </div>
                     {renderPicker(picker ?? 'inscricaoInicio')}
@@ -666,6 +717,18 @@ export function CriarEvento() {
                         ]}
                     />
                 </div>
+
+                <label className="criar-jam-field">
+                    <span>Tamanho da equipe</span>
+                    <input
+                        type="number"
+                        min="2"
+                        max="12"
+                        step="1"
+                        value={tamanhoEquipe}
+                        onChange={(event) => setTamanhoEquipe(Number(event.target.value))}
+                    />
+                </label>
 
                 <section className="criar-jam-bloco criar-jam-contatos">
                     <h2>Contatos</h2>

@@ -37,4 +37,6 @@ public interface ConteudoRepository extends MongoRepository<Conteudo, String> {
 
     List<Conteudo> findByTipoInAndInscricoesAteGreaterThanEqualOrderByInscricoesAteAsc(
             List<TipoConteudo> tipos, LocalDate data);
+
+    List<Conteudo> findByModeloEquipeAndSorteioRealizadoNot(Boolean sorteioRealizado);
 }

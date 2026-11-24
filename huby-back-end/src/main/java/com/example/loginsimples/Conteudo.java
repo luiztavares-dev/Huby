@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,9 +59,25 @@ public class Conteudo {
 
     /** Modelo de inscrição definido pela organização: COMUM, SURPRESA ou INDIVIDUAL. */
     private String modeloEquipe = "COMUM";
+    private Boolean sorteioRealizado = false;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate inscricoesAte;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime inscricoesInicio;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime inscricoesFim;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime desenvolvimentoInicio;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime desenvolvimentoFim;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime analiseInicio;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime analiseFim;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime dataPremiacao;
 
     private List<Premio> premios = new ArrayList<>();
     private List<EtapaCronograma> cronograma = new ArrayList<>();
@@ -160,8 +177,32 @@ public class Conteudo {
     public String getModeloEquipe() { return modeloEquipe; }
     public void setModeloEquipe(String modeloEquipe) { this.modeloEquipe = modeloEquipe; }
 
+    public Boolean getSorteioRealizado() { return sorteioRealizado; }
+    public void setSorteioRealizado(Boolean sorteioRealizado) { this.sorteioRealizado = sorteioRealizado; }
+
     public LocalDate getInscricoesAte() { return inscricoesAte; }
     public void setInscricoesAte(LocalDate inscricoesAte) { this.inscricoesAte = inscricoesAte; }
+
+    public LocalDateTime getInscricoesInicio() { return inscricoesInicio; }
+    public void setInscricoesInicio(LocalDateTime inscricoesInicio) { this.inscricoesInicio = inscricoesInicio; }
+
+    public LocalDateTime getInscricoesFim() { return inscricoesFim; }
+    public void setInscricoesFim(LocalDateTime inscricoesFim) { this.inscricoesFim = inscricoesFim; }
+
+    public LocalDateTime getDesenvolvimentoInicio() { return desenvolvimentoInicio; }
+    public void setDesenvolvimentoInicio(LocalDateTime desenvolvimentoInicio) { this.desenvolvimentoInicio = desenvolvimentoInicio; }
+
+    public LocalDateTime getDesenvolvimentoFim() { return desenvolvimentoFim; }
+    public void setDesenvolvimentoFim(LocalDateTime desenvolvimentoFim) { this.desenvolvimentoFim = desenvolvimentoFim; }
+
+    public LocalDateTime getAnaliseInicio() { return analiseInicio; }
+    public void setAnaliseInicio(LocalDateTime analiseInicio) { this.analiseInicio = analiseInicio; }
+
+    public LocalDateTime getAnaliseFim() { return analiseFim; }
+    public void setAnaliseFim(LocalDateTime analiseFim) { this.analiseFim = analiseFim; }
+
+    public LocalDateTime getDataPremiacao() { return dataPremiacao; }
+    public void setDataPremiacao(LocalDateTime dataPremiacao) { this.dataPremiacao = dataPremiacao; }
 
     public List<Premio> getPremios() { return premios; }
     public void setPremios(List<Premio> premios) { this.premios = premios; }

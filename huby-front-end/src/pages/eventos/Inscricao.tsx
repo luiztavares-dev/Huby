@@ -14,6 +14,7 @@ import {
 } from '../../services/eventos'
 import { buscarUsuarios, type UsuarioResumoApi } from '../../services/usuarios'
 import { enviarImagemParaCloudinary } from '../../services/uploads'
+import { inscricoesAbertas } from '../../utils/fasesEvento'
 import './Inscricao.css'
 
 type Experiencia = 'INICIANTE' | 'INTERMEDIARIO' | 'AVANCADO'
@@ -175,6 +176,7 @@ export function InscricaoEvento() {
     const modeloAtual = MODELOS.find((item) => item.valor === (evento?.modeloEquipe ?? 'COMUM')) ?? MODELOS[0]
     const modelo = modeloAtual.valor
     const minimoIntegrantes = modelo === 'COMUM' ? INTEGRANTES_MIN : 1
+    const periodoInscricaoAberto = evento ? inscricoesAbertas(evento) : false
 
     const avatarDoGrupo = avatarEquipe
 
@@ -309,6 +311,10 @@ export function InscricaoEvento() {
     const enviar = async (event: FormEvent) => {
         event.preventDefault()
         if (!id || !evento) return
+        if (!inscricoesAbertas(evento)) {
+            setErroForm('As inscrições para este evento não estão abertas no momento.')
+            return
+        }
 
         const erroValidacao = validar()
         if (erroValidacao) {
@@ -366,6 +372,7 @@ export function InscricaoEvento() {
 
     if (equipeCriada) {
         const modeloCriado = MODELOS.find((item) => item.valor === (equipeCriada.modelo ?? modelo))
+        const aguardandoSorteio = modeloCriado?.valor === 'SURPRESA' && equipeCriada.aguardandoSorteio !== false
         const avatarSucesso = equipeCriada.avatar || ''
 
         return (
@@ -392,38 +399,47 @@ export function InscricaoEvento() {
                         </div>
                     )}
 
-                    <h1>Equipe inscrita!</h1>
-                    <p>
-                        <strong>{equipeCriada.nome}</strong> está confirmada em {evento.titulo}.
-                    </p>
+                    <h1>{aguardandoSorteio ? 'Inscrição confirmada!' : 'Equipe inscrita!'}</h1>
+                    {aguardandoSorteio ? (
+                        <p>
+                            Sua inscrição em <strong>{evento.titulo}</strong> foi confirmada. O sorteio da equipe
+                            surpresa ocorrerá ao final do período de inscrições.
+                        </p>
+                    ) : (
+                        <p>
+                            <strong>{equipeCriada.nome}</strong> está confirmada em {evento.titulo}.
+                        </p>
+                    )}
                     {modeloCriado && <p className="inscricao-sucesso-modelo">Modelo: {modeloCriado.titulo}</p>}
 
-                    <ul>
-                        {equipeCriada.integrantes.map((integrante) => (
-                            <li key={integrante.nomeUsuario}>
-                                <span className="inscricao-sucesso-integrante">
-                                    {integrante.avatar
-                                        ? <img src={integrante.avatar} alt="" />
-                                        : <span className="inscricao-sucesso-integrante-neutro"><AvatarNeutro /></span>}
-                                    <span>@{integrante.nomeUsuario}</span>
-                                </span>
-                                <small>
-                                    {integrante.funcao}
-                                    {integrante.status === 'PENDENTE' && ' · convite enviado'}
-                                    {integrante.status === 'RECUSADO' && ' · recusou'}
-                                </small>
-                            </li>
-                        ))}
-                    </ul>
+                    {!aguardandoSorteio && (
+                        <ul>
+                            {equipeCriada.integrantes.map((integrante) => (
+                                <li key={integrante.nomeUsuario}>
+                                    <span className="inscricao-sucesso-integrante">
+                                        {integrante.avatar
+                                            ? <img src={integrante.avatar} alt="" />
+                                            : <span className="inscricao-sucesso-integrante-neutro"><AvatarNeutro /></span>}
+                                        <span>@{integrante.nomeUsuario}</span>
+                                    </span>
+                                    <small>
+                                        {integrante.funcao}
+                                        {integrante.status === 'PENDENTE' && ' · convite enviado'}
+                                        {integrante.status === 'RECUSADO' && ' · recusou'}
+                                    </small>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
 
-                    {equipeCriada.integrantes.some((integrante) => integrante.status === 'PENDENTE') && (
+                    {!aguardandoSorteio && equipeCriada.integrantes.some((integrante) => integrante.status === 'PENDENTE') && (
                         <p className="inscricao-sucesso-convites">
                             Enviamos um convite no chat dos integrantes convidados. Eles entram na equipe somente
                             depois de aceitar.
                         </p>
                     )}
 
-                    {equipeCriada.abertaParaSolicitacoes && (
+                    {!aguardandoSorteio && equipeCriada.abertaParaSolicitacoes && (
                         <p className="inscricao-sucesso-aberta">
                             Sua equipe está aberta para receber solicitações de novos integrantes.
                         </p>
@@ -671,10 +687,15 @@ export function InscricaoEvento() {
                     </div>
                 </div>
 
+                {!periodoInscricaoAberto && (
+                    <p className="inscricao-erro" role="status">As inscrições para este evento não estão abertas no momento.</p>
+                )}
                 {erroForm && <p className="inscricao-erro" role="alert">{erroForm}</p>}
 
-                <button type="submit" className="inscricao-enviar" disabled={enviando}>
-                    {enviando ? 'Inscrevendo...' : 'Confirmar Inscrição'}
+                <button type="submit" className="inscricao-enviar" disabled={enviando || !periodoInscricaoAberto}>
+                    {enviando
+                        ? 'Inscrevendo...'
+                        : periodoInscricaoAberto ? 'Confirmar Inscrição' : 'Inscrições encerradas'}
                 </button>
             </form>
 

@@ -15,5 +15,11 @@ public interface MensagemRepository extends MongoRepository<Mensagem, String> {
     boolean existsByEquipeIdAndRemetenteIdAndTipoAndConviteStatus(
             String equipeId, String remetenteId, String tipo, String conviteStatus);
 
+    boolean existsByEquipeIdAndRemetenteIdAndDestinatarioIdAndTipoAndOrigemAndConviteStatus(
+            String equipeId, String remetenteId, String destinatarioId, String tipo, String origem, String conviteStatus);
+
     List<Mensagem> findByRemetenteIdAndTipoOrderByDataHoraDesc(String remetenteId, String tipo);
+
+    List<Mensagem> findByDestinatarioIdAndEventoIdAndTipoAndOrigemAndConviteStatus(
+            String destinatarioId, String eventoId, String tipo, String origem, String conviteStatus);
 }

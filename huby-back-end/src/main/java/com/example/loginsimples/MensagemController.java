@@ -5,6 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -26,6 +30,9 @@ public class MensagemController {
     private ConteudoRepository conteudoRepository;
 
     @Autowired
+    private ProcurandoEquipeRepository procurandoEquipeRepository;
+
+    @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
     public record RespostaConviteDTO(String usuarioId) {
@@ -35,6 +42,7 @@ public class MensagemController {
     public ResponseEntity<Mensagem> enviarMensagem(@RequestBody Mensagem mensagem) {
         mensagem.setDataHora(LocalDateTime.now());
         mensagem.setTipo("TEXTO");
+        mensagem.setOrigem("EQUIPE");
         mensagem.setEquipeId("");
         mensagem.setEventoId("");
         mensagem.setEventoTitulo("");
@@ -83,12 +91,14 @@ public class MensagemController {
     }
 
     @PostMapping("/{id}/pedido/aceitar")
+    @Transactional
     public ResponseEntity<?> aceitarPedido(@PathVariable String id,
                                            @RequestBody(required = false) RespostaConviteDTO dto) {
         return responderPedido(id, dto, true);
     }
 
     @PostMapping("/{id}/pedido/recusar")
+    @Transactional
     public ResponseEntity<?> recusarPedido(@PathVariable String id,
                                            @RequestBody(required = false) RespostaConviteDTO dto) {
         return responderPedido(id, dto, false);
@@ -115,7 +125,7 @@ public class MensagemController {
 
         if (!dto.usuarioId().equals(pedido.getDestinatarioId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("mensagem", "Este pedido não pertence à sua equipe."));
+                    .body(Map.of("mensagem", "Você não pode responder a este pedido."));
         }
 
         if (!"PENDENTE".equals(pedido.getConviteStatus())) {
@@ -130,60 +140,175 @@ public class MensagemController {
                     .body(Map.of("mensagem", "A equipe deste pedido não existe mais."));
         }
 
-        Usuario solicitante = usuarioRepository.findById(pedido.getRemetenteId()).orElse(null);
-        if (solicitante == null || solicitante.getId() == null) {
+        boolean perfilBusca = "PERFIL_BUSCA".equals(pedido.getOrigem());
+        Usuario remetente = usuarioRepository.findById(pedido.getRemetenteId()).orElse(null);
+        if (remetente == null || remetente.getId() == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("mensagem", "Usuário do pedido não encontrado."));
         }
 
         Equipe equipe = equipeOptional.get();
+        String eventoId = pedido.getEventoId() == null ? "" : pedido.getEventoId();
+        if (!eventoId.equals(equipe.getEventoId())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("mensagem", "A equipe deste pedido pertence a outro evento."));
+        }
+
+        Usuario entrante = remetente;
+        if (perfilBusca) {
+            entrante = usuarioRepository.findById(pedido.getDestinatarioId()).orElse(null);
+            if (entrante == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("mensagem", "Seu perfil não foi encontrado."));
+            }
+            if (!remetente.getId().equals(equipe.getLiderId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("mensagem", "Somente o líder desta equipe pode enviar este pedido."));
+            }
+            if (!"COMUM".equals(equipe.getModelo()) || !Boolean.TRUE.equals(equipe.getAbertaParaSolicitacoes())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("mensagem", "Esta equipe não está mais aceitando integrantes."));
+            }
+            if (procurandoEquipeRepository.findByEventoIdAndUsuarioId(
+                    eventoId, entrante.getId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("mensagem", "Este perfil não está mais procurando equipe."));
+            }
+        }
 
         if (aceitar) {
-            String username = solicitante.getUsername() == null ? "" : solicitante.getUsername();
-            boolean jaParticipa = equipe.getIntegrantes() != null && equipe.getIntegrantes().stream()
-                    .anyMatch(item -> item != null && item.getNomeUsuario() != null
-                            && item.getNomeUsuario().equalsIgnoreCase(username));
+            Conteudo evento = conteudoRepository.findById(eventoId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Evento do pedido não encontrado."));
+            PeriodoEvento.validarInscricoes(evento);
+            if (Boolean.TRUE.equals(equipe.getAguardandoSorteio())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("mensagem", "Aguarde o sorteio das equipes surpresa."));
+            }
 
-            if (!jaParticipa) {
-                Conteudo evento = conteudoRepository.findById(
-                        pedido.getEventoId() == null ? "" : pedido.getEventoId()).orElse(null);
-                int maximo = Math.max(2, evento != null && evento.getTamanhoEquipe() != null
+            String username = entrante.getUsername() == null ? "" : entrante.getUsername();
+            List<IntegranteEquipe> integrantes = equipe.getIntegrantes() == null
+                    ? new ArrayList<>() : new ArrayList<>(equipe.getIntegrantes());
+
+            IntegranteEquipe integranteAtivo = integrantes.stream()
+                    .filter(item -> item != null && !"RECUSADO".equals(item.getStatus())
+                            && item.getNomeUsuario() != null
+                            && item.getNomeUsuario().equalsIgnoreCase(username))
+                    .findFirst()
+                    .orElse(null);
+
+            IntegranteEquipe integrante = integranteAtivo;
+            if (integrante == null) {
+                integrante = integrantes.stream()
+                        .filter(item -> item != null && "RECUSADO".equals(item.getStatus())
+                                && item.getNomeUsuario() != null
+                                && item.getNomeUsuario().equalsIgnoreCase(username))
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            if (integranteAtivo == null) {
+                int maximo = Math.max(2, evento.getTamanhoEquipe() != null
                         ? evento.getTamanhoEquipe() : 4);
-                int total = equipe.getIntegrantes() == null ? 0 : equipe.getIntegrantes().size();
+                int total = (int) integrantes.stream()
+                        .filter(item -> item != null && !"RECUSADO".equals(item.getStatus()))
+                        .count();
 
                 if (total >= maximo) {
                     return ResponseEntity.status(HttpStatus.CONFLICT)
                             .body(Map.of("mensagem", "A equipe já está completa."));
                 }
-
-                String avatar = solicitante.getAvatarUrl() == null ? "" : solicitante.getAvatarUrl().trim();
-                IntegranteEquipe integrante = new IntegranteEquipe(username, "A definir", avatar);
-                integrante.setStatus("CONFIRMADO");
-
-                List<IntegranteEquipe> integrantes = equipe.getIntegrantes() == null
-                        ? new ArrayList<>() : new ArrayList<>(equipe.getIntegrantes());
-                integrantes.add(integrante);
-                equipe.setIntegrantes(integrantes);
-                equipeRepository.save(equipe);
             }
+
+            if (participaDeOutraEquipe(eventoId, entrante, equipe.getId())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("mensagem", "Você já está inscrito em outra equipe deste evento."));
+            }
+
+            String avatar = entrante.getAvatarUrl() == null ? "" : entrante.getAvatarUrl().trim();
+            if (integrante == null) {
+                String funcao = perfilBusca && pedido.getFuncao() != null && !pedido.getFuncao().isBlank()
+                        ? pedido.getFuncao() : "A definir";
+                integrante = new IntegranteEquipe(username, funcao, avatar);
+                integrantes.add(integrante);
+            } else {
+                if (perfilBusca && pedido.getFuncao() != null && !pedido.getFuncao().isBlank()) {
+                    integrante.setFuncao(pedido.getFuncao());
+                }
+                integrante.setAvatar(avatar);
+            }
+
+            integrante.setStatus("CONFIRMADO");
+            equipe.setIntegrantes(integrantes);
+            equipeRepository.save(equipe);
+
+            procurandoEquipeRepository.deleteByEventoIdAndUsuarioId(eventoId, entrante.getId());
+            cancelarPedidosPerfil(eventoId, entrante.getId(), pedido.getId());
         }
 
         pedido.setConviteStatus(aceitar ? "ACEITO" : "RECUSADO");
         Mensagem salva = mensagemRepository.save(pedido);
-
-        messagingTemplate.convertAndSend("/topic/mensagens/" + salva.getDestinatarioId(), salva);
-        messagingTemplate.convertAndSend("/topic/mensagens/" + salva.getRemetenteId(), salva);
+        notificarMensagem(salva);
 
         return ResponseEntity.ok(salva);
     }
 
+    private List<IntegranteEquipe> integrantesAtivos(Equipe equipe) {
+        if (equipe.getIntegrantes() == null) return List.of();
+        return equipe.getIntegrantes().stream()
+                .filter(integrante -> integrante != null && !"RECUSADO".equals(integrante.getStatus()))
+                .toList();
+    }
+
+    private boolean participaDeOutraEquipe(String eventoId, Usuario usuario, String equipeId) {
+        String username = usuario.getUsername() == null ? "" : usuario.getUsername();
+        return equipeRepository.findByEventoIdOrderByCriadoEmDesc(eventoId).stream()
+                .anyMatch(equipe -> !equipeId.equals(equipe.getId())
+                        && (usuario.getId().equals(equipe.getLiderId())
+                                || integrantesAtivos(equipe).stream()
+                                        .anyMatch(item -> item.getNomeUsuario() != null
+                                                && item.getNomeUsuario().equalsIgnoreCase(username))));
+    }
+
+    private void notificarMensagem(Mensagem mensagem) {
+        Runnable envio = () -> {
+            messagingTemplate.convertAndSend("/topic/mensagens/" + mensagem.getDestinatarioId(), mensagem);
+            messagingTemplate.convertAndSend("/topic/mensagens/" + mensagem.getRemetenteId(), mensagem);
+        };
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    envio.run();
+                }
+            });
+        } else {
+            envio.run();
+        }
+    }
+
+    private void cancelarPedidosPerfil(String eventoId, String usuarioId, String idExcluido) {
+        List<Mensagem> pedidos = mensagemRepository
+                .findByDestinatarioIdAndEventoIdAndTipoAndOrigemAndConviteStatus(
+                        usuarioId, eventoId, "PEDIDO_EQUIPE", "PERFIL_BUSCA", "PENDENTE");
+        for (Mensagem pedido : pedidos) {
+            if (idExcluido != null && idExcluido.equals(pedido.getId())) continue;
+            pedido.setConviteStatus("RECUSADO");
+            Mensagem salva = mensagemRepository.save(pedido);
+            notificarMensagem(salva);
+        }
+    }
+
     @PostMapping("/{id}/convite/aceitar")
+    @Transactional
     public ResponseEntity<?> aceitarConvite(@PathVariable String id,
                                             @RequestBody(required = false) RespostaConviteDTO dto) {
         return responderConvite(id, dto, true);
     }
 
     @PostMapping("/{id}/convite/recusar")
+    @Transactional
     public ResponseEntity<?> recusarConvite(@PathVariable String id,
                                             @RequestBody(required = false) RespostaConviteDTO dto) {
         return responderConvite(id, dto, false);
@@ -225,6 +350,13 @@ public class MensagemController {
                     .body(Map.of("mensagem", "A equipe deste convite não existe mais."));
         }
 
+        Equipe equipe = equipeOptional.get();
+        String eventoId = convite.getEventoId() == null ? "" : convite.getEventoId();
+        if (!eventoId.equals(equipe.getEventoId())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("mensagem", "A equipe deste convite pertence a outro evento."));
+        }
+
         Usuario convidado = usuarioRepository.findById(dto.usuarioId()).orElse(null);
         if (convidado == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -232,7 +364,6 @@ public class MensagemController {
         }
 
         String username = convidado.getUsername() == null ? "" : convidado.getUsername();
-        Equipe equipe = equipeOptional.get();
         IntegranteEquipe integrante = equipe.getIntegrantes() == null ? null
                 : equipe.getIntegrantes().stream()
                         .filter(item -> item != null && item.getNomeUsuario() != null
@@ -250,14 +381,32 @@ public class MensagemController {
                     .body(Map.of("mensagem", "Seu convite para esta equipe já foi respondido."));
         }
 
+        if (aceitar) {
+            Conteudo evento = conteudoRepository.findById(eventoId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Evento do convite não encontrado."));
+            PeriodoEvento.validarInscricoes(evento);
+            if (Boolean.TRUE.equals(equipe.getAguardandoSorteio())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("mensagem", "Aguarde o sorteio das equipes surpresa."));
+            }
+            if (participaDeOutraEquipe(eventoId, convidado, equipe.getId())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("mensagem", "Você já está inscrito em outra equipe deste evento."));
+            }
+        }
+
         integrante.setStatus(aceitar ? "CONFIRMADO" : "RECUSADO");
         equipeRepository.save(equipe);
 
+        if (aceitar) {
+            procurandoEquipeRepository.deleteByEventoIdAndUsuarioId(eventoId, convidado.getId());
+            cancelarPedidosPerfil(eventoId, convidado.getId(), null);
+        }
+
         convite.setConviteStatus(aceitar ? "ACEITO" : "RECUSADO");
         Mensagem salva = mensagemRepository.save(convite);
-
-        messagingTemplate.convertAndSend("/topic/mensagens/" + salva.getDestinatarioId(), salva);
-        messagingTemplate.convertAndSend("/topic/mensagens/" + salva.getRemetenteId(), salva);
+        notificarMensagem(salva);
 
         return ResponseEntity.ok(salva);
     }
