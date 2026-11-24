@@ -18,7 +18,7 @@
   margin: 0 auto;
 }
 
-/* CABEÇALHO */
+
 .carrinho-header {
   display: flex;
   align-items: center;
@@ -129,7 +129,7 @@
   filter: brightness(1.1);
 }
 
-/* CARDS DE JOGO */
+
 .carrinho-cards {
   display: flex;
   flex-direction: column;
@@ -368,4 +368,211 @@
   .carrinho-card-acoes {
     justify-content: flex-end;
   }
+}
+
+
+.pagamento-metodos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.pagamento-metodo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--white);
+  color: #111;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.pagamento-metodo-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.pagamento-metodo-btn.ativo {
+  background-color: var(--pink);
+  color: var(--white);
+}
+
+.pagamento-metodo-btn:hover:not(.ativo) {
+  filter: brightness(0.92);
+}
+
+
+.pagamento-cartao-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.pagamento-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pagamento-campo label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.pagamento-campo input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  background-color: #111;
+  border: 1px solid var(--gray3);
+  border-radius: 4px;
+  color: var(--white);
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.pagamento-campo input::placeholder {
+  color: #555;
+}
+
+.pagamento-campo input:focus {
+  border-color: var(--pink);
+}
+
+.pagamento-linha-dupla {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 12px;
+}
+
+.validade-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.validade-inputs input {
+  text-align: center;
+  padding: 0 6px;
+}
+
+
+.pagamento-pix-area {
+  margin-bottom: 12px;
+}
+
+.btn-gerar-pix {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--pink);
+  color: var(--white);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.btn-gerar-pix:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btn-gerar-pix:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pix-qrcode-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #111;
+  border: 1px solid var(--gray3);
+  border-radius: 6px;
+}
+
+.pix-qrcode-wrap {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pix-qrcode-wrap img {
+  width: 160px;
+  height: 160px;
+  display: block;
+}
+
+.pix-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.pix-timer span {
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+
+.pix-timer strong {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--pink);
+  font-variant-numeric: tabular-nums;
+}
+
+.pix-timer.expirado span {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.btn-copiar-pix,
+.btn-regerar-pix {
+  width: 100%;
+  height: 34px;
+  border: 1px solid var(--gray3);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-copiar-pix:hover,
+.btn-regerar-pix:hover {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+
+.btn-confirmar-compra:disabled {
+  background-color: #3a3a3a;
+  color: #c5c5c5;
+  opacity: 1;
+  cursor: not-allowed;
 }

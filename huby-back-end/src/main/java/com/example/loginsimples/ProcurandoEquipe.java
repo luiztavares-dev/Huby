@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-/** Perfil público de um usuário que procura uma equipe em um evento específico. */
+
 @Document(collection = "procurando_equipe")
 @CompoundIndex(name = "evento_usuario_unico", def = "{'eventoId': 1, 'usuarioId': 1}", unique = true)
 public class ProcurandoEquipe {
@@ -43,4 +43,5 @@ public class ProcurandoEquipe {
 
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
     public void setAtualizadoEm(LocalDateTime atualizadoEm) { this.atualizadoEm = atualizadoEm; }
+    
 }

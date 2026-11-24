@@ -1,3 +1,25 @@
+@keyframes abrirGavetaDetalhes {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fecharGavetaDetalhes {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
 .game-details-overlay {
     position: fixed;
     inset: 0;
@@ -7,6 +29,7 @@
     pointer-events: none;
 }
 
+.game-details-overlay.aberta,
 .game-details-overlay.is-open {
     opacity: 1;
     pointer-events: auto;
@@ -16,74 +39,111 @@
     position: fixed;
     top: 0;
     right: 0;
-    z-index: 120;
+    z-index: 9000;
     width: 470px;
     max-width: 100vw;
     height: 100vh;
     background-color: #0e0e0e;
+    border-left: 1px solid var(--gray3);
+    box-shadow: -30px 0 80px rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.game-details.aberta,
+.game-details.is-open {
+    pointer-events: auto;
+    animation: abrirGavetaDetalhes 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.game-details.fechando {
+    pointer-events: none;
+    animation: fecharGavetaDetalhes 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.game-details-scroll {
+    height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
-    transform: translateX(100%);
-    visibility: hidden;
-    transition: transform 0.32s ease, visibility 0s linear 0.32s;
     scrollbar-width: thin;
     scrollbar-color: var(--pink) #1e1e1e;
 }
 
-.game-details.is-open {
-    transform: translateX(0);
-    visibility: visible;
-    transition: transform 0.32s ease;
-}
-
-.game-details::-webkit-scrollbar {
+.game-details-scroll::-webkit-scrollbar {
     width: 6px;
 }
 
-.game-details::-webkit-scrollbar-track {
+.game-details-scroll::-webkit-scrollbar-track {
     background: #1e1e1e;
 }
 
-.game-details::-webkit-scrollbar-thumb {
+.game-details-scroll::-webkit-scrollbar-thumb {
+    background: var(--pink);
+    border-radius: 999px;
+}
+
+
+.game-details:not(:has(.game-details-scroll)) {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) #1e1e1e;
+}
+
+.game-details:not(:has(.game-details-scroll))::-webkit-scrollbar {
+    width: 6px;
+}
+
+.game-details:not(:has(.game-details-scroll))::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.game-details:not(:has(.game-details-scroll))::-webkit-scrollbar-thumb {
     background: var(--pink);
     border-radius: 999px;
 }
 
 .game-details-voltar {
-    position: fixed;
+    position: absolute;
+    left: -22px;
     top: 50%;
-    right: 453px;
-    z-index: 121;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--gray1);
+    border: 1px solid var(--gray3);
+    color: var(--text3);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    padding: 7px;
-    border: 1px solid #2e2e2e;
-    border-radius: 50%;
-    background-color: #0b0b0b;
-    color: var(--white);
     cursor: pointer;
     opacity: 0;
-    visibility: hidden;
-    transform: translateY(-50%);
-    transition: opacity 0.25s ease, visibility 0s linear 0.25s, background 0.2s ease;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -6px 0 16px rgba(0, 0, 0, 0.6);
 }
 
+.game-details.aberta .game-details-voltar,
+.game-details.is-open .game-details-voltar,
 .game-details-voltar.is-open {
     opacity: 1;
-    visibility: visible;
-    transition: opacity 0.25s ease, background 0.2s ease;
+    pointer-events: auto;
 }
 
 .game-details-voltar:hover {
-    background-color: var(--pink);
+    border-color: var(--white);
+    color: var(--white);
+    transform: translateY(-50%) scale(1.05);
 }
 
 .game-details-voltar svg {
-    width: 100%;
-    height: 100%;
+    width: 22px;
+    height: 22px;
 }
 
 .game-details-capa {
@@ -927,7 +987,7 @@
     }
 
     .game-details-voltar {
-        right: calc(100vw - 17px);
+        left: 12px;
     }
 
     .game-details-faixa,

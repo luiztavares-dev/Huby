@@ -125,8 +125,8 @@ const atualizarComentario = (
 
 function IconeAvancar() {
     return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 5l7 7-7 7" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
         </svg>
     )
 }
@@ -360,7 +360,18 @@ interface GameDetailsProps {
     onBuy?: (game: Game) => void
 }
 
-export default function GameDetails({ game, isOpen, onClose, isSaved = false, isPurchased = false, actionPending = null, notice, onSave, onBuy }: GameDetailsProps) {
+export default function GameDetails({
+    game,
+    isOpen,
+    onClose,
+    isSaved = false,
+    isPurchased = false,
+    actionPending = null,
+    notice,
+    onSave,
+    onBuy
+}: GameDetailsProps) {
+    const [gavetaAberta, setGavetaAberta] = useState<boolean | null>(null)
     const [lastGame, setLastGame] = useState<Game | null>(null)
     const [downloads, setDownloads] = useState<Partial<Record<DownloadPlatform, DownloadState>>>({})
     const [lastDownload, setLastDownload] = useState<DownloadPlatform | null>(null)
@@ -388,6 +399,14 @@ export default function GameDetails({ game, isOpen, onClose, isSaved = false, is
     const avaliacoesRef = useRef<HTMLDivElement | null>(null)
     const textoRef = useRef<HTMLTextAreaElement | null>(null)
     const comentarioRef = useRef<HTMLInputElement | null>(null)
+
+    useEffect(() => {
+        if (isOpen) {
+            setGavetaAberta(true)
+        } else if (gavetaAberta === true) {
+            setGavetaAberta(false)
+        }
+    }, [isOpen, gavetaAberta])
 
     useEffect(() => {
         if (!game) return
@@ -643,452 +662,456 @@ export default function GameDetails({ game, isOpen, onClose, isSaved = false, is
         enviarResposta
     }
 
+    const classeGaveta = gavetaAberta === true ? 'aberta' : gavetaAberta === false ? 'fechando' : ''
+
     return (
         <>
             <div
-                className={`game-details-overlay ${isOpen ? 'is-open' : ''}`}
+                className={`game-details-overlay ${gavetaAberta === true ? 'aberta' : ''}`}
                 onClick={onClose}
                 aria-hidden="true"
             />
 
-            <button
-                ref={fecharRef}
-                type="button"
-                className={`game-details-voltar ${isOpen ? 'is-open' : ''}`}
-                onClick={onClose}
-                aria-label="Fechar detalhes"
-                tabIndex={isOpen ? 0 : -1}
-            >
-                <IconeAvancar />
-            </button>
-
             <aside
-                className={`game-details ${isOpen ? 'is-open' : ''}`}
+                className={`game-details ${classeGaveta}`}
                 aria-label={`Detalhes de ${current.title}`}
             >
-                <div className="game-details-capa">
-                    <img src={current.image} alt={current.title} />
-                </div>
+                <button
+                    ref={fecharRef}
+                    type="button"
+                    className="game-details-voltar"
+                    onClick={onClose}
+                    aria-label="Fechar detalhes"
+                    tabIndex={isOpen ? 0 : -1}
+                >
+                    <IconeAvancar />
+                </button>
 
-                <div className="game-details-faixa">
-                    <h2>{current.title}</h2>
-                    <div className="game-details-pills">
-                        {current.tags.map((tag) => (
-                            <span key={tag} className="game-details-pill">{tag}</span>
-                        ))}
+                <div className="game-details-scroll">
+                    <div className="game-details-capa">
+                        <img src={current.image} alt={current.title} />
                     </div>
-                </div>
 
-                <div className="game-details-corpo">
-                    <strong className="game-details-dev">{current.developer}</strong>
-                    <span className="game-details-handle">{handleDe(current.developer)}</span>
-
-                    <section className="game-details-secao">
-                        <h3>Descrição</h3>
-                        <p>{current.longDescription || current.description}</p>
-                    </section>
-
-                    {!isJogo && (
-                        <section className="game-details-secao">
-                            <h3>{current.tipo === 'COMUNIDADE' ? 'Sobre a comunidade' : 'Sobre o evento'}</h3>
-                            <dl className="game-details-facts">
-                                <div>
-                                    <dt>Período</dt>
-                                    <dd>{formatarPeriodo(current.dataInicio, current.dataFim)}</dd>
-                                </div>
-                                {current.local && (
-                                    <div>
-                                        <dt>Local</dt>
-                                        <dd>{current.local}</dd>
-                                    </div>
-                                )}
-                                {participantes && (
-                                    <div>
-                                        <dt>Participantes</dt>
-                                        <dd>{participantes}</dd>
-                                    </div>
-                                )}
-                                {ehEvento && (current.tema || !temaLiberado) && (
-                                    <div>
-                                        <dt>Tema</dt>
-                                        <dd>{temaLiberado ? current.tema : 'Será revelado após as inscrições'}</dd>
-                                    </div>
-                                )}
-                                {ehEvento && current.dataPremiacao && (
-                                    <div>
-                                        <dt>Premiação</dt>
-                                        <dd>{formatarDataHoraEvento(current.dataPremiacao)}</dd>
-                                    </div>
-                                )}
-                            </dl>
-                        </section>
-                    )}
-
-                    {isJogo && (onSave || onBuy || isSaved || isPurchased) && (
-                        <section className="game-details-secao game-details-aquisicao">
-                            <h3>Aquisição</h3>
-                            <div className="game-details-aquisicao-acoes">
-                                {preco > 0 && (onBuy || isPurchased) && (
-                                    <button
-                                        type="button"
-                                        className={`game-details-aquisicao-botao is-comprar ${isPurchased ? 'is-comprado' : ''}`}
-                                        disabled={!onBuy || isPurchased || actionPending !== null}
-                                        onClick={() => onBuy?.(current)}
-                                    >
-                                        {actionPending === 'comprar' && <span className="game-details-spinner" aria-hidden="true" />}
-                                        {actionPending === 'comprar'
-                                            ? 'Comprando…'
-                                            : isPurchased ? 'Comprado' : `Comprar ${formatarPreco(preco)}`}
-                                    </button>
-                                )}
-
-                                {(onSave || isSaved) && (
-                                    <button
-                                        type="button"
-                                        className={`game-details-aquisicao-botao is-salvar ${isSaved ? 'is-salvo' : ''}`}
-                                        disabled={!onSave || isSaved || actionPending !== null}
-                                        onClick={() => onSave?.(current)}
-                                    >
-                                        {actionPending === 'salvar' && <span className="game-details-spinner" aria-hidden="true" />}
-                                        {actionPending === 'salvar'
-                                            ? 'Salvando…'
-                                            : isSaved ? 'Salvo na biblioteca' : 'Salvar'}
-                                    </button>
-                                )}
-                            </div>
-                            {notice && (
-                                <p className="game-details-status game-details-aquisicao-aviso" role="status">{notice}</p>
-                            )}
-                        </section>
-                    )}
-
-                    {isJogo && (
-                        <section className="game-details-secao">
-                            <h3>Baixar</h3>
-                            <div className="game-details-downloads">
-                                {(Object.keys(downloadLabels) as DownloadPlatform[]).map((platform) => {
-                                    const state = downloads[platform] ?? 'idle'
-                                    const available = isAvailable(platform)
-
-                                    return (
-                                        <button
-                                            key={platform}
-                                            type="button"
-                                            className={`game-details-download ${state === 'done' ? 'is-done' : ''}`}
-                                            disabled={!available}
-                                            onClick={() => startDownload(platform)}
-                                        >
-                                            {state === 'downloading' ? (
-                                                <span className="game-details-spinner" aria-hidden="true" />
-                                            ) : state === 'done' ? (
-                                                <CheckGlyph />
-                                            ) : (
-                                                <PlatformGlyph platform={platform} />
-                                            )}
-                                            <span>
-                                                {state === 'downloading' ? 'Baixando…' : state === 'done' ? 'Baixado' : downloadLabels[platform]}
-                                            </span>
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                            {downloadStatus && (
-                                <p className="game-details-status" role="status">{downloadStatus}</p>
-                            )}
-                        </section>
-                    )}
-
-                    {isJogo && current.platforms.includes('website') && (
-                        <section className="game-details-secao">
-                            <h3>Jogar no navegador</h3>
-                            <button
-                                type="button"
-                                className={`game-details-play ${playState === 'running' ? 'is-running' : ''}`}
-                                onClick={togglePlay}
-                            >
-                                {playState === 'launching' ? (
-                                    <span className="game-details-spinner" aria-hidden="true" />
-                                ) : playState === 'running' ? (
-                                    <IconeParar />
-                                ) : (
-                                    <IconePlay />
-                                )}
-                                <span>
-                                    {playState === 'launching' ? 'Abrindo…' : playState === 'running' ? 'Parar' : 'Jogar'}
-                                </span>
-                            </button>
-                            {playState === 'running' && (
-                                <p className="game-details-status" role="status">
-                                    {current.title} está rodando no navegador.
-                                </p>
-                            )}
-                        </section>
-                    )}
-
-                    {isJogo && (
-                        <>
-                            <div className="game-details-divisor" />
-
-                            <div className="game-details-acoes">
-                                <button
-                                    type="button"
-                                    className="game-details-acao is-primaria"
-                                    onClick={abrirEditorAvaliacao}
-                                >
-                                    Avaliar jogo
-                                </button>
-                                <button
-                                    type="button"
-                                    className="game-details-acao is-secundaria"
-                                    onClick={abrirEditorComentario}
-                                >
-                                    Comentar
-                                </button>
-                            </div>
-                        </>
-                    )}
-
-                    <section className="game-details-interacao" ref={avaliacoesRef}>
-                        <div className="game-details-abas" role="tablist" aria-label="Avaliações e comentários">
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-selected={aba === 'avaliacoes'}
-                                className={aba === 'avaliacoes' ? 'is-active' : ''}
-                                onClick={() => setAba('avaliacoes')}
-                            >
-                                Avaliações
-                            </button>
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-selected={aba === 'comentarios'}
-                                className={aba === 'comentarios' ? 'is-active' : ''}
-                                onClick={() => setAba('comentarios')}
-                            >
-                                Comentários
-                            </button>
+                    <div className="game-details-faixa">
+                        <h2>{current.title}</h2>
+                        <div className="game-details-pills">
+                            {current.tags.map((tag) => (
+                                <span key={tag} className="game-details-pill">{tag}</span>
+                            ))}
                         </div>
+                    </div>
 
-                        {aba === 'avaliacoes' && (
-                            <>
-                                {editorAvaliacao && (
-                                    <form className="game-details-editor" onSubmit={enviarAvaliacao}>
-                                        <div className="game-details-nota" role="radiogroup" aria-label="Sua nota">
-                                            {[1, 2, 3, 4, 5].map((indice) => (
-                                                <button
-                                                    key={indice}
-                                                    type="button"
-                                                    role="radio"
-                                                    aria-checked={notaRascunho === indice}
-                                                    aria-label={`${indice} ${indice === 1 ? 'estrela' : 'estrelas'}`}
-                                                    className={indice <= notaRascunho ? 'is-ativa' : ''}
-                                                    onClick={() => setNotaRascunho(indice)}
-                                                >
-                                                    <IconeEstrela ativa={indice <= notaRascunho} />
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <textarea
-                                            ref={textoRef}
-                                            value={textoAvaliacao}
-                                            onChange={(event) => setTextoAvaliacao(event.target.value)}
-                                            placeholder="Conte o que você achou do jogo..."
-                                            aria-label="Escreva sua avaliação"
-                                            rows={3}
-                                        />
-                                        <div className="game-details-editor-acoes">
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditorAvaliacao(false)}
-                                            >
-                                                Cancelar
-                                            </button>
-                                            <button type="submit" disabled={!textoAvaliacao.trim()}>
-                                                Enviar avaliação
-                                            </button>
-                                        </div>
-                                    </form>
-                                )}
+                    <div className="game-details-corpo">
+                        <strong className="game-details-dev">{current.developer}</strong>
+                        <span className="game-details-handle">{handleDe(current.developer)}</span>
 
-                                <div className="game-details-filtros">
-                                    <div className="game-details-ordem">
-                                        <button
-                                            type="button"
-                                            className={ordem === 'recentes' ? 'is-active' : ''}
-                                            onClick={() => setOrdem('recentes')}
-                                        >
-                                            Recentes
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className={ordem === 'populares' ? 'is-active' : ''}
-                                            onClick={() => setOrdem('populares')}
-                                        >
-                                            Populares
-                                        </button>
+                        <section className="game-details-secao">
+                            <h3>Descrição</h3>
+                            <p>{current.longDescription || current.description}</p>
+                        </section>
+
+                        {!isJogo && (
+                            <section className="game-details-secao">
+                                <h3>{current.tipo === 'COMUNIDADE' ? 'Sobre a comunidade' : 'Sobre o evento'}</h3>
+                                <dl className="game-details-facts">
+                                    <div>
+                                        <dt>Período</dt>
+                                        <dd>{formatarPeriodo(current.dataInicio, current.dataFim)}</dd>
                                     </div>
+                                    {current.local && (
+                                        <div>
+                                            <dt>Local</dt>
+                                            <dd>{current.local}</dd>
+                                        </div>
+                                    )}
+                                    {participantes && (
+                                        <div>
+                                            <dt>Participantes</dt>
+                                            <dd>{participantes}</dd>
+                                        </div>
+                                    )}
+                                    {ehEvento && (current.tema || !temaLiberado) && (
+                                        <div>
+                                            <dt>Tema</dt>
+                                            <dd>{temaLiberado ? current.tema : 'Será revelado após as inscrições'}</dd>
+                                        </div>
+                                    )}
+                                    {ehEvento && current.dataPremiacao && (
+                                        <div>
+                                            <dt>Premiação</dt>
+                                            <dd>{formatarDataHoraEvento(current.dataPremiacao)}</dd>
+                                        </div>
+                                    )}
+                                </dl>
+                            </section>
+                        )}
 
-                                    <div className="game-details-nota-filtro">
+                        {isJogo && (onSave || onBuy || isSaved || isPurchased) && (
+                            <section className="game-details-secao game-details-aquisicao">
+                                <h3>Aquisição</h3>
+                                <div className="game-details-aquisicao-acoes">
+                                    {preco > 0 && (onBuy || isPurchased) && (
                                         <button
                                             type="button"
-                                            className="game-details-nota-botao"
-                                            onClick={() => setFiltrosAbertos((aberto) => !aberto)}
-                                            aria-expanded={filtrosAbertos}
-                                            aria-label="Filtrar avaliações por nota"
+                                            className={`game-details-aquisicao-botao is-comprar ${isPurchased ? 'is-comprado' : ''}`}
+                                            disabled={!onBuy || isPurchased || actionPending !== null}
+                                            onClick={() => onBuy?.(current)}
                                         >
-                                            <span>{filtroNota ?? 'Notas'}</span>
-                                            <IconeEstrela ativa />
-                                            <span className="game-details-nota-seta"><IconeSetaBaixo /></span>
+                                            {actionPending === 'comprar' && <span className="game-details-spinner" aria-hidden="true" />}
+                                            {actionPending === 'comprar'
+                                                ? 'Adicionando…'
+                                                : isPurchased ? 'Comprado' : `Adicionar ao carrinho ${formatarPreco(preco)}`}
                                         </button>
+                                    )}
 
-                                        {filtrosAbertos && (
-                                            <div className="game-details-nota-lista" role="menu">
-                                                <button
-                                                    type="button"
-                                                    role="menuitem"
-                                                    onClick={() => {
-                                                        setFiltroNota(null)
-                                                        setFiltrosAbertos(false)
-                                                    }}
-                                                >
-                                                    Todas
-                                                </button>
-                                                {[5, 4, 3, 2, 1].map((nota) => (
+                                    {(onSave || isSaved) && (
+                                        <button
+                                            type="button"
+                                            className={`game-details-aquisicao-botao is-salvar ${isSaved ? 'is-salvo' : ''}`}
+                                            disabled={!onSave || isSaved || actionPending !== null}
+                                            onClick={() => onSave?.(current)}
+                                        >
+                                            {actionPending === 'salvar' && <span className="game-details-spinner" aria-hidden="true" />}
+                                            {actionPending === 'salvar'
+                                                ? 'Salvando…'
+                                                : isSaved ? 'Salvo na biblioteca' : 'Salvar'}
+                                        </button>
+                                    )}
+                                </div>
+                                {notice && (
+                                    <p className="game-details-status game-details-aquisicao-aviso" role="status">{notice}</p>
+                                )}
+                            </section>
+                        )}
+
+                        {isJogo && (
+                            <section className="game-details-secao">
+                                <h3>Baixar</h3>
+                                <div className="game-details-downloads">
+                                    {(Object.keys(downloadLabels) as DownloadPlatform[]).map((platform) => {
+                                        const state = downloads[platform] ?? 'idle'
+                                        const available = isAvailable(platform)
+
+                                        return (
+                                            <button
+                                                key={platform}
+                                                type="button"
+                                                className={`game-details-download ${state === 'done' ? 'is-done' : ''}`}
+                                                disabled={!available}
+                                                onClick={() => startDownload(platform)}
+                                            >
+                                                {state === 'downloading' ? (
+                                                    <span className="game-details-spinner" aria-hidden="true" />
+                                                ) : state === 'done' ? (
+                                                    <CheckGlyph />
+                                                ) : (
+                                                    <PlatformGlyph platform={platform} />
+                                                )}
+                                                <span>
+                                                    {state === 'downloading' ? 'Baixando…' : state === 'done' ? 'Baixado' : downloadLabels[platform]}
+                                                </span>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                {downloadStatus && (
+                                    <p className="game-details-status" role="status">{downloadStatus}</p>
+                                )}
+                            </section>
+                        )}
+
+                        {isJogo && current.platforms.includes('website') && (
+                            <section className="game-details-secao">
+                                <h3>Jogar no navegador</h3>
+                                <button
+                                    type="button"
+                                    className={`game-details-play ${playState === 'running' ? 'is-running' : ''}`}
+                                    onClick={togglePlay}
+                                >
+                                    {playState === 'launching' ? (
+                                        <span className="game-details-spinner" aria-hidden="true" />
+                                    ) : playState === 'running' ? (
+                                        <IconeParar />
+                                    ) : (
+                                        <IconePlay />
+                                    )}
+                                    <span>
+                                        {playState === 'launching' ? 'Abrindo…' : playState === 'running' ? 'Parar' : 'Jogar'}
+                                    </span>
+                                </button>
+                                {playState === 'running' && (
+                                    <p className="game-details-status" role="status">
+                                        {current.title} está rodando no navegador.
+                                    </p>
+                                )}
+                            </section>
+                        )}
+
+                        {isJogo && (
+                            <>
+                                <div className="game-details-divisor" />
+
+                                <div className="game-details-acoes">
+                                    <button
+                                        type="button"
+                                        className="game-details-acao is-primaria"
+                                        onClick={abrirEditorAvaliacao}
+                                    >
+                                        Avaliar jogo
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="game-details-acao is-secundaria"
+                                        onClick={abrirEditorComentario}
+                                    >
+                                        Comentar
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        <section className="game-details-interacao" ref={avaliacoesRef}>
+                            <div className="game-details-abas" role="tablist" aria-label="Avaliações e comentários">
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={aba === 'avaliacoes'}
+                                    className={aba === 'avaliacoes' ? 'is-active' : ''}
+                                    onClick={() => setAba('avaliacoes')}
+                                >
+                                    Avaliações
+                                </button>
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={aba === 'comentarios'}
+                                    className={aba === 'comentarios' ? 'is-active' : ''}
+                                    onClick={() => setAba('comentarios')}
+                                >
+                                    Comentários
+                                </button>
+                            </div>
+
+                            {aba === 'avaliacoes' && (
+                                <>
+                                    {editorAvaliacao && (
+                                        <form className="game-details-editor" onSubmit={enviarAvaliacao}>
+                                            <div className="game-details-nota" role="radiogroup" aria-label="Sua nota">
+                                                {[1, 2, 3, 4, 5].map((indice) => (
                                                     <button
-                                                        key={nota}
+                                                        key={indice}
                                                         type="button"
-                                                        role="menuitem"
-                                                        onClick={() => {
-                                                            setFiltroNota(nota)
-                                                            setFiltrosAbertos(false)
-                                                        }}
+                                                        role="radio"
+                                                        aria-checked={notaRascunho === indice}
+                                                        aria-label={`${indice} ${indice === 1 ? 'estrela' : 'estrelas'}`}
+                                                        className={indice <= notaRascunho ? 'is-ativa' : ''}
+                                                        onClick={() => setNotaRascunho(indice)}
                                                     >
-                                                        {nota} {nota === 1 ? 'Estrela' : 'Estrelas'}
+                                                        <IconeEstrela ativa={indice <= notaRascunho} />
                                                     </button>
                                                 ))}
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
+                                            <textarea
+                                                ref={textoRef}
+                                                value={textoAvaliacao}
+                                                onChange={(event) => setTextoAvaliacao(event.target.value)}
+                                                placeholder="Conte o que você achou do jogo..."
+                                                aria-label="Escreva sua avaliação"
+                                                rows={3}
+                                            />
+                                            <div className="game-details-editor-acoes">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditorAvaliacao(false)}
+                                                >
+                                                    Cancelar
+                                                </button>
+                                                <button type="submit" disabled={!textoAvaliacao.trim()}>
+                                                    Enviar avaliação
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
 
-                                {avaliacoesVisiveis.length === 0 && (
-                                    <p className="game-details-vazio">
-                                        {filtroNota === null
-                                            ? 'Nenhuma avaliação ainda. Seja a primeira pessoa a avaliar.'
-                                            : 'Nenhuma avaliação com essa nota.'}
-                                    </p>
-                                )}
+                                    <div className="game-details-filtros">
+                                        <div className="game-details-ordem">
+                                            <button
+                                                type="button"
+                                                className={ordem === 'recentes' ? 'is-active' : ''}
+                                                onClick={() => setOrdem('recentes')}
+                                            >
+                                                Recentes
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={ordem === 'populares' ? 'is-active' : ''}
+                                                onClick={() => setOrdem('populares')}
+                                            >
+                                                Populares
+                                            </button>
+                                        </div>
 
-                                <div className="game-details-lista">
-                                    {avaliacoesVisiveis.map((avaliacao) => (
-                                        <article className="game-details-avaliacao" key={avaliacao.id}>
-                                            <img className="game-details-avaliacao-avatar" src={avaliacao.avatar} alt="" />
+                                        <div className="game-details-nota-filtro">
+                                            <button
+                                                type="button"
+                                                className="game-details-nota-botao"
+                                                onClick={() => setFiltrosAbertos((aberto) => !aberto)}
+                                                aria-expanded={filtrosAbertos}
+                                                aria-label="Filtrar avaliações por nota"
+                                            >
+                                                <span>{filtroNota ?? 'Notas'}</span>
+                                                <IconeEstrela ativa />
+                                                <span className="game-details-nota-seta"><IconeSetaBaixo /></span>
+                                            </button>
 
-                                            <div className="game-details-avaliacao-corpo">
-                                                <div className="game-details-avaliacao-topo">
-                                                    <strong>{avaliacao.autor}</strong>
+                                            {filtrosAbertos && (
+                                                <div className="game-details-nota-lista" role="menu">
+                                                    <button
+                                                        type="button"
+                                                        role="menuitem"
+                                                        onClick={() => {
+                                                            setFiltroNota(null)
+                                                            setFiltrosAbertos(false)
+                                                        }}
+                                                    >
+                                                        Todas
+                                                    </button>
+                                                    {[5, 4, 3, 2, 1].map((nota) => (
+                                                        <button
+                                                            key={nota}
+                                                            type="button"
+                                                            role="menuitem"
+                                                            onClick={() => {
+                                                                setFiltroNota(nota)
+                                                                setFiltrosAbertos(false)
+                                                            }}
+                                                        >
+                                                            {nota} {nota === 1 ? 'Estrela' : 'Estrelas'}
+                                                        </button>
+                                                    ))}
                                                 </div>
-                                                <span className="game-details-avaliacao-meta">
-                                                    <span>{dataCurta(avaliacao.criadoEm)}</span>
-                                                    <span>{horaCurta(avaliacao.criadoEm)}</span>
-                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                                <Estrelas nota={avaliacao.nota} />
+                                    {avaliacoesVisiveis.length === 0 && (
+                                        <p className="game-details-vazio">
+                                            {filtroNota === null
+                                                ? 'Nenhuma avaliação ainda. Seja a primeira pessoa a avaliar.'
+                                                : 'Nenhuma avaliação com essa nota.'}
+                                        </p>
+                                    )}
 
-                                                <p className="game-details-avaliacao-texto">{avaliacao.texto}</p>
+                                    <div className="game-details-lista">
+                                        {avaliacoesVisiveis.map((avaliacao) => (
+                                            <article className="game-details-avaliacao" key={avaliacao.id}>
+                                                <img className="game-details-avaliacao-avatar" src={avaliacao.avatar} alt="" />
 
-                                                <div className="game-details-avaliacao-acoes">
-                                                    <button
-                                                        type="button"
-                                                        className={avaliacao.voto === 'cima' ? 'is-votado' : ''}
-                                                        onClick={() => votarAvaliacao(avaliacao.id, 'cima')}
-                                                        aria-pressed={avaliacao.voto === 'cima'}
-                                                        aria-label="Achei útil"
-                                                    >
-                                                        <IconePolegar />
-                                                        <span>{avaliacao.curtidas}</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={avaliacao.voto === 'baixo' ? 'is-votado' : ''}
-                                                        onClick={() => votarAvaliacao(avaliacao.id, 'baixo')}
-                                                        aria-pressed={avaliacao.voto === 'baixo'}
-                                                        aria-label="Não achei útil"
-                                                    >
-                                                        <IconePolegar baixo />
-                                                    </button>
-                                                    {avaliacao.minha && (
+                                                <div className="game-details-avaliacao-corpo">
+                                                    <div className="game-details-avaliacao-topo">
+                                                        <strong>{avaliacao.autor}</strong>
+                                                    </div>
+                                                    <span className="game-details-avaliacao-meta">
+                                                        <span>{dataCurta(avaliacao.criadoEm)}</span>
+                                                        <span>{horaCurta(avaliacao.criadoEm)}</span>
+                                                    </span>
+
+                                                    <Estrelas nota={avaliacao.nota} />
+
+                                                    <p className="game-details-avaliacao-texto">{avaliacao.texto}</p>
+
+                                                    <div className="game-details-avaliacao-acoes">
                                                         <button
                                                             type="button"
-                                                            onClick={() => excluirAvaliacao(avaliacao.id)}
-                                                            aria-label="Excluir minha avaliação"
+                                                            className={avaliacao.voto === 'cima' ? 'is-votado' : ''}
+                                                            onClick={() => votarAvaliacao(avaliacao.id, 'cima')}
+                                                            aria-pressed={avaliacao.voto === 'cima'}
+                                                            aria-label="Achei útil"
                                                         >
-                                                            <IconeLixeira />
-                                                            Excluir
+                                                            <IconePolegar />
+                                                            <span>{avaliacao.curtidas}</span>
                                                         </button>
-                                                    )}
+                                                        <button
+                                                            type="button"
+                                                            className={avaliacao.voto === 'baixo' ? 'is-votado' : ''}
+                                                            onClick={() => votarAvaliacao(avaliacao.id, 'baixo')}
+                                                            aria-pressed={avaliacao.voto === 'baixo'}
+                                                            aria-label="Não achei útil"
+                                                        >
+                                                            <IconePolegar baixo />
+                                                        </button>
+                                                        {avaliacao.minha && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => excluirAvaliacao(avaliacao.id)}
+                                                                aria-label="Excluir minha avaliação"
+                                                            >
+                                                                <IconeLixeira />
+                                                                Excluir
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </article>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-
-                        {aba === 'comentarios' && (
-                            <>
-                                {editorComentario && (
-                                    <form className="game-details-comentario-form" onSubmit={enviarComentario}>
-                                        <img src="/icon-perfil.png" alt="" />
-                                        <input
-                                            ref={comentarioRef}
-                                            type="text"
-                                            value={novoComentario}
-                                            onChange={(event) => setNovoComentario(event.target.value)}
-                                            placeholder="Escreva um comentário..."
-                                            aria-label="Escreva um comentário"
-                                        />
-                                        <button type="submit" disabled={!novoComentario.trim()}>Comentar</button>
-                                    </form>
-                                )}
-
-                                <div className="game-details-filtros">
-                                    <div className="game-details-ordem">
-                                        <button
-                                            type="button"
-                                            className={ordem === 'recentes' ? 'is-active' : ''}
-                                            onClick={() => setOrdem('recentes')}
-                                        >
-                                            Recentes
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className={ordem === 'populares' ? 'is-active' : ''}
-                                            onClick={() => setOrdem('populares')}
-                                        >
-                                            Populares
-                                        </button>
+                                            </article>
+                                        ))}
                                     </div>
-                                </div>
+                                </>
+                            )}
 
-                                {comentariosOrdenados.length === 0 && (
-                                    <p className="game-details-vazio">Seja a primeira pessoa a comentar.</p>
-                                )}
+                            {aba === 'comentarios' && (
+                                <>
+                                    {editorComentario && (
+                                        <form className="game-details-comentario-form" onSubmit={enviarComentario}>
+                                            <img src="/icon-perfil.png" alt="" />
+                                            <input
+                                                ref={comentarioRef}
+                                                type="text"
+                                                value={novoComentario}
+                                                onChange={(event) => setNovoComentario(event.target.value)}
+                                                placeholder="Escreva um comentário..."
+                                                aria-label="Escreva um comentário"
+                                            />
+                                            <button type="submit" disabled={!novoComentario.trim()}>Comentar</button>
+                                        </form>
+                                    )}
 
-                                <div className="game-details-lista">
-                                    {comentariosOrdenados.map((comentario) => (
-                                        <ComentarioItem
-                                            key={comentario.id}
-                                            comentario={comentario}
-                                            nivel={0}
-                                            acoes={acoesComentario}
-                                        />
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </section>
+                                    <div className="game-details-filtros">
+                                        <div className="game-details-ordem">
+                                            <button
+                                                type="button"
+                                                className={ordem === 'recentes' ? 'is-active' : ''}
+                                                onClick={() => setOrdem('recentes')}
+                                            >
+                                                Recentes
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={ordem === 'populares' ? 'is-active' : ''}
+                                                onClick={() => setOrdem('populares')}
+                                            >
+                                                Populares
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {comentariosOrdenados.length === 0 && (
+                                        <p className="game-details-vazio">Seja a primeira pessoa a comentar.</p>
+                                    )}
+
+                                    <div className="game-details-lista">
+                                        {comentariosOrdenados.map((comentario) => (
+                                            <ComentarioItem
+                                                key={comentario.id}
+                                                comentario={comentario}
+                                                nivel={0}
+                                                acoes={acoesComentario}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </section>
+                    </div>
                 </div>
             </aside>
         </>
