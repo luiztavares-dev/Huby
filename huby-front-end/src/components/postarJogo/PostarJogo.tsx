@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 
 import { linkJogoValido, publicarJogo } from '../../services/home'
-import type { ConteudoApi, PlataformaJogoApi } from '../../services/home'
-import { enviarImagemParaCloudinary } from '../../services/uploads'
+import type { ConteudoApi, MidiaJogoApi, PlataformaJogoApi } from '../../services/home'
+import { enviarMidiaParaCloudinary } from '../../services/uploads'
+import { RecortarMidia } from '../midia/RecortarMidia'
 import './PostarJogo.css'
 
 type PostarJogoProps = {
@@ -25,6 +26,11 @@ type Formulario = {
     plataformas: PlataformaJogoApi[]
 }
 
+type MidiaRascunho = MidiaJogoApi & {
+    id: string
+    enviando: boolean
+}
+
 const opcoesPlataforma: Array<{ valor: PlataformaJogoApi; titulo: string; descricao: string }> = [
     { valor: 'pc', titulo: 'PC', descricao: 'Computador' },
     { valor: 'website', titulo: 'Navegador', descricao: 'Jogar na web' },
@@ -44,23 +50,57 @@ const novoFormulario = (desenvolvedor: string): Formulario => ({
 
 export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublished }: PostarJogoProps) {
     const [formulario, setFormulario] = useState<Formulario>(() => novoFormulario(desenvolvedor))
-    const [capa, setCapa] = useState('')
-    const [enviandoImagem, setEnviandoImagem] = useState(false)
+    const [midias, setMidias] = useState<MidiaRascunho[]>([])
+    const [arquivoImagem, setArquivoImagem] = useState<File | null>(null)
+    const [indiceCapa, setIndiceCapa] = useState(0)
+    const [ordemMidias, setOrdemMidias] = useState<string[]>([])
     const [enviando, setEnviando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
     const fecharRef = useRef<HTMLButtonElement | null>(null)
+    const inputImagemRef = useRef<HTMLInputElement | null>(null)
+    const inputVideoRef = useRef<HTMLInputElement | null>(null)
+    const revogadasRef = useRef(new Set<string>())
+
+    const revogarUrlLocal = (url: string) => {
+        if (!url.startsWith('blob:') || revogadasRef.current.has(url)) return
+        revogadasRef.current.add(url)
+        URL.revokeObjectURL(url)
+    }
+
+    useEffect(() => {
+        if (isOpen) return
+        setMidias([])
+        setArquivoImagem(null)
+        setIndiceCapa(0)
+        setOrdemMidias([])
+    }, [isOpen])
+
+    const capa = midias.find((midia) => (
+        midia.id === ordemMidias[indiceCapa] && midia.tipo === 'image' && !midia.enviando
+    ))?.url ?? ''
+    const enviandoMidia = midias.some((midia) => midia.enviando)
+    const midiasOrdenadas = ordemMidias
+        .map((id) => midias.find((midia) => midia.id === id))
+        .filter((midia): midia is MidiaRascunho => Boolean(midia))
+    const bloqueado = enviando || enviandoMidia || Boolean(arquivoImagem)
 
     const limpar = useCallback(() => {
         setFormulario(novoFormulario(desenvolvedor))
-        setCapa('')
+        setMidias((atuais) => {
+            atuais.filter((midia) => midia.url.startsWith('blob:')).forEach((midia) => revogarUrlLocal(midia.url))
+            return []
+        })
+        setArquivoImagem(null)
+        setIndiceCapa(0)
+        setOrdemMidias([])
         setErro(null)
     }, [desenvolvedor])
 
     const fechar = useCallback(() => {
-        if (enviando || enviandoImagem) return
+        if (enviando || enviandoMidia || arquivoImagem) return
         limpar()
         onClose()
-    }, [enviando, enviandoImagem, limpar, onClose])
+    }, [enviando, enviandoMidia, arquivoImagem, limpar, onClose])
 
     useEffect(() => {
         if (!isOpen) return
@@ -87,7 +127,36 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
         }))
     }
 
-    const selecionarCapa = async (event: ChangeEvent<HTMLInputElement>) => {
+    const concluirMidia = (id: string, url: string) => {
+        setMidias((atuais) => atuais.map((midia) => {
+            if (midia.id !== id) return midia
+            if (midia.url.startsWith('blob:')) revogarUrlLocal(midia.url)
+            return { ...midia, url, enviando: false }
+        }))
+        setErro(null)
+    }
+
+    const falharMidia = (id: string, mensagem: string) => {
+        setMidias((atuais) => {
+            const falhou = atuais.find((midia) => midia.id === id)
+            if (falhou?.url.startsWith('blob:')) revogarUrlLocal(falhou.url)
+            return atuais.filter((midia) => midia.id !== id)
+        })
+        setOrdemMidias((atuais) => atuais.filter((item) => item !== id))
+        setIndiceCapa((atual) => Math.max(0, Math.min(atual, midias.length - 2)))
+        setErro(mensagem)
+    }
+
+    const enviarMidia = async (midia: MidiaRascunho, arquivo: Blob) => {
+        try {
+            const url = await enviarMidiaParaCloudinary(arquivo, 'huby/jogos/midias', midia.tipo)
+            concluirMidia(midia.id, url)
+        } catch (error) {
+            falharMidia(midia.id, error instanceof Error ? error.message : 'Não foi possível enviar a mídia.')
+        }
+    }
+
+    const selecionarImagem = async (event: ChangeEvent<HTMLInputElement>) => {
         const arquivo = event.target.files?.[0]
         event.target.value = ''
         if (!arquivo) return
@@ -96,21 +165,62 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
             return
         }
 
-        setEnviandoImagem(true)
+        setArquivoImagem(arquivo)
+    }
+
+    const selecionarVideo = (event: ChangeEvent<HTMLInputElement>) => {
+        const arquivo = event.target.files?.[0]
+        event.target.value = ''
+        if (!arquivo) return
+        if (!arquivo.type.startsWith('video/')) {
+            setErro('Escolha um arquivo de vídeo válido.')
+            return
+        }
+
+        const midia: MidiaRascunho = {
+            id: `video-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            tipo: 'video',
+            url: URL.createObjectURL(arquivo),
+            enviando: true
+        }
+        setMidias((atuais) => [...atuais, midia])
+        setOrdemMidias((atuais) => [...atuais, midia.id])
         setErro(null)
-        try {
-            const url = await enviarImagemParaCloudinary(arquivo, 'huby/jogos/capas')
-            setCapa(url)
-        } catch (error) {
-            setErro(error instanceof Error ? error.message : 'Não foi possível enviar a capa.')
-        } finally {
-            setEnviandoImagem(false)
+        void enviarMidia(midia, arquivo)
+    }
+
+    const removerMidia = (id: string) => {
+        const removida = midias.find((midia) => midia.id === id)
+        if (!removida || removida.enviando) return
+
+        const proximaOrdem = ordemMidias.filter((item) => item !== id)
+        const proximasMidias = proximaOrdem
+            .map((item) => midias.find((midia) => midia.id === item))
+            .filter((midia): midia is MidiaRascunho => Boolean(midia))
+        const capaAtual = midias.find((midia) => midia.id === ordemMidias[indiceCapa])
+        const indiceCapaAtual = midias.findIndex((midia) => midia.id === capaAtual?.id)
+
+        if (capaAtual?.id === id) {
+            const proximaCapa = proximasMidias.findIndex((midia) => midia.tipo === 'image')
+            setIndiceCapa(proximaCapa)
+        } else if (indiceCapaAtual >= 0 && indiceCapaAtual > midias.findIndex((midia) => midia.id === id)) {
+            setIndiceCapa((atual) => Math.max(0, atual - 1))
+        }
+
+        setMidias((atuais) => atuais.filter((midia) => midia.id !== id))
+        if (removida.url.startsWith('blob:')) revogarUrlLocal(removida.url)
+        setOrdemMidias(proximaOrdem)
+    }
+
+    const escolherCapa = (indice: number) => {
+        if (midiasOrdenadas[indice]?.tipo === 'image' && !midiasOrdenadas[indice].enviando) {
+            setIndiceCapa(indice)
         }
     }
 
     const publicar = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-        if (enviando || enviandoImagem) return
+        if (bloqueado) return
 
         const titulo = formulario.titulo.trim()
         const descricao = formulario.descricao.trim()
@@ -137,6 +247,10 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
             setErro('Informe um preço válido.')
             return
         }
+        if (!capa) {
+            setErro('Adicione pelo menos uma imagem para usar como capa do jogo.')
+            return
+        }
 
         setEnviando(true)
         setErro(null)
@@ -147,7 +261,8 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
                 descricao,
                 descricaoLonga: formulario.descricaoLonga.trim() || descricao,
                 desenvolvedor: formulario.desenvolvedor.trim(),
-                imagem: capa || undefined,
+                imagem: capa,
+                midias: midiasOrdenadas.map(({ tipo, url }) => ({ tipo, url })),
                 linkUrl,
                 tags: formulario.tags.split(',').map((tag) => tag.trim()).filter(Boolean).slice(0, 8),
                 plataformas: formulario.plataformas,
@@ -194,8 +309,7 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
                 aria-hidden={!isOpen}
                 aria-labelledby="postar-jogo-titulo"
             >
-                <label className={`game-details-capa postar-jogo-capa ${enviandoImagem ? 'is-enviando' : ''}`}>
-                    <input type="file" accept="image/*" onChange={selecionarCapa} disabled={enviando || enviandoImagem} />
+                <div className="game-details-capa postar-jogo-capa">
                     {capa ? (
                         <img src={capa} alt="Prévia da capa do jogo" />
                     ) : (
@@ -205,12 +319,11 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
                                 <circle cx="8.5" cy="9" r="1.5" />
                                 <path d="M4 17l5-5 4 4 3-3 4 4" />
                             </svg>
-                            <strong>{enviandoImagem ? 'Enviando capa…' : 'Adicionar capa'}</strong>
-                            <small>Selecione uma imagem do seu jogo</small>
+                            <strong>Adicionar mídia do jogo</strong>
+                            <small>Selecione imagens ou vídeos</small>
                         </span>
                     )}
-                    {capa && !enviandoImagem && <span className="postar-jogo-trocar-capa">Trocar capa</span>}
-                </label>
+                </div>
 
                 <div className="game-details-faixa">
                     <h2 id="postar-jogo-titulo">Postar jogo</h2>
@@ -218,6 +331,69 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
                 </div>
 
                 <form className="game-details-corpo postar-jogo-form" onSubmit={publicar}>
+                    <section className="postar-jogo-secao">
+                        <h3>Imagens e vídeos</h3>
+                        <p className="postar-jogo-dica">
+                            Adicione a galeria exibida na sessão do jogo. A primeira imagem será usada como capa.
+                        </p>
+
+                        <div className="postar-jogo-galeria" aria-label="Mídias do jogo">
+                            {midiasOrdenadas.map((midia, indice) => (
+                                <div className={`postar-jogo-midia ${midia.url === capa ? 'is-capa' : ''}`} key={midia.id}>
+                                    <button
+                                        type="button"
+                                        className="postar-jogo-midia-preview"
+                                        onClick={() => midia.tipo === 'image' && escolherCapa(indice)}
+                                        aria-label={midia.tipo === 'video' ? `Vídeo ${indice + 1}` : `Definir imagem ${indice + 1} como capa`}
+                                        disabled={bloqueado || midia.enviando || midia.tipo === 'video'}
+                                    >
+                                        {midia.tipo === 'video' ? (
+                                            <video src={midia.url || undefined} muted playsInline preload="metadata" />
+                                        ) : midia.enviando ? (
+                                            <span className="postar-jogo-midia-placeholder" aria-hidden="true" />
+                                        ) : (
+                                            <img src={midia.url} alt={`Imagem ${indice + 1} do jogo`} />
+                                        )}
+                                        {midia.tipo === 'video' && <span className="postar-jogo-midia-video">Vídeo</span>}
+                                        {midia.tipo === 'image' && !midia.enviando && midia.url === capa && <span className="postar-jogo-midia-capa">Capa</span>}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="postar-jogo-midia-remover"
+                                        onClick={() => removerMidia(midia.id)}
+                                        aria-label={`Remover ${midia.tipo === 'video' ? 'vídeo' : 'imagem'} ${indice + 1}`}
+                                        disabled={bloqueado}
+                                    >
+                                        ×
+                                    </button>
+                                    {midia.enviando && <span className="postar-jogo-midia-enviando">Enviando…</span>}
+                                </div>
+                            ))}
+
+                            <button
+                                type="button"
+                                className="postar-jogo-adicionar-midia"
+                                onClick={() => inputImagemRef.current?.click()}
+                                disabled={bloqueado}
+                            >
+                                <span aria-hidden="true">+</span>
+                                Adicionar imagem
+                            </button>
+                            <button
+                                type="button"
+                                className="postar-jogo-adicionar-midia"
+                                onClick={() => inputVideoRef.current?.click()}
+                                disabled={bloqueado}
+                            >
+                                <span aria-hidden="true">+</span>
+                                Adicionar vídeo
+                            </button>
+                        </div>
+
+                        <input ref={inputImagemRef} className="postar-jogo-input-oculto" type="file" accept="image/*" onChange={selecionarImagem} />
+                        <input ref={inputVideoRef} className="postar-jogo-input-oculto" type="file" accept="video/*" onChange={selecionarVideo} />
+                    </section>
+
                     <section className="postar-jogo-secao">
                         <h3>Informações principais</h3>
                         <label htmlFor="postar-jogo-nome">Nome do jogo</label>
@@ -326,13 +502,38 @@ export function PostarJogo({ isOpen, onClose, usuarioId, desenvolvedor, onPublis
                     {erro && <p className="postar-jogo-erro" role="alert">{erro}</p>}
 
                     <div className="postar-jogo-acoes">
-                        <button type="button" onClick={fechar} disabled={enviando || enviandoImagem}>Cancelar</button>
-                        <button type="submit" disabled={enviando || enviandoImagem}>
+                        <button type="button" onClick={fechar} disabled={bloqueado}>Cancelar</button>
+                        <button type="submit" disabled={bloqueado}>
                             {enviando ? 'Publicando…' : 'Publicar jogo'}
                         </button>
                     </div>
                 </form>
             </aside>
+
+            {arquivoImagem && (
+                <RecortarMidia
+                    arquivo={arquivoImagem}
+                    onCancelar={() => setArquivoImagem(null)}
+                    onConfirmar={async (imagem) => {
+                        const midia: MidiaRascunho = {
+                            id: `image-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                            tipo: 'image',
+                            url: 'huby/jogos/midias',
+                            enviando: true
+                        }
+                        const primeiraImagem = !ordemMidias.some((id) => midias.find((midia) => midia.id === id)?.tipo === 'image')
+                        setMidias((atuais) => [...atuais, midia])
+                        setOrdemMidias((atuais) => {
+                            if (primeiraImagem) setIndiceCapa(atuais.length)
+                            return [...atuais, midia.id]
+                        })
+                        setArquivoImagem(null)
+                        setErro(null)
+
+                        enviarMidia(midia, imagem)
+                    }}
+                />
+            )}
         </>
     )
 }

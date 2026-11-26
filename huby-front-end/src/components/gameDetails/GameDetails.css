@@ -160,6 +160,152 @@
     display: block;
 }
 
+.game-details-galeria {
+    position: relative;
+    background: #0a0a0a;
+}
+
+.game-details-midia-principal {
+    position: relative;
+    width: 100%;
+    height: clamp(200px, 36vh, 300px);
+    overflow: hidden;
+    background: #111;
+}
+
+.game-details-midia-principal > img,
+.game-details-midia-principal > video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #080808;
+}
+
+.game-details-galeria-setas {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    pointer-events: none;
+}
+
+.game-details-galeria-setas button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0 0 3px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+    background: rgba(14, 14, 14, 0.72);
+    color: var(--white);
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.game-details-galeria-setas button:hover {
+    border-color: var(--pink);
+    background: var(--pink);
+}
+
+.game-details-video-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 50%;
+    background: rgba(14, 14, 14, 0.76);
+    color: var(--white);
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+}
+
+.game-details-video-play[aria-hidden='true'] {
+    display: none;
+}
+
+.game-details-video-play:hover {
+    border-color: var(--pink);
+    background: var(--pink);
+}
+
+.game-details-video-play svg {
+    width: 28px;
+    height: 28px;
+    margin-left: 3px;
+}
+
+.game-details-galeria-miniaturas {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 16px 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) #171717;
+}
+
+.game-details-galeria-miniaturas button {
+    position: relative;
+    flex: 0 0 78px;
+    width: 78px;
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid transparent;
+    border-radius: 5px;
+    background: #1c1c1c;
+    cursor: pointer;
+    opacity: 0.58;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.game-details-galeria-miniaturas button:hover,
+.game-details-galeria-miniaturas button.is-active {
+    border-color: var(--pink);
+    opacity: 1;
+}
+
+.game-details-galeria-miniaturas img,
+.game-details-galeria-miniaturas video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.game-details-miniatura-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(14, 14, 14, 0.78);
+    color: var(--white);
+    transform: translate(-50%, -50%);
+}
+
+.game-details-miniatura-video svg {
+    width: 12px;
+    height: 12px;
+    margin-left: 2px;
+}
+
 .game-details-faixa {
     padding: 18px 28px 20px;
     background-color: var(--pink);
@@ -982,7 +1128,7 @@
         width: 100vw;
     }
 
-    .game-details-capa {
+    .game-details-midia-principal {
         height: 210px;
     }
 

@@ -22,6 +22,7 @@ public class Conteudo {
     private String descricaoLonga = "";
     private String desenvolvedor = "";
     private String imagem = "";
+    private List<MidiaConteudo> midias = new ArrayList<>();
 
     private List<String> tags = new ArrayList<>();
     private List<String> plataformas = new ArrayList<>();
@@ -121,6 +122,9 @@ public class Conteudo {
 
     public String getImagem() { return imagem; }
     public void setImagem(String imagem) { this.imagem = imagem; }
+
+    public List<MidiaConteudo> getMidias() { return midias; }
+    public void setMidias(List<MidiaConteudo> midias) { this.midias = midias; }
 
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags; }

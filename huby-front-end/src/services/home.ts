@@ -1,5 +1,10 @@
 import type { ComentarioApi, TipoConteudo } from '../types/conteudo'
 
+export type MidiaJogoApi = {
+    tipo: 'image' | 'video'
+    url: string
+}
+
 export type ConteudoApi = {
     id: string
     tipo: TipoConteudo
@@ -8,6 +13,7 @@ export type ConteudoApi = {
     descricaoLonga: string
     desenvolvedor: string
     imagem: string
+    midias?: MidiaJogoApi[] | null
     tags: string[]
     plataformas: string[]
     nota: number
@@ -52,6 +58,7 @@ export type NovoJogoApi = {
     descricaoLonga: string
     desenvolvedor: string
     imagem?: string
+    midias?: MidiaJogoApi[]
     linkUrl: string
     tags: string[]
     plataformas: PlataformaJogoApi[]

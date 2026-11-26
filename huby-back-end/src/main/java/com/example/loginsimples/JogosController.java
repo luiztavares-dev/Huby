@@ -27,6 +27,7 @@ import java.util.Set;
 public class JogosController {
 
     private static final Set<String> PLATAFORMAS_PERMITIDAS = Set.of("pc", "mobile", "website");
+    private static final Set<String> TIPOS_MIDIA_PERMITIDOS = Set.of("image", "video");
 
     @Autowired
     private ConteudoRepository conteudoRepository;
@@ -41,6 +42,7 @@ public class JogosController {
             String descricaoLonga,
             String desenvolvedor,
             String imagem,
+            List<MidiaConteudo> midias,
             String linkUrl,
             List<String> tags,
             List<String> plataformas,
@@ -85,6 +87,7 @@ public class JogosController {
 
         String imagem = dados.imagem() == null ? "" : dados.imagem().trim();
         String descricaoLonga = dados.descricaoLonga() == null ? "" : dados.descricaoLonga().trim();
+        List<MidiaConteudo> midias = normalizarMidias(dados.midias(), imagem);
 
         Conteudo jogo = new Conteudo();
         jogo.setTipo(TipoConteudo.JOGO);
@@ -93,6 +96,7 @@ public class JogosController {
         jogo.setDescricaoLonga(descricaoLonga.isBlank() ? descricao : descricaoLonga);
         jogo.setDesenvolvedor(desenvolvedor);
         jogo.setImagem(imagem.isBlank() ? "/imagem-polvojam.jpg" : imagem);
+        jogo.setMidias(midias);
         jogo.setLinkUrl(linkUrl);
         jogo.setTags(normalizarTags(dados.tags()));
         jogo.setPlataformas(plataformas);
@@ -109,6 +113,32 @@ public class JogosController {
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Não foi possível salvar o jogo.");
         }
+    }
+
+    private List<MidiaConteudo> normalizarMidias(List<MidiaConteudo> midias, String imagem) {
+        if (midias == null || midias.isEmpty()) {
+            if (imagem.isBlank()) {
+                return new ArrayList<>();
+            }
+            return List.of(new MidiaConteudo("image", imagem));
+        }
+
+        List<MidiaConteudo> normalizadas = new ArrayList<>();
+        for (MidiaConteudo midia : midias) {
+            if (midia == null || midia.getUrl() == null || midia.getUrl().isBlank()) {
+                continue;
+            }
+            String tipo = midia.getTipo() == null ? "" : midia.getTipo().trim().toLowerCase(Locale.ROOT);
+            if (!TIPOS_MIDIA_PERMITIDOS.contains(tipo)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de mídia não suportado.");
+            }
+            normalizadas.add(new MidiaConteudo(tipo, midia.getUrl().trim()));
+        }
+
+        if (normalizadas.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe uma mídia válida para o jogo.");
+        }
+        return normalizadas;
     }
 
     private void validarLink(String linkUrl) {

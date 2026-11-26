@@ -39,6 +39,7 @@ function paraGame(jogo: ConteudoApi): Game {
         longDescription: jogo.descricaoLonga,
         developer: jogo.desenvolvedor,
         image: jogo.imagem,
+        midias: jogo.midias ?? [],
         tags: jogo.tags ?? [],
         score: jogo.nota ?? 0,
         reviews: jogo.avaliacoes ?? 0,

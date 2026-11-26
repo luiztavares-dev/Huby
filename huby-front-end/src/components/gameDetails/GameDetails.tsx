@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
+import type { MidiaJogoApi } from '../../services/home'
 import type { ComentarioApi, TipoConteudo } from '../../types/conteudo'
 import { formatarDataHoraEvento, temaRevelado } from '../../utils/fasesEvento'
 import { formatarParticipantes, formatarPeriodo } from '../../utils/formato'
@@ -14,6 +15,7 @@ export type Game = {
     longDescription: string
     developer: string
     image: string
+    midias?: MidiaJogoApi[]
     tags: string[]
     score: number
     reviews: number
@@ -376,6 +378,8 @@ export default function GameDetails({
     const [downloads, setDownloads] = useState<Partial<Record<DownloadPlatform, DownloadState>>>({})
     const [lastDownload, setLastDownload] = useState<DownloadPlatform | null>(null)
     const [playState, setPlayState] = useState<PlayState>('idle')
+    const [midiaAtual, setMidiaAtual] = useState(0)
+    const [pausado, setPausado] = useState(true)
 
     const [aba, setAba] = useState<Aba>('avaliacoes')
     const [ordem, setOrdem] = useState<Ordem>('recentes')
@@ -399,6 +403,7 @@ export default function GameDetails({
     const avaliacoesRef = useRef<HTMLDivElement | null>(null)
     const textoRef = useRef<HTMLTextAreaElement | null>(null)
     const comentarioRef = useRef<HTMLInputElement | null>(null)
+    const videoRef = useRef<HTMLVideoElement | null>(null)
 
     useEffect(() => {
         if (isOpen) {
@@ -412,6 +417,8 @@ export default function GameDetails({
         if (!game) return
 
         setLastGame(game)
+        setMidiaAtual(0)
+        setPausado(true)
         setDownloads({})
         setLastDownload(null)
         setPlayState('idle')
@@ -435,6 +442,12 @@ export default function GameDetails({
     }, [game])
 
     useEffect(() => () => timers.current.forEach(clearTimeout), [])
+
+    useEffect(() => {
+        if (isOpen) return
+        videoRef.current?.pause()
+        setPausado(true)
+    }, [isOpen])
 
     useEffect(() => {
         if (!isOpen) return
@@ -475,11 +488,36 @@ export default function GameDetails({
 
     if (!current) return null
 
+    const midias = current.tipo === 'JOGO' && current.midias?.length
+        ? current.midias
+        : [{ tipo: 'image' as const, url: current.image || '/imagem-polvojam.jpg' }]
+    const midia = midias[Math.min(midiaAtual, midias.length - 1)]
     const isJogo = current.tipo === 'JOGO'
     const ehEvento = current.tipo === 'GAME_JAM' || current.tipo === 'EVENTO'
     const temaLiberado = ehEvento && temaRevelado(current)
     const preco = Math.max(0, current.preco ?? 0)
     const participantes = formatarParticipantes(current.participantes)
+
+    const selecionarMidia = (indice: number) => {
+        videoRef.current?.pause()
+        setMidiaAtual((indice + midias.length) % midias.length)
+        setPausado(true)
+    }
+
+    const alternarVideo = async () => {
+        const video = videoRef.current
+        if (!video) return
+
+        if (video.paused) {
+            try {
+                await video.play()
+            } catch {
+                setPausado(true)
+            }
+        } else {
+            video.pause()
+        }
+    }
 
     const isAvailable = (platform: DownloadPlatform) => {
         return platform === 'android'
@@ -688,8 +726,67 @@ export default function GameDetails({
                 </button>
 
                 <div className="game-details-scroll">
-                    <div className="game-details-capa">
-                        <img src={current.image} alt={current.title} />
+                    <div className="game-details-galeria" aria-roledescription="carrossel" aria-label={`Mídias de ${current.title}`}>
+                        <div className="game-details-midia-principal">
+                            {midia.tipo === 'video' ? (
+                                <>
+                                    <video
+                                        key={midia.url}
+                                        ref={videoRef}
+                                        src={midia.url}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        onPlay={() => setPausado(false)}
+                                        onPause={() => setPausado(true)}
+                                        onEnded={() => setPausado(true)}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="game-details-video-play"
+                                        onClick={alternarVideo}
+                                        aria-label={pausado ? 'Reproduzir vídeo' : 'Pausar vídeo'}
+                                        aria-hidden={!pausado}
+                                        tabIndex={pausado ? 0 : -1}
+                                    >
+                                        <IconePlay />
+                                    </button>
+                                </>
+                            ) : (
+                                <img key={midia.url} src={midia.url} alt={`${current.title} — mídia ${midiaAtual + 1}`} />
+                            )}
+
+                            {midias.length > 1 && (
+                                <div className="game-details-galeria-setas">
+                                    <button type="button" onClick={() => selecionarMidia(midiaAtual - 1)} aria-label="Mídia anterior">‹</button>
+                                    <button type="button" onClick={() => selecionarMidia(midiaAtual + 1)} aria-label="Próxima mídia">›</button>
+                                </div>
+                            )}
+                        </div>
+
+                        {midias.length > 1 && (
+                            <div className="game-details-galeria-miniaturas" aria-label="Selecionar mídia">
+                                {midias.map((item, indice) => (
+                                    <button
+                                        key={`${item.url}-${indice}`}
+                                        type="button"
+                                        className={indice === midiaAtual ? 'is-active' : ''}
+                                        onClick={() => selecionarMidia(indice)}
+                                        aria-label={`Mostrar ${item.tipo === 'video' ? 'vídeo' : 'imagem'} ${indice + 1}`}
+                                        aria-current={indice === midiaAtual}
+                                    >
+                                        {item.tipo === 'video' ? (
+                                            <video src={item.url} muted playsInline preload="metadata" />
+                                        ) : (
+                                            <img src={item.url} alt="" />
+                                        )}
+                                        {item.tipo === 'video' && (
+                                            <span className="game-details-miniatura-video" aria-hidden="true"><IconePlay /></span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="game-details-faixa">

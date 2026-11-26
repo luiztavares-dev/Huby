@@ -41,8 +41,8 @@ class JogosControllerTest {
 
         var dados = new JogosController.PublicarJogoDTO(
                 "usuario-1", " Jogo de teste ", " Uma descrição válida para o jogo. ", null,
-                "", "https://imagem.test/capa.jpg", "https://jogo.test", List.of(" Puzzle ", "puzzle"),
-                List.of("WEBSITE", "pc"), 12.90
+                "", "https://imagem.test/capa.jpg", List.of(new MidiaConteudo("IMAGE", " https://imagem.test/capa.jpg ")),
+                "https://jogo.test", List.of(" Puzzle ", "puzzle"), List.of("WEBSITE", "pc"), 12.90
         );
 
         Conteudo jogo = controller.publicar(dados);
@@ -51,6 +51,9 @@ class JogosControllerTest {
         assertEquals("Jogo de teste", jogo.getTitulo());
         assertEquals("Uma descrição válida para o jogo.", jogo.getDescricaoLonga());
         assertEquals("João", jogo.getDesenvolvedor());
+        var midia = jogo.getMidias().get(0);
+        assertEquals("image", midia.getTipo());
+        assertEquals("https://imagem.test/capa.jpg", midia.getUrl());
         assertEquals(List.of("Puzzle"), jogo.getTags());
         assertEquals(List.of("website", "pc"), jogo.getPlataformas());
         assertEquals(12.90, jogo.getPreco());
@@ -62,7 +65,7 @@ class JogosControllerTest {
     @Test
     void publicarRejeitaTituloCurto() {
         var dados = new JogosController.PublicarJogoDTO(
-                "usuario-1", "ab", "Descrição válida", null, "", "", "https://jogo.test",
+                "usuario-1", "ab", "Descrição válida", null, "", "", List.of(), "https://jogo.test",
                 List.of(), List.of("pc"), 0.0
         );
 
@@ -76,7 +79,7 @@ class JogosControllerTest {
     void publicarRejeitaUsuarioInexistente() {
         when(usuarioRepository.findById("usuario-1")).thenReturn(Optional.empty());
         var dados = new JogosController.PublicarJogoDTO(
-                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", "https://jogo.test",
+                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", List.of(), "https://jogo.test",
                 List.of(), List.of("pc"), 0.0
         );
 
@@ -92,7 +95,7 @@ class JogosControllerTest {
         usuario.setId("usuario-1");
         when(usuarioRepository.findById("usuario-1")).thenReturn(Optional.of(usuario));
         var dados = new JogosController.PublicarJogoDTO(
-                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", "javascript:alert(1)",
+                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", List.of(), "javascript:alert(1)",
                 List.of(), List.of("pc"), 0.0
         );
 
@@ -108,7 +111,7 @@ class JogosControllerTest {
         usuario.setId("usuario-1");
         when(usuarioRepository.findById("usuario-1")).thenReturn(Optional.of(usuario));
         var dados = new JogosController.PublicarJogoDTO(
-                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", "https://jogo.test",
+                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", List.of(), "https://jogo.test",
                 List.of(), List.of("pc"), -1.0
         );
 
@@ -124,7 +127,7 @@ class JogosControllerTest {
         usuario.setId("usuario-1");
         when(usuarioRepository.findById("usuario-1")).thenReturn(Optional.of(usuario));
         var dados = new JogosController.PublicarJogoDTO(
-                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", "https://jogo.test",
+                "usuario-1", "Jogo válido", "Descrição válida", null, "", "", List.of(), "https://jogo.test",
                 List.of(), List.of(), 0.0
         );
 

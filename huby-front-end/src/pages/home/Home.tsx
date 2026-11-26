@@ -117,6 +117,7 @@ function paraGame(item: ConteudoApi): HomeGame {
         longDescription: item.descricaoLonga,
         developer: item.desenvolvedor,
         image: item.imagem,
+        midias: item.midias ?? [],
         tags: item.tags ?? [],
         score: item.nota ?? 0,
         reviews: item.avaliacoes ?? 0,

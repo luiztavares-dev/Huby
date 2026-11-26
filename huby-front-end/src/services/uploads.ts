@@ -10,13 +10,32 @@ type RespostaCloudinary = {
     error?: { message?: string }
 }
 
-/**
- * Envia qualquer imagem do site para o Cloudinary (upload unsigned) e devolve
- * a URL segura, que deve ser persistida no banco pela tela que chamou.
- */
+export type TipoMidia = 'image' | 'video'
+
+export async function enviarMidiaParaCloudinary(
+    arquivo: File | Blob,
+    pasta = 'huby',
+    tipo: TipoMidia = 'image'
+): Promise<string> {
+    if (tipo === 'video') {
+        return enviarArquivo(arquivo, pasta, 'video', 'vídeo')
+    }
+
+    return enviarArquivo(arquivo, pasta, 'image', 'imagem')
+}
+
 export async function enviarImagemParaCloudinary(arquivo: File | Blob, pasta = 'huby'): Promise<string> {
+    return enviarMidiaParaCloudinary(arquivo, pasta)
+}
+
+async function enviarArquivo(
+    arquivo: File | Blob,
+    pasta: string,
+    recurso: 'image' | 'video',
+    nome: string
+): Promise<string> {
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-        throw new Error('O upload de imagens ainda não está configurado (Cloudinary).')
+        throw new Error(`O upload de ${nome === 'vídeo' ? 'vídeos' : 'imagens'} ainda não está configurado (Cloudinary).`)
     }
 
     const dados = new FormData()
@@ -27,18 +46,18 @@ export async function enviarImagemParaCloudinary(arquivo: File | Blob, pasta = '
     let resposta: Response
 
     try {
-        resposta = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        resposta = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${recurso}/upload`, {
             method: 'POST',
             body: dados
         })
     } catch {
-        throw new Error('Não foi possível enviar a imagem. Verifique sua conexão.')
+        throw new Error(`Não foi possível enviar ${nome === 'vídeo' ? 'o vídeo' : 'a imagem'}. Verifique sua conexão.`)
     }
 
     const corpo = (await resposta.json().catch(() => null)) as RespostaCloudinary | null
 
     if (!resposta.ok || !corpo?.secure_url) {
-        throw new Error(corpo?.error?.message ?? `Não foi possível enviar a imagem (HTTP ${resposta.status}).`)
+        throw new Error(corpo?.error?.message ?? `Não foi possível enviar ${nome === 'vídeo' ? 'o vídeo' : 'a imagem'} (HTTP ${resposta.status}).`)
     }
 
     return corpo.secure_url

@@ -18,20 +18,7 @@
     position: relative;
     display: grid;
     place-items: center;
-    cursor: pointer;
-    transition: filter 0.2s ease;
-}
-
-.postar-jogo-capa:hover {
-    filter: brightness(1.08);
-}
-
-.postar-jogo-capa input {
-    display: none;
-}
-
-.postar-jogo-capa.is-enviando {
-    cursor: wait;
+    background-color: #1c1c1c;
 }
 
 .postar-jogo-capa-vazia {
@@ -58,6 +45,226 @@
 .postar-jogo-capa-vazia small,
 .postar-jogo-trocar-capa {
     font-size: 0.7rem;
+}
+
+.postar-jogo-input-oculto {
+    display: none;
+}
+
+.postar-jogo-galeria {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.postar-jogo-midia {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #3a3a3a;
+    border-radius: 5px;
+    background: #171717;
+}
+
+.postar-jogo-midia.is-capa {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 1px var(--pink);
+}
+
+.postar-jogo-midia-preview {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.postar-jogo-midia-preview:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.postar-jogo-midia-preview img,
+.postar-jogo-midia-preview video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.postar-jogo-midia-placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #1d1b20;
+}
+
+.postar-jogo-midia-video,
+.postar-jogo-midia-capa,
+.postar-jogo-midia-enviando {
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: rgba(14, 14, 14, 0.88);
+    color: var(--white);
+    font-size: 0.55rem;
+    font-weight: 700;
+}
+
+.postar-jogo-midia-capa {
+    background: var(--pink);
+}
+
+.postar-jogo-midia-enviando {
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 0;
+    background: rgba(14, 14, 14, 0.7);
+    font-size: 0.65rem;
+}
+
+.postar-jogo-midia-remover {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: grid;
+    place-items: center;
+    width: 23px;
+    height: 23px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    background: rgba(14, 14, 14, 0.88);
+    color: var(--white);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.postar-jogo-midia-remover:hover:not(:disabled) {
+    border-color: var(--pink);
+    background: var(--pink);
+}
+
+.postar-jogo-adicionar-midia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 72px;
+    padding: 8px;
+    border: 1px dashed var(--pink);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text2);
+    font-size: 0.62rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.postar-jogo-adicionar-midia span {
+    color: var(--pink);
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.postar-jogo-adicionar-midia:hover:not(:disabled) {
+    background: rgba(250, 41, 95, 0.08);
+    color: var(--white);
+}
+
+.recortar-midia-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.84);
+}
+
+.recortar-midia-modal {
+    width: min(560px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 22px;
+    border: 1px solid var(--gray3);
+    border-radius: 10px;
+    background: #141414;
+    color: var(--text1);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+}
+
+.recortar-midia-modal h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.recortar-midia-modal > p {
+    margin: 7px 0 16px;
+    color: var(--text2);
+    font-size: 0.76rem;
+}
+
+.recortar-midia-area {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #080808;
+}
+
+.recortar-midia-zoom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    color: var(--text2);
+    font-size: 0.72rem;
+}
+
+.recortar-midia-zoom input {
+    flex: 1;
+    accent-color: var(--pink);
+}
+
+.recortar-midia-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.recortar-midia-acoes button {
+    min-height: 38px;
+    padding: 8px 18px;
+    border: 1px solid #555;
+    border-radius: 999px;
+    background: #252525;
+    color: var(--text1);
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.recortar-midia-acoes button[type='button']:last-child {
+    border-color: var(--pink);
+    background: var(--pink);
+    color: var(--white);
+}
+
+.recortar-midia-acoes button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .postar-jogo-trocar-capa {
